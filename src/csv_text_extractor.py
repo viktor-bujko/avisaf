@@ -13,8 +13,8 @@ def choose_file():
     return file_path
 
 
-def extract_narratives(
-        csv_file_path='/media/sf_MFF_Skola/2rocnik/Rocnikovy-projekt/data/ASRS/ASRS-csv-reports/ASRS_DBOnline-01-2020-08-2020.csv'):
+def extract_narratives(csv_file_path='/media/sf_MFF_Skola/2rocnik/Rocnikovy-projekt/data/ASRS/ASRS-csv-reports/ASRS_DBOnline-01-2020-08-2020.csv'):
+
     report_df = pd.read_csv(csv_file_path, skip_blank_lines=True, index_col=0, header=[0, 1])
     report_df.columns = report_df.columns.map('_'.join)
     try:
@@ -35,7 +35,7 @@ def extract_narratives(
 
 
 if __name__ == '__main__':
-    for narr in extract_narratives():
-        print(narr + '\n\n\n')
-
-    extract_narratives(choose_file())
+    # for narr in extract_narratives():
+    #    print(narr + '\n\n\n')
+    print(extract_narratives())
+    # extract_narratives(choose_file())
