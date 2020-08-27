@@ -14,9 +14,8 @@ if __name__ == '__main__':
         # replace fixed file path with path argument for dictionary
         KEYS = json.loads(keys_file.read())  # patterns to be matched
 
-    # get testing texts HERE; TODO: use csv_text_extractor in order to get the texts
-
-    TEXTS = extract_narratives()
+    # get testing texts;
+    TEXTS = list(extract_narratives())
 
     '''TEXTS = [('During the takeoff roll; a loose can of unopened Coca-Cola Zero rolled from behind the'
               ' captain\'s rudder pedals and stopped between the captain\'s left foot and the left '
@@ -40,7 +39,7 @@ if __name__ == '__main__':
     matcher.add('ACFT_PART', None, *patterns)
     i = 0
 
-    for doc in nlp.pipe(TEXTS):
+    for doc in nlp.pipe(TEXTS[1101:]):
         matched_spans = [doc[start:end] for _, start, end in matcher(doc)]
         entities = [(span.start_char, span.end_char,'ACFT_PART') for span in matched_spans]
         tr_example = (doc.text, {"entities": entities})

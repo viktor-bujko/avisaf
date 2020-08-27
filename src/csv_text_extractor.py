@@ -24,12 +24,12 @@ def extract_narratives(csv_file_path='/media/sf_MFF_Skola/2rocnik/Rocnikovy-proj
         calls2 = report_df['Report 2_Callback'].values.tolist()
         length = len(narrs1)
         lists = [narrs1, calls1, narrs2, calls2]
-        result = []
+        # result = []
         assert all(len(lst) == length for lst in lists)
         for index in range(length):
             res = '\n'.join([str(lst[index]) for lst in lists if str(lst[index]) != 'nan'])
-            result.append(res)
-        return result
+            yield res
+        # return result
     except KeyError:
         print('No such key was found', file=stderr)
 
@@ -37,5 +37,6 @@ def extract_narratives(csv_file_path='/media/sf_MFF_Skola/2rocnik/Rocnikovy-proj
 if __name__ == '__main__':
     # for narr in extract_narratives():
     #    print(narr + '\n\n\n')
-    print(extract_narratives())
+    for value in  extract_narratives():
+        print(value)
     # extract_narratives(choose_file())
