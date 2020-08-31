@@ -1,0 +1,16 @@
+[
+  [{"TEXT": "ILS"}, {"LOWER": "approach"}],
+  [{"SHAPE": "dd;ddd"}, {"LOWER": {"IN": ["ft", "feet"]}}], // 14;000 ft
+  [{"IS_DIGIT": True}, {"LOWER": {"IN": ["ft", "feet"]}}],
+  [{"LEMMA": "arrive"}],
+  [{"LEMMA": "depart"}],
+  [{"LEMMA": "taxi"}],
+  [{"LEMMA": "fly"}],
+  [{"LEMMA": "land"}],
+  [{"LEMMA": "climb"}],
+  [{"LEMMA": "descend"}],
+  [{"LEMMA": "push"}],
+  [{"LEMMA": "take off", "POS": "VERB"}],
+  [{"IS_UPPER": True, "LENGTH": {"==": 5}}], // waypoint
+  [{"IS_UPPER": True, "LENGTH": {">=": 3}],   // ATC, PIB, ORD
+]
