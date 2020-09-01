@@ -1,5 +1,10 @@
 [
   [{"TEXT": "ILS"}, {"LOWER": "approach"}],
+  [{"LOWER": "runway"}],
+  [{"LOWER": {"IN": ["boeing", "airbus"]}}],
+  [{"TEXT": "ATC"}],
+  [{"TEXT": {"IN": ["heading", "HDG"]}}, {"LOWER": "of", "OP": "?"}, {"IS_DIGIT": True, "LENGTH": 3}],
+  [{"TEXT": "RWY"}, {"IS_DIGIT": True, "<=": 35}],
   [{"SHAPE": "dd;ddd"}, {"LOWER": {"IN": ["ft", "feet"]}}], // 14;000 ft
   [{"IS_DIGIT": True}, {"LOWER": {"IN": ["ft", "feet"]}}],
   [{"LEMMA": "arrive"}],

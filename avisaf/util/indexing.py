@@ -86,7 +86,8 @@ def get_training_data(path):
 if __name__ == '__main__':
     # phrase = sys.argv[1]
 
-    with open(os.path.expanduser('~/Documents/avisaf_ner/checker.json'), mode='r') as file:
+    with open(os.path.expanduser('~/Documents/avisaf_ner/resources/checker.json'), mode='r') as file:
         json_list = json.loads(file.read())
-        for text, entities in json_list:
-            print_matches(text, entities)
+
+    for text, entities in json_list:
+        print_matches(text, entities)
