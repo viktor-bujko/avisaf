@@ -8,6 +8,7 @@ import random
 from util.data_extractor import get_entities, get_training_data
 import os
 from datetime import datetime
+import time
 
 
 def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
@@ -18,7 +19,8 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
     :param new_model_name:
     :return:
     """
-
+    print('Start time.')
+    start_time = time.time()
     if model is not None:
         nlp = spacy.load(model)
         print('An already existing spaCy model was successfully loaded.')
@@ -41,7 +43,7 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
     for label in entity_labels:
         ner.add_label(label)
 
-    TRAINING_DATA = get_training_data('/home/viktor/Documents/avisaf_ner/resources/generated_annotation_data.json')
+    TRAINING_DATA = get_training_data('/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json')
 
     with nlp.disable_pipes(*other_pipes):
         # Start the training
@@ -65,7 +67,7 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
                            entity_offsets,
                            sgd=optimizer,
                            losses=losses)
-            print(f'Current losses: {losses}.')
+            print(f'Iteration {itn} losses: {losses}.')
 
     if new_model_name is None:
         new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
@@ -74,12 +76,14 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
 
     nlp.to_disk(model_path)
     print('Model saved')
+    print(f'Program execution time: {time.time() - start_time}')
 
     return nlp
 
 
 if __name__ == '__main__':
-    train_spaCy_model(model="/home/viktor/Documents/avisaf_ner/models/newest-model", new_model_name="retrained-model")
+    train_spaCy_model(model='/home/viktor/Documents/avisaf_ner/models/auto-generated-data-model',
+                      new_model_name="auto-generated-data-model-1")
 
     """
     @plac.annotations(

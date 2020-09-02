@@ -8,7 +8,7 @@ import os
 import json
 
 
-def get_entities(entities_file_path=os.path.expanduser('~/Documents/avisaf_ner/resources/entities_labels.json')):
+def get_entities(entities_file_path=os.path.expanduser('~/Documents/avisaf_ner/data_files/entities_labels.json')):
     """
 
     :param entities_file_path:
