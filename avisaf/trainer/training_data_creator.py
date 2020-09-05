@@ -1,59 +1,65 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-
 from spacy.matcher import PhraseMatcher, Matcher
-from util.data_extractor import get_narratives, get_entities, get_training_data
+from util.data_extractor import get_narratives, get_entities
 from util.indexing import get_spans_indexes
+import util.training_data_build as train
 import spacy
 import json
 import os
-from pathlib import Path
 
-MAN_TRAINING_DATA_FILE_PATH = '../../data_files/man_annotated_data.json'
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+MAN_TRAINING_DATA_FILE_PATH = os.path.expanduser('~/Documents/avisaf_ner/data_files/man_annotated_data.json')
 
 
-def create_matcher_tr_data(kw_file_path,
-                           label_text,
-                           model='en_core_web_md',
-                           tr_src_file=None,
-                           extract_texts=False,
-                           use_phrasematcher=True):
+def annotate_auto(keywords_file_path,
+                  label_text,
+                  model='en_core_web_md',
+                  tr_src_file=None,
+                  extract_texts=False,
+                  use_phrasematcher=True,
+                  save=False,
+                  verbose=False):
     """
-    Semi-automatic annotation tool. The function takes a file which should contain a list of keywords to be matched
-    :type kw_file_path:  str
-    :param kw_file_path: String representing a path to the file with words to be matched (glossary etc).
-    :type label_text:    str
-    :param label_text:   The text of the label of an entity.
-    :type model:         str
-    :param model:        Optional: Model to be loaded to spaCy.
-    :type tr_src_file:   str
-    :param tr_src_file:  Training data source file path.
-    :type extract_texts: bool
-    :param extract_texts: Flag indicating whether new texts should be searched for. Default False.
-    :type use_phrasematcher:   bool
-    :param use_phrasematcher:  Flag indicating whether Matcher or PhraseMatcher spaCy object is used.
-                               Default is PhraseMatcher.
+    Semi-automatic annotation tool. The function takes a file which should 
+    contain a list of keywords to be matched.
+    
+    :type keywords_file_path:   str
+    :param keywords_file_path:  String representing a path to the file with words to be matched (glossary etc).
+    :type label_text:           str
+    :param label_text:          The text of the label of an entity.
+    :type model:                str
+    :param model:               Model to be loaded to spaCy.
+    :type tr_src_file:          str
+    :param tr_src_file:         Training data source file path.
+    :type extract_texts:        bool
+    :param extract_texts:       Flag indicating whether new texts should be searched for.
+    :type use_phrasematcher:    bool
+    :param use_phrasematcher:   Flag indicating whether Matcher or PhraseMatcher spaCy object is used.
+    :type save:                 bool
+    :param save:                Flag indicating whether the data should be saved.
+    :type verbose:              bool
+    :param verbose:             Flag indicating verbose printing.
     :return:
     """
     # result list
-    TRAINING_DATA = []
+    tr_data_overlaps = []
 
     if extract_texts or tr_src_file is None:
         # get testing texts
-        TEXTS = list(get_narratives())  # file_path is None
-        ENTITIES = None
+        texts = list(get_narratives())  # file_path is None
+        entities = None
     else:
         with open(tr_src_file, mode='r') as tr_data_file:
             # load the file containing the list of training ('text string', entity dict) tuples
             tr_data = json.load(tr_data_file)
-            TEXTS = [text for text, _ in tr_data]
-            ENTITIES = [entities for _, entities in tr_data]
+            texts = [text for text, _ in tr_data]
+            entities = [ents for _, ents in tr_data]
 
     # create NLP analyzer object of the model
     nlp = spacy.load(model)
-    with open(kw_file_path, mode='r') as keys_file:
+    with open(keywords_file_path, mode='r') as keys_file:
         patterns = json.load(keys_file)  # phrase/patterns to be matched
 
     if use_phrasematcher:
@@ -68,210 +74,124 @@ def create_matcher_tr_data(kw_file_path,
         matcher = Matcher(nlp.vocab, validate=True)
         matcher.add(label_text, patterns)
 
-    print(f'Using {matcher}')
-    print(*patterns, sep='\n')
+    print(f'Using {matcher}', flush=verbose)
+    print(*patterns, sep='\n', flush=verbose)
     matcher1 = Matcher(nlp.vocab)
     # matcher1.add("LETISKO",
-    #             [[{"LOWER": {"IN": ["runway", "rwy"]}, "OP": "?"}, {"TEXT": {"REGEX": "(0[1-9]|[1-2][0-9]|3[0-6])(L|C|R)?"}}]])
+    #    [[{"LOWER": {"IN": ["runway", "rwy"]}, "OP": "?"}, {"TEXT": {"REGEX": "(0[1-9]|[1-2][0-9]|3[0-6])(L|C|R)?"}}]])
 
-    print('----------------------------------------------------------------------')
-    for doc in nlp.pipe(TEXTS, batch_size=50):
+    for doc in nlp.pipe(texts, batch_size=50):
         matches = matcher(doc) + matcher1(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
-        print(f'Doc index: {TEXTS.index(doc.text)}', f'Matched spans: {matched_spans}')
+        print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
         tr_example = (doc.text, {"entities": new_entities})
-        if ENTITIES is not None:
-            doc_index = TEXTS.index(doc.text)
-            old_entities = list(ENTITIES[doc_index]["entities"])
-            # equivalent for list(set(new_entities + old_entities))
+        if entities is not None:
+            doc_index = texts.index(doc.text)
+            old_entities = list(entities[doc_index]["entities"])
             new_entities = new_entities + old_entities
             tr_example = (doc.text, {"entities": new_entities})
 
-        TRAINING_DATA.append(tr_example)
+        tr_data_overlaps.append(tr_example)
 
-    if input("Save file?: ").startswith("y") and tr_src_file is not None:
+    TRAINING_DATA = []  # list will contain training data without overlaps
+
+    for text, annotations in tr_data_overlaps:
+        new_annotations = train.remove_overlaps_from_dict(annotations)
+        TRAINING_DATA.append((text, {"entities": new_annotations}))
+
+    if save and tr_src_file is not None:
         with open(tr_src_file, mode='w') as file:
             json.dump(TRAINING_DATA, file)
 
-        pretty_print_training_data(tr_src_file)
     else:
         print(*TRAINING_DATA, sep='\n')
 
     return TRAINING_DATA
 
 
-def write_sentences():
-    phrase = input('Write a sentence: ')
-    result = []
-    while phrase != 'None':
-        result.append(phrase)
-        phrase = input('Write a sentence: ')
-
-    return result
-
-
-def annotate_texts(labels, file_path, start_index=0):
+def annotate_man(labels,
+                 file_path,
+                 lines,
+                 start_index=0,
+                 save=False):
     """
-    Semi-automatic text annotation.
-    :param labels:    Available entity labels.
-    :param file_path: The path to the file containing texts to be annotated.
-    :param start_index: The index of the first text to be taken from the file.
-    :return:
-    """
-    n = input('How many texts should be annotated?: ')
-    lines = int(n) if n.isdigit() else -1
+    Manual text annotation tool. A set of 'lines' texts starting with start_index
+    is progressively printed in order to be annotated by labels.
 
-    question = input('Save the annotated data in the file? (y/N): ')
+    :type labels:       list
+    :param labels:      List of available entity labels.
+    :type file_path:    str
+    :param file_path:   The path to the file containing texts to be annotated.
+                        If None, then a user can write own sentences and annotate them.
+    :type lines:        int
+    :param lines:       The number of texts to be annotated (1 text = 1 line).
+    :type start_index:  int
+    :param start_index: The index of the first text to be annotated.
+    :type save:         bool
+    :param save:        Flag indicating whether the result of the annotation
+                        should be saved.
+
+    :return:            List of texts and its annotations.
+    """
 
     if file_path is not None:
-        TEXTS = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
+        texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
     else:
-        TEXTS = write_sentences()
+        texts = train.write_sentences()
+
     result = []
 
-    for text in TEXTS:
+    for text in texts:
         ent_labels = []
         print(text)
-        words = input('\nWrite all words you want to annotate (separated by a comma): ')
+        print()  # print an empty line
+        words = input('Write all words you want to annotate (separated by a comma): ')
         spans = set([word.strip() for word in words.split(',') if word.strip()])
 
         if not spans:
             new_entry = (text, {"entities": []})
             result.append(new_entry)
         else:
-            found_occurs = get_spans_indexes(text, spans)
+            found_occurs = get_spans_indexes(text, spans)  # find positions of "spans" string list items in the text
             for occur_dict in found_occurs:
-                key = list(occur_dict.keys())[0]            # we want only the first key
+                key = list(occur_dict.keys())[0]  # only the first key is desired
                 matches = occur_dict[key]
-                label = input(f'Label \'{key}\' with one of the following {list(enumerate(labels))}: ').upper()
-                if label == 'NONE':
+                label = input(f'Label \'{key}\' with an item from: {list(enumerate(labels))}: ').upper()
+                if label == 'NONE':  # when there is no suitable label in the list
                     continue
                 if label.isdigit():
-                    ent_labels += [(start, end, labels[int(label)]) for start, end in matches]
+                    ent_labels += [(start, end, labels[int(label)]) for start, end in matches]  # create the tuple
                 else:
+                    # same as above, but entity label text is directly taken
                     ent_labels += [(start, end, label) for start, end in matches]
+
             new_entry = (text, {"entities": ent_labels})
             result.append(new_entry)
-        print('\n')
-        if question.startswith('y'):
+        print()  # print an empty line
+
+        if save:
+            # rewrite the content of the file
             with open(os.path.expanduser(MAN_TRAINING_DATA_FILE_PATH), mode='r') as file:
-                old_content = json.loads(file.read())
+                old_content = json.load(file)
 
             with open(os.path.expanduser(MAN_TRAINING_DATA_FILE_PATH), mode='w') as file:
                 old_content.append(new_entry)
                 json.dump(old_content, file)
 
-    if question.startswith('y'):
-        pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
+            train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
 
     return result
-
-
-def pretty_print_training_data(path):
-    """
-    Prints each tuple of the document in a new line.
-    :param path: The path of the training data file.
-    :return:
-    """
-    with open(os.path.expanduser(path), mode='r') as file:
-        content = json.loads(file.read())
-
-    with open(os.path.expanduser(path), mode='w') as file:
-        file.write('[')
-        for i, entry in enumerate(content):
-            json.dump(entry, file)
-            if i != len(content) - 1:
-                file.write(',\n')
-            else:
-                file.write('\n')
-        file.write(']')
-
-
-def decide_overlap(entity_triplet, other_triplet, text):
-    entity_start = entity_triplet[0]
-    entity_end = entity_triplet[1]
-    other_start = other_triplet[0]
-    other_end = other_triplet[1]
-    x = set(range(entity_start, entity_end))
-    y = range(other_start, other_end)
-
-    entity_text = text[entity_triplet[0]:entity_triplet[1]]
-    other_text = text[other_triplet[0]:other_triplet[1]]
-
-    if x.intersection(y):
-        if len(entity_text) >= len(other_text):
-            return other_triplet
-        else:
-            return entity_triplet
-
-            # print(f'Entity: {entity_triplet}; Text: {entity_text}')
-            # print(f'Entity: {other_triplet}; Text: {other_text}')
-            # to_remove = input("Enter entity which you want to remove: ")
-            # if to_remove == "1":
-            #    return entity_triplet
-            # if to_remove == "2":
-            #    return other_triplet
-    else:
-        return None
-
-
-def decide_overlaps(file_path):
-
-    sort_annotations(file_path)
-    train_data = get_training_data(file_path)
-    result = []
-
-    for text, annotations in train_data:
-        entities_list = annotations['entities']
-        to_rem = []
-        for entity_triplet in entities_list:
-            index = list(entities_list).index(entity_triplet)
-            if index < len(entities_list) - 1:
-                other_triplet = entities_list[index + 1]
-                triplet_to_remove = decide_overlap(entity_triplet, other_triplet, text)
-                if triplet_to_remove is not None:
-                    # print(f'Removing: {triplet_to_remove}\n')
-                    to_rem.append(triplet_to_remove)
-        new_annot = [entity for entity in entities_list if entity not in to_rem]
-        # print(f"NEW ANNOT: {new_annot}")
-        result.append((text, {"entities": new_annot}))
-
-    with open(file_path, mode='w') as file:
-        json.dump(result, file)
-
-    pretty_print_training_data(file_path)
-
-    return result
-
-
-def sort_annotations(file_path):
-
-    tr_data = get_training_data(file_path)
-
-    sorted_tr_data = []
-    for text, annotation in tr_data:
-        annot_list = annotation["entities"]
-        sorted_list = sorted(annot_list, key=lambda tple: tple[0])
-        sorted_tr_data.append((text, {"entities": sorted_list}))
-
-    with open(file_path, mode='w') as file:
-        json.dump(sorted_tr_data, file)
-
-    pretty_print_training_data(file_path)
 
 
 if __name__ == '__main__':
-
-    """path_arg = sys.argv[1]
+    path_arg = sys.argv[1]
     first_text_idx = int(sys.argv[2])
     ents = get_entities()
-    print(annotate_texts(labels=ents, file_path=path_arg, start_index=first_text_idx))
-    pretty_print_training_data(TRAINING_DATA_FILE_PATH)"""
+    print(annotate_man(labels=ents, file_path=path_arg, start_index=first_text_idx, lines=5))
+    train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
 
-    create_matcher_tr_data("/home/viktor/Documents/avisaf_ner/data_files/altitude_list.json",
+    annotate_auto("/home/viktor/Documents/avisaf_ner/data_files/altitude_list.json",
                            "ALTITUDE",
-                           tr_src_file="/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json",
-                           use_phrasematcher=False)
-
-    decide_overlaps('/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json')
+                  tr_src_file="/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json",
+                  use_phrasematcher=False)

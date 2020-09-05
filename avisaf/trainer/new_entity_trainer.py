@@ -10,24 +10,33 @@ import os
 from datetime import datetime
 import time
 
+PROJECT_PATH = os.path.expanduser('~/Documents/avisaf_ner')
 
-def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
+
+def train_spaCy_model(iter_number=20,
+                      model=None,
+                      new_model_name=None,
+                      train_data_srcfile=f'{PROJECT_PATH}/data_files/auto_annotated_data.json',
+                      verbose=False):
     """
 
+    :param verbose:
+    :param train_data_srcfile:
     :param iter_number:
     :param model:
     :param new_model_name:
     :return:
     """
-    print('Start time.')
+    if verbose:
+        print('Start time.')
     start_time = time.time()
     if model is not None:
         nlp = spacy.load(model)
-        print('An already existing spaCy model was successfully loaded.')
+        print('An already existing spaCy model was successfully loaded.', flush=verbose)
     else:
         # using a blank English language spaCy model
         nlp = spacy.blank('en')
-        print('A new blank model has been created.')
+        print('A new blank model has been created.', flush=verbose)
 
     # getting a list of currently used entities from default location
     entity_labels = get_entities()
@@ -43,7 +52,7 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
     for label in entity_labels:
         ner.add_label(label)
 
-    TRAINING_DATA = get_training_data('/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json')
+    TRAINING_DATA = get_training_data(train_data_srcfile)
 
     with nlp.disable_pipes(*other_pipes):
         # Start the training
@@ -55,7 +64,6 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
             random.shuffle(TRAINING_DATA)
             losses = {}
 
-            # Divide examples into batches and iterate over them
             for batch in spacy.util.minibatch(TRAINING_DATA, size=3):
                 # Get all the texts from the batch
                 texts = [text for text, entities in batch]
@@ -67,16 +75,17 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
                            entity_offsets,
                            sgd=optimizer,
                            losses=losses)
-            print(f'Iteration {itn} losses: {losses}.')
+            print(f'Iteration {itn} losses: {losses}.', flush=verbose)
 
     if new_model_name is None:
         new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-    model_path = os.path.expanduser('~/Documents/avisaf_ner/models/' + new_model_name)
+    model_path = f'{PROJECT_PATH}/models/{new_model_name}'
 
     nlp.to_disk(model_path)
-    print('Model saved')
-    print(f'Program execution time: {time.time() - start_time}')
+    if verbose:
+        print('Model saved')
+        print(f'Program execution time: {time.time() - start_time}')
 
     return nlp
 
@@ -84,13 +93,6 @@ def train_spaCy_model(iter_number=20, model=None, new_model_name=None):
 if __name__ == '__main__':
     train_spaCy_model(model='/home/viktor/Documents/avisaf_ner/models/auto-generated-data-model',
                       new_model_name="auto-generated-data-model-1")
-
-    """
-    @plac.annotations(
-    model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
-    output_dir=("Optional output directory", "option", "o", Path),
-    n_iter=("Number of training iterations", "option", "n", int),
-    )"""
 
     """
     matcher = PhraseMatcher(nlp.vocab)
