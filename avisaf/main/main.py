@@ -3,9 +3,11 @@
 import spacy
 import spacy.displacy as displacy
 import sys
+import os
 from argparse import ArgumentParser
 
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.append(os.path.join(PROJECT_ROOT_PATH, 'avisaf'))
 from trainer.new_entity_trainer import train_spaCy_model
 from trainer.training_data_creator import annotate_auto, annotate_man
 
@@ -30,7 +32,7 @@ def obtain_text():
             )
 
 
-def test(model='en_core_web_md', cli_result=True, visualize=True):
+def test(model='en_core_web_md', cli_result=False, visualize=False):
     # TODO: a user should be able to either copy the text, or choose a txt file to be processed which will extract the 
     #       text and identify the entities
     # TODO: a user should be able to use own spaCy model defined as name in the parameter --model=str
@@ -65,15 +67,44 @@ def test(model='en_core_web_md', cli_result=True, visualize=True):
         exit(1)
 
 
-def main():
+def choose_action(args):
+    """
+    Callback function which invokes the correct function with specified
+    CLI arguments.
+    :param args: parseargs command-line arguments.
+    :return:    Exit code.
+    """
+
     FUNCTIONS = {
-        'train': train_spaCy_model,
-        'test':  test,
-        'autobuild': annotate_auto,
-        'manbuild': annotate_man
+        'train': lambda: train_spaCy_model(iter_number=args.iterations, model=args.model,
+                                           new_model_name=args.name, train_data_srcfile=args.data,
+                                           verbose=args.verbose),
+
+        'test': lambda: test(model=args.model, cli_result=args.print, visualize=args.show),
+
+        'annotate_auto': lambda: annotate_auto(args.keys_file, args.label,
+                                               model=args.model, tr_src_file=args.data,
+                                               extract_texts=args.extract, use_phrasematcher=args.p,
+                                               save=args.save, verbose=args.verbose),
+
+        'annotate_man': lambda: annotate_man(labels_path=args.labels, file_path=args.texts_file,
+                                             lines=args.lines, save=args.save,
+                                             start_index=args.start_index)
     }
 
+    try:
+        func = FUNCTIONS.get(args.action)
+        func()
+        return 0
+    except AttributeError:
+        print('No action is to be invoked.', file=sys.stderr)
+        return 1
+
+
+def main():
+
     args = ArgumentParser(description='Named entity recognizer for aviation safety reports.')
+    # args.set_defaults(action=args.print_help())
     subparser = args.add_subparsers(help='Possible actions to perform.')
 
     # train subcommand and its arguments
@@ -81,6 +112,7 @@ def main():
         'train',
         help='Train a new NLP NER model.'
     )
+    arg_train.set_defaults(action='train_spaCy_model')
     arg_train.add_argument(
         '-i', '--iterations',
         metavar='INT',
@@ -91,17 +123,20 @@ def main():
     arg_train.add_argument(
         '-m', '--model',
         metavar='PATH',
-        help='File path to an existing spaCy model or existing spaCy model name to be trained.'
+        help='File path to an existing spaCy model or existing spaCy model name to be trained.',
+        default=None
     )
     arg_train.add_argument(
         '-n', '--name',
         metavar='STRING',
-        help='Name of the new model.'
+        help='Name of the new model.',
+        default=None
     )
     arg_train.add_argument(
         '-d', '--data',
         metavar='PATH',
-        help='File path to the file with annotated training data.'
+        help='File path to the file with annotated training data.',
+        default=os.path.join(PROJECT_ROOT_PATH, 'data_files/auto_annotated_data.json')
     )
     arg_train.add_argument(
         '-v', '--verbose',
@@ -109,13 +144,13 @@ def main():
         metavar='BOOL',
         help='Flag for verbose printing.'
     )
-    arg_train.set_defaults(func=train_spaCy_model)
 
     # test subcommand and its arguments
     arg_test = subparser.add_parser(
         'test',
         help='Test a selected model.'
     )
+    arg_test.set_defaults(action='test')
     arg_test.add_argument(
         '-m', '--model',
         metavar='PATH',
@@ -125,24 +160,24 @@ def main():
     arg_test.add_argument(
         '-s', '--show',
         type=bool,
-        default=True,
+        default=False,
         help='A flag to indicate whether a visualization tool should be started.'
     )
     arg_test.add_argument(
         '-p', '--print',
         type=bool,
-        default=True,
+        default=False,
         help='Print the result on the screen.'
     )
-    arg_test.set_defaults(func=test)
 
     # automatic training data builder and its arguments
     arg_autobuild = subparser.add_parser(
         'autobuild',
         help='Automatic annotation tool for new training dataset creation.'
     )
+    arg_autobuild.set_defaults(action='annotate_auto')
     arg_autobuild.add_argument(
-        'keys-file',
+        'keys_file',
         help='Path to file with words to be matched.'
     )
     arg_autobuild.add_argument(
@@ -153,14 +188,14 @@ def main():
     arg_autobuild.add_argument(
         '-m', '--model',
         type=str,
-        help='File path to an existing spaCy model or existing spaCy model name.'
-        # default='en_core_web_md'
+        help='File path to an existing spaCy model or existing spaCy model name.',
+        default='en_core_web_md'
     )
     arg_autobuild.add_argument(
         '-d', '--data',
         type=str,
-        help='Training data source file path.'
-        # default=None
+        help='Training data source file path.',
+        default=None
     )
     arg_autobuild.add_argument(
         '-e', '--extract',
@@ -186,21 +221,16 @@ def main():
         help='Flag indicating verbose printing.',
         default=False
     )
-    arg_autobuild.set_defaults(func=annotate_auto)
 
     # manual training data builder and its arguments
     arg_manbuild = subparser.add_parser(
         'build',
         help='Manual annotation tool for new training dataset creation.'
     )
+    arg_manbuild.set_defaults(action='annotate_man')
     arg_manbuild.add_argument(
-        'labels',
-        type=list,
-        help='List of entity labels used for annotation.',
-    )
-    arg_manbuild.add_argument(
-        'texts-file',
-        type=str,
+        'texts_file',
+        # type=str,
         help='''The path to the file containing texts to be annotated. 
                 If None, then a user can write own sentences and annotate them.''',
         default=None
@@ -209,6 +239,11 @@ def main():
         'lines',
         type=int,
         help='The number of texts to be annotated (1 text = 1 line).'
+    )
+    arg_manbuild.add_argument(
+        '-l', '--labels',
+        help='Path to the file containing entity labels used for annotation.',
+        default=None
     )
     arg_manbuild.add_argument(
         '-s', '--start-index',
@@ -222,12 +257,11 @@ def main():
         help='Flag indicating whether the result of the annotation should be saved.',
         default=False
     )
-    arg_manbuild.set_defaults(func=annotate_man)
 
-    config = args.parse_args()
+    args = args.parse_args()
+    exit_code = choose_action(args)
 
-    # args.set_defaults(action=args.print_help())
-    # choose_action(config)
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':

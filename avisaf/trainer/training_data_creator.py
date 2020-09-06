@@ -110,17 +110,17 @@ def annotate_auto(keywords_file_path,
     return TRAINING_DATA
 
 
-def annotate_man(labels,
-                 file_path,
+def annotate_man(file_path,
                  lines,
+                 labels_path=None,
                  start_index=0,
                  save=False):
     """
     Manual text annotation tool. A set of 'lines' texts starting with start_index
     is progressively printed in order to be annotated by labels.
 
-    :type labels:       list
-    :param labels:      List of available entity labels.
+    :type labels_path:  file
+    :param labels_path: Path to the file containing available entity labels.
     :type file_path:    str
     :param file_path:   The path to the file containing texts to be annotated.
                         If None, then a user can write own sentences and annotate them.
@@ -134,6 +134,8 @@ def annotate_man(labels,
 
     :return:            List of texts and its annotations.
     """
+
+    labels = get_entities(labels_path) if labels_path is not None else get_entities()
 
     if file_path is not None:
         texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
@@ -185,13 +187,12 @@ def annotate_man(labels,
 
 
 if __name__ == '__main__':
-    path_arg = sys.argv[1]
+    """path_arg = sys.argv[1]
     first_text_idx = int(sys.argv[2])
-    ents = get_entities()
-    print(annotate_man(labels=ents, file_path=path_arg, start_index=first_text_idx, lines=5))
+    print(annotate_man(file_path=path_arg, start_index=first_text_idx, lines=5))
     train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
 
     annotate_auto("/home/viktor/Documents/avisaf_ner/data_files/altitude_list.json",
                            "ALTITUDE",
                   tr_src_file="/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json",
-                  use_phrasematcher=False)
+                  use_phrasematcher=False)"""
