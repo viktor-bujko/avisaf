@@ -1,4 +1,0 @@
-[
-  [{"IS_UPPER": True, "LENGTH": {"==": 5}}], // waypoint
-  [{"IS_UPPER": True, "LENGTH": {">=": 3}],   // ATC, PIB, ORD
-]

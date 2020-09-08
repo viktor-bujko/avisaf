@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-
+import os
 import spacy
 import random
-from util.data_extractor import get_entities, get_training_data
-import os
 from datetime import datetime
 import time
 
-PROJECT_PATH = os.path.expanduser('~/Documents/avisaf_ner')
+PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+#sys.path.append(PROJECT_ROOT_PATH)
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+
+from util.data_extractor import get_entities, get_training_data
 
 
 def train_spaCy_model(iter_number=20,
                       model=None,
                       new_model_name=None,
-                      train_data_srcfile=f'{PROJECT_PATH}/data_files/auto_annotated_data.json',
+                      train_data_srcfile=os.path.join(PROJECT_ROOT_PATH, 'data_files/auto_annotated_data.json'),
                       verbose=False):
     """
 
@@ -60,6 +64,7 @@ def train_spaCy_model(iter_number=20,
 
         # Iterate iter_number times
         for itn in range(iter_number):
+            print(f'Iteration: {itn}.')
             # Shuffle the training data
             random.shuffle(TRAINING_DATA)
             losses = {}
@@ -75,12 +80,14 @@ def train_spaCy_model(iter_number=20,
                            entity_offsets,
                            sgd=optimizer,
                            losses=losses)
+                print(losses)
             print(f'Iteration {itn} losses: {losses}.', flush=verbose)
 
     if new_model_name is None:
         new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-    model_path = f'{PROJECT_PATH}/models/{new_model_name}'
+    model_path = os.path.join('/home/viktor/Documents/avisaf_ner/models', new_model_name)
+    # os.path.join(PROJECT_ROOT_PATH, 'models', new_model_name)
 
     nlp.to_disk(model_path)
     if verbose:
@@ -93,17 +100,3 @@ def train_spaCy_model(iter_number=20,
 if __name__ == '__main__':
     train_spaCy_model(model='/home/viktor/Documents/avisaf_ner/models/auto-generated-data-model',
                       new_model_name="auto-generated-data-model-1")
-
-    """
-    matcher = PhraseMatcher(nlp.vocab)
-        patterns = list(nlp.pipe(WORDS))
-        matcher.add("ACFT_PARTS", None, *patterns)
-
-        matches = matcher(doc)
-
-        for (match_id, start, end) in matches:
-            print(match_id, start, end, doc[start:end])
-
-        for entity in doc.ents:
-            print(entity.text, entity.label_)
-    """

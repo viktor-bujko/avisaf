@@ -5,14 +5,20 @@ import spacy.displacy as displacy
 import sys
 import os
 from argparse import ArgumentParser
+from pathlib import Path
 
 PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.append(os.path.join(PROJECT_ROOT_PATH, 'avisaf'))
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+
 from trainer.new_entity_trainer import train_spaCy_model
 from trainer.training_data_creator import annotate_auto, annotate_man
+from util.data_extractor import get_entities
 
 
-def obtain_text():
+def get_sample_text():
     return ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival to "
             "ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles powered "
             "back for descent a loud bang came from the left side of the aircraft followed by significant airframe "
@@ -32,19 +38,31 @@ def obtain_text():
             )
 
 
-def test(model='en_core_web_md', cli_result=False, visualize=False):
-    # TODO: a user should be able to either copy the text, or choose a txt file to be processed which will extract the 
-    #       text and identify the entities
-    # TODO: a user should be able to use own spaCy model defined as name in the parameter --model=str
+def test(model='en_core_web_md',
+         text_path=None,
+         cli_result=False,
+         visualize=False):
 
-    # extract the text
-    text = obtain_text()
+    if text_path is None:
+        # use sample text
+        # text = input("Please enter the text: \n")
+        text = get_sample_text()
+    else:
+        # extract the text
+        if Path(text_path).exists():
+            # in case the argument is the path to the file containing the text
+            with open(text_path, mode='r') as file:
+                text = file.read()
+        else:
+            # if the text is passed as argument
+            text = text_path
 
     try:
         # create new nlp object
         if model.startswith('en_core_web'):
-            print('Using a default english language model!')
-        nlp = spacy.load(model)
+            print('Using a default english language model!', file=sys.stderr)
+        nlp = spacy.load(model) if '/' not in model else spacy.load(os.path.join(PROJECT_ROOT_PATH, model))
+        # nlp = spacy.load(model)
 
         if not nlp.has_pipe(u'ner'):
             raise OSError
@@ -55,12 +73,29 @@ def test(model='en_core_web_md', cli_result=False, visualize=False):
         # identify entities
         entities = document.ents
 
+        longest_entity = max([len(entity.text) for entity in entities])
         # print them using displacy renderer
         for ent in entities:
-            print(f'{ent.text}\t{ent.label_}', flush=cli_result)
+            dist = longest_entity - len(ent.text) + 4
+            print(f'{ent.text}{" " * dist}{ent.label_}', flush=cli_result)
 
         if visualize:
-            displacy.serve(document, style='ent')
+            colors = {
+                "AIRPLANE": "#ACECD5",
+                "CREW": "#FFF9AA",
+                "AIRPORT_TERM": "#FFD5B8",
+                "FLIGHT_PHASE": "#FFB9B3",
+                "AVIATION_TERM": "#A5C8E4",
+                "NAV_WAYPOINT": "#FF6961",
+                "ALTITUDE": "#988270",
+                "WEATHER": "#BE9B7B",
+                "ABBREVIATION": "#FFF4E6"
+            }
+            options = {
+                "ents": get_entities(),
+                "colors": colors
+            }
+            displacy.serve(document, style='ent', options=options)
 
     except OSError:
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
@@ -80,7 +115,8 @@ def choose_action(args):
                                            new_model_name=args.name, train_data_srcfile=args.data,
                                            verbose=args.verbose),
 
-        'test': lambda: test(model=args.model, cli_result=args.print, visualize=args.show),
+        'test': lambda: test(model=args.model, cli_result=args.print,
+                             visualize=args.show, text_path=args.text),
 
         'annotate_auto': lambda: annotate_auto(args.keys_file, args.label,
                                                model=args.model, tr_src_file=args.data,
@@ -112,7 +148,7 @@ def main():
         'train',
         help='Train a new NLP NER model.'
     )
-    arg_train.set_defaults(action='train_spaCy_model')
+    arg_train.set_defaults(action='train')
     arg_train.add_argument(
         '-i', '--iterations',
         metavar='INT',
@@ -122,7 +158,7 @@ def main():
     )
     arg_train.add_argument(
         '-m', '--model',
-        metavar='PATH',
+        metavar='PATH/NAME',
         help='File path to an existing spaCy model or existing spaCy model name to be trained.',
         default=None
     )
@@ -140,8 +176,7 @@ def main():
     )
     arg_train.add_argument(
         '-v', '--verbose',
-        type=bool,
-        metavar='BOOL',
+        action='store_true',
         help='Flag for verbose printing.'
     )
 
@@ -158,15 +193,18 @@ def main():
         help='File path to an existing spaCy model or existing spaCy model name for NER.'
     )
     arg_test.add_argument(
+        '-t', '--text',
+        default=None,
+        help='File path to the text which will have entities extracted. If None, user input is requested.'
+    )
+    arg_test.add_argument(
         '-s', '--show',
-        type=bool,
-        default=False,
+        action='store_true',
         help='A flag to indicate whether a visualization tool should be started.'
     )
     arg_test.add_argument(
         '-p', '--print',
-        type=bool,
-        default=False,
+        action='store_false',
         help='Print the result on the screen.'
     )
 
@@ -199,27 +237,23 @@ def main():
     )
     arg_autobuild.add_argument(
         '-e', '--extract',
-        type=bool,
-        help='Flag indicating that text extraction should take place.',
-        default=False
+        action='store_true',
+        help='Flag indicating that text extraction should take place.'
     )
     arg_autobuild.add_argument(
         '-p',
-        type=bool,
-        help='Flag indicating that spaCy\'s PhraseMatcher object should be used.',
-        default=True
+        action='store_false',
+        help='Flag indicating that spaCy\'s PhraseMatcher object should NOT be used.'
     )
     arg_autobuild.add_argument(
         '-s', '--save',
-        type=bool,
-        help='Flag indicating that the result should be saved. Requires the -d/--data argument.',
-        default=False
+        action='store_true',
+        help='Flag indicating that the result should be saved. Requires the -d/--data argument.'
     )
     arg_autobuild.add_argument(
         '-v', '--verbose',
-        type=bool,
+        action='store_true',
         help='Flag indicating verbose printing.',
-        default=False
     )
 
     # manual training data builder and its arguments
@@ -253,9 +287,8 @@ def main():
     )
     arg_manbuild.add_argument(
         '--save',
-        type=bool,
+        action='store_true',
         help='Flag indicating whether the result of the annotation should be saved.',
-        default=False
     )
 
     args = args.parse_args()

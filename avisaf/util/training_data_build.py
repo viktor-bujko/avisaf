@@ -2,8 +2,15 @@
 
 import json
 import os
+import sys
 
-from .data_extractor import get_training_data
+PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+# sys.path.append(PROJECT_ROOT_PATH)
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+from util.data_extractor import get_training_data
 
 
 def sort_annotations(file_path):
@@ -30,6 +37,8 @@ def sort_annotations(file_path):
 
     pretty_print_training_data(file_path)       # pretty print the file
 
+    return sorted_training_data
+
 
 def remove_overlaps_from_dict(annotations_dict):
     """
@@ -42,15 +51,17 @@ def remove_overlaps_from_dict(annotations_dict):
 
     entities_list = annotations_dict['entities']  # get entities list from "entities" key in the annotation dictionary
     remove_list = []
-    for entity_triplet in entities_list:
-        index = list(entities_list).index(entity_triplet)
-
-        # if the entity_triplet is NOT the last item of the list
-        if index < len(entities_list) - 1:
-            next_triplet = entities_list[index + 1]  # find next tuple
-            triplet_to_remove = overlap_between(entity_triplet, next_triplet)
-            if triplet_to_remove is not None:  # an overlap detected and resolved
-                remove_list.append(triplet_to_remove)
+    index = 0
+    while index < len(entities_list) - 1:
+        entity_triplet = entities_list[index]
+        next_triplet = entities_list[index + 1]
+        if entity_triplet == next_triplet:
+            entities_list.remove(next_triplet)
+            continue
+        triplet_to_remove = overlap_between(entity_triplet, next_triplet)
+        if triplet_to_remove is not None:  # an overlap detected and resolved
+            remove_list.append(triplet_to_remove)
+        index += 1
 
     new_annotations = [entity for entity in entities_list if entity not in remove_list]
 
@@ -67,8 +78,8 @@ def remove_overlaps_from_file(file_path):
     :return:            Returns the content of the JSON file in the file_path arg without overlapping annotations.
     """
 
-    sort_annotations(file_path)  # sorting annotations list for simpler overlap detection
-    training_data = get_training_data(file_path)
+    training_data = sort_annotations(file_path)  # sorting annotations list for simpler overlap detection
+    # training_data = get_training_data(file_path)
     result = []
 
     for text, annotations in training_data:
@@ -123,10 +134,10 @@ def pretty_print_training_data(path):
     :param path: The path of the file to be rewritten.
     """
 
-    with open(os.path.expanduser(path), mode='r') as file:
-        content = json.loads(file.read())
+    with open(path, mode='r') as file:
+        content = json.load(file)
 
-    with open(os.path.expanduser(path), mode='w') as file:
+    with open(path, mode='w') as file:
         file.write('[')
         for i, entry in enumerate(content):
             json.dump(entry, file)
@@ -151,3 +162,9 @@ def write_sentences():
         sentence = input('Write a sentence: ')
 
     return result
+
+
+if __name__ == '__main__':
+    path = sys.argv[1]
+
+    remove_overlaps_from_file(path)

@@ -2,6 +2,13 @@
 
 import json
 import os
+import sys
+import re
+
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
 
 
 def get_span_indexes(text, span):
@@ -69,7 +76,7 @@ def print_matches(match_text, entities_dict):
     """
     ent_list = entities_dict['entities']  # list of entities in the form of (start_index, end_index, label)
     for (start, end, label) in ent_list:
-        print(match_text[start:end], label)
+        print(f"'{match_text[start:end]}'", f'"{label}"')
 
 
 def get_training_data(path):
@@ -83,11 +90,46 @@ def get_training_data(path):
         return TR_DATA
 
 
-if __name__ == '__main__':
-    # phrase = sys.argv[1]
+def trim_entity_spans(data: list) -> list:
+    """Removes leading and trailing white spaces from entity spans.
 
-    with open(os.path.expanduser('~/Documents/avisaf_ner/data_files/auto_annotated_data.json'), mode='r') as file:
+    Args:
+        data (list): The data to be cleaned in spaCy JSON format.
+
+    Returns:
+        list: The cleaned data.
+    """
+    invalid_span_tokens = re.compile(r'\s')
+
+    cleaned_data = []
+    for text, annotations in data:
+        entities = annotations['entities']
+        valid_entities = []
+        for start, end, label in entities:
+            valid_start = start
+            valid_end = end
+            while valid_start < len(text) and invalid_span_tokens.match(
+                    text[valid_start]):
+                valid_start += 1
+            while valid_end > 1 and invalid_span_tokens.match(
+                    text[valid_end - 1]):
+                valid_end -= 1
+            valid_entities.append([valid_start, valid_end, label])
+        cleaned_data.append([text, {'entities': valid_entities}])
+
+    return cleaned_data
+
+
+if __name__ == '__main__':
+    path = sys.argv[1]
+
+    with open(os.path.expanduser(path), mode='r') as file:
         json_list = json.load(file)
+
+    """result = trim_entity_spans(json_list)
+
+    with open(path, mode='w') as file:
+        json.dump(result, file)"""
 
     for text, entities in json_list:
         print_matches(text, entities)

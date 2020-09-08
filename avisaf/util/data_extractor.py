@@ -6,9 +6,16 @@ from tkinter import filedialog
 from sys import stderr
 import os
 import json
+import sys
+
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
 
-def get_entities(entities_file_path=os.path.expanduser('~/Documents/avisaf_ner/data_files/entities_labels.json')):
+def get_entities(entities_file_path=os.path.join(PROJECT_ROOT_PATH, '..', 'data_files', 'entities_labels.json')):
     """
 
     :param entities_file_path:
@@ -27,18 +34,17 @@ def get_training_data(training_data_file_path):
         return json.load(tr_data_file)
 
 
-def _choose_file(select=False):
+def _choose_file():
     """
 
     :return:
     """
-    if select:
-        tkinter.Tk()
-        file_path = filedialog.askopenfilename(initialdir='~', title='Select a file', filetypes=[('csv files', '*.csv')])
+    tkinter.Tk()
+    file_path = filedialog.askopenfilename(initialdir='~',
+                                           title='Select a file',
+                                           filetypes=[('csv files', '*.csv')])
 
-        return file_path
-    else:
-        return '/media/sf_MFF_Skola/2rocnik/Rocnikovy-projekt/data/ASRS/ASRS-csv-reports/ASRS_DBOnline-04-2019-12-2019.csv'
+    return file_path
 
 
 def get_narratives(lines=-1, file_path=None, start_index=0):
@@ -76,5 +82,20 @@ def get_narratives(lines=-1, file_path=None, start_index=0):
     for index in range(start_index, length):
         if lines != -1 and index >= end_index:
             break
-        res = '\n'.join([str(lst[index]) for lst in lists if str(lst[index]) != 'nan'])
+        res = ' '.join([str(lst[index]) for lst in lists if str(lst[index]) != 'nan'])
         yield res
+
+
+if __name__ == '__main__':
+    import sys
+    path = sys.argv[1]
+    # target = sys.argv[2]
+    texts = list(get_narratives(file_path=path))
+
+    for text in texts:
+        print(f'"{text}",')
+
+    # print(len(texts))
+
+    # with open(target, mode='x') as file:
+    #    file.write(*texts, sep='\n')

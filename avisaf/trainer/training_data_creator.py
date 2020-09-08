@@ -9,18 +9,19 @@ import spacy
 import json
 import os
 
+PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+# sys.path.append(os.path.join(PROJECT_ROOT_PATH, 'avisaf'))
 sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-MAN_TRAINING_DATA_FILE_PATH = os.path.expanduser('~/Documents/avisaf_ner/data_files/man_annotated_data.json')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
+sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+MAN_TRAINING_DATA_FILE_PATH = os.path.join(PROJECT_ROOT_PATH, 'data_files', 'man_annotated_data.json')
 
 
-def annotate_auto(keywords_file_path,
-                  label_text,
-                  model='en_core_web_md',
-                  tr_src_file=None,
-                  extract_texts=False,
-                  use_phrasematcher=True,
-                  save=False,
-                  verbose=False):
+def annotate_auto(keywords_file_path, label_text,
+                  model='en_core_web_md', tr_src_file=None,
+                  extract_texts=False, use_phrasematcher=True,
+                  save=False, verbose=False):
     """
     Semi-automatic annotation tool. The function takes a file which should 
     contain a list of keywords to be matched.
@@ -75,12 +76,12 @@ def annotate_auto(keywords_file_path,
         matcher.add(label_text, patterns)
 
     print(f'Using {matcher}', flush=verbose)
-    print(*patterns, sep='\n', flush=verbose)
+    # print(*patterns, sep='\n', flush=verbose)
     matcher1 = Matcher(nlp.vocab)
     # matcher1.add("LETISKO",
     #    [[{"LOWER": {"IN": ["runway", "rwy"]}, "OP": "?"}, {"TEXT": {"REGEX": "(0[1-9]|[1-2][0-9]|3[0-6])(L|C|R)?"}}]])
 
-    for doc in nlp.pipe(texts, batch_size=50):
+    for doc in nlp.pipe(texts, batch_size=100):
         matches = matcher(doc) + matcher1(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
         print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
@@ -104,16 +105,15 @@ def annotate_auto(keywords_file_path,
         with open(tr_src_file, mode='w') as file:
             json.dump(TRAINING_DATA, file)
 
+        train.pretty_print_training_data(tr_src_file)
     else:
         print(*TRAINING_DATA, sep='\n')
 
     return TRAINING_DATA
 
 
-def annotate_man(file_path,
-                 lines,
-                 labels_path=None,
-                 start_index=0,
+def annotate_man(file_path, lines,
+                 labels_path=None, start_index=0,
                  save=False):
     """
     Manual text annotation tool. A set of 'lines' texts starting with start_index
