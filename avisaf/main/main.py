@@ -19,6 +19,32 @@ from util.data_extractor import get_entities
 
 
 def get_sample_text():
+    ex =  """Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight
+                            run-up. All indications were satisfactory and within limitations. Taxied out of run-up area to
+                            the hold short line of Runway 4. Received takeoff clearance from Runway 4 and proceeded to 
+                            taxi onto runway at which point full power was added and a takeoff was initiated. Another 
+                            check of the instruments was done as required and all were within limitations; RPMs were 2400;
+                             and airspeed was rising steadily. After rotation at approximately 200 feet a loud bang came 
+                             from the engine compartment that sounded like the engine backfiring but normal operation 
+                             continued. Upon reaching approximately 400 feet engine power loss began. Engine power dropped
+                              by about 400-500 RPMs to approximately 2000 RPMs. After the initial drop; RPMs rose by about
+                               200 RPMs to 2200 RPMs. However; following the rise; the engine RPMs dropped in and out 
+                               ranging from 200 RPM drops to 1000 RPM drops. At this point a sufficient climb was unable 
+                               to be maintained due to loss of power. Tower was contacted and a request to return to the 
+                               opposite direction runway (Runway 22) was made. Tower cleared all traffic from the runway 
+                               and gave priority handling to us. At that point a landing was made on Runway 22. Due to 
+                               excessive braking from landing on a shortened runway (only about 50% of runway was remaining
+                                at touchdown; about 2;000 feet) and a tailwind of 12 knots gusting to 19 knots the right 
+                                main gear tire became worn but did not blow out. There was however a large flat spot on 
+                                the tire. After making the landing; turned off the runway and returned to ramp where a 
+                                secondary run-up was performed. The only noticeable problem was that when checking the 
+                                right magneto a popping noise was made followed by a drop of 200-300 RPMs; but would then 
+                                rise and steadily maintain an RPM setting within limitations (approximately 100 RPMs below 
+                                RPM setting for run-up). Incident was reported to maintenance for further review. No 
+                                damage was done to the aircraft and the instructor pilot did all flying after the initial 
+                                engine power loss was observed. Student pilot and observing passenger were onboard the 
+                                aircraft."""
+
     return ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival to "
             "ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles powered "
             "back for descent a loud bang came from the left side of the aircraft followed by significant airframe "
@@ -49,11 +75,14 @@ def test(model='en_core_web_md',
         text = get_sample_text()
     else:
         # extract the text
-        if Path(text_path).exists():
-            # in case the argument is the path to the file containing the text
-            with open(text_path, mode='r') as file:
-                text = file.read()
-        else:
+        try:
+            if Path(text_path).exists():
+                # in case the argument is the path to the file containing the text
+                with open(text_path, mode='r') as file:
+                    text = file.read()
+            else:
+                raise OSError
+        except OSError:
             # if the text is passed as argument
             text = text_path
 
@@ -61,7 +90,7 @@ def test(model='en_core_web_md',
         # create new nlp object
         if model.startswith('en_core_web'):
             print('Using a default english language model!', file=sys.stderr)
-        nlp = spacy.load(model) if '/' not in model else spacy.load(os.path.join(PROJECT_ROOT_PATH, model))
+        nlp = spacy.load(model) if '/' not in model else spacy.load(model)  # spacy.load(os.path.join(PROJECT_ROOT_PATH, model))
         # nlp = spacy.load(model)
 
         if not nlp.has_pipe(u'ner'):
@@ -95,7 +124,9 @@ def test(model='en_core_web_md',
                 "ents": get_entities(),
                 "colors": colors
             }
-            displacy.serve(document, style='ent', options=options)
+            # html = displacy.serve(document, style='ent', options=options)
+            html = displacy.render(document, style='ent', options=options)
+            print(html)
 
     except OSError:
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
@@ -116,7 +147,7 @@ def choose_action(args):
                                            verbose=args.verbose),
 
         'test': lambda: test(model=args.model, cli_result=args.print,
-                             visualize=args.show, text_path=args.text),
+                             visualize=args.render, text_path=args.text),
 
         'annotate_auto': lambda: annotate_auto(args.keys_file, args.label,
                                                model=args.model, tr_src_file=args.data,
@@ -198,7 +229,7 @@ def main():
         help='File path to the text which will have entities extracted. If None, user input is requested.'
     )
     arg_test.add_argument(
-        '-s', '--show',
+        '-r', '--render',
         action='store_true',
         help='A flag to indicate whether a visualization tool should be started.'
     )
@@ -298,4 +329,8 @@ def main():
 
 
 if __name__ == '__main__':
+    # todo: build aviation terminology glossary for entity "aviation_term"
+    # todo: train existing entities on the rest of the training data
+    # todo: correct file paths
+    # todo: test render flag change to render parameter with file path to store the html
     main()

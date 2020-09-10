@@ -79,7 +79,6 @@ def remove_overlaps_from_file(file_path):
     """
 
     training_data = sort_annotations(file_path)  # sorting annotations list for simpler overlap detection
-    # training_data = get_training_data(file_path)
     result = []
 
     for text, annotations in training_data:

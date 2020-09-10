@@ -8,7 +8,7 @@ from datetime import datetime
 import time
 
 PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-#sys.path.append(PROJECT_ROOT_PATH)
+# sys.path.append(PROJECT_ROOT_PATH)
 sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
 sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
 sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
@@ -75,12 +75,17 @@ def train_spaCy_model(iter_number=20,
                 # Get all entity annotations from the batch
                 entity_offsets = [entities for text, entities in batch]
 
-                # Update the current model
-                nlp.update(texts,
-                           entity_offsets,
-                           sgd=optimizer,
-                           losses=losses)
-                print(losses)
+                try:
+                    # Update the current model
+                    nlp.update(texts,
+                               entity_offsets,
+                               sgd=optimizer,
+                               losses=losses)
+                    print(losses)
+                except ValueError:
+                    print("Something went wrong.", file=sys.stderr)
+                    sys.exit(1)
+
             print(f'Iteration {itn} losses: {losses}.', flush=verbose)
 
     if new_model_name is None:
