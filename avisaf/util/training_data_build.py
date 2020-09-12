@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 
 import json
-import os
 import sys
+from pathlib import Path
 
-PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-# sys.path.append(PROJECT_ROOT_PATH)
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
+SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
+PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
+sys.path.append(str(SOURCES_ROOT_PATH))
+
 from util.data_extractor import get_training_data
 
 
-def sort_annotations(file_path):
+def sort_annotations(file_path: Path):
     """
     Function that sorts the (start_index, end_index, label) tuples based by
     their position in the given text. Sorting is done for every line of a JSON
     training data file.
 
-    :type file_path:  file
+    :type file_path:  Path
     :param file_path: Path of the JSON file containing the list of
                       (text, entities) tuples, which will have entities sorted.
     """
+
+    file_path = file_path.resolve()
 
     training_data = get_training_data(file_path)
     sorted_training_data = []
@@ -32,7 +32,7 @@ def sort_annotations(file_path):
         sorted_list = sorted(annot_list, key=lambda tple: tple[0])  # sort entities by the start_index
         sorted_training_data.append((text, {"entities": sorted_list}))  # recreate new, sorted dictionary
 
-    with open(file_path, mode='w') as file:     # write the result to the same file
+    with file_path.open(mode='w') as file:     # write the result to the same file
         json.dump(sorted_training_data, file)
 
     pretty_print_training_data(file_path)       # pretty print the file
@@ -40,13 +40,14 @@ def sort_annotations(file_path):
     return sorted_training_data
 
 
-def remove_overlaps_from_dict(annotations_dict):
+def remove_overlaps_from_dict(annotations_dict: dict):
     """
     Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
-    :param annotations_dict: The dictionary containing the annotations list under
-                             'entities' key.
-    :return:                 The list of new annotations without overlaps.
+    :type annotations_dict:     dict
+    :param annotations_dict:    The dictionary containing the annotations list under
+                                'entities' key.
+    :return:                    The list of new annotations without overlaps.
     """
 
     entities_list = annotations_dict['entities']  # get entities list from "entities" key in the annotation dictionary
@@ -68,7 +69,7 @@ def remove_overlaps_from_dict(annotations_dict):
     return new_annotations
 
 
-def remove_overlaps_from_file(file_path):
+def remove_overlaps_from_file(file_path: Path):
     """
     The function removes overlapping annotations from all the (text, annotations)
     tuples in JSON file specified in the file_path argument.
@@ -85,7 +86,7 @@ def remove_overlaps_from_file(file_path):
         new_annotations = remove_overlaps_from_dict(annotations)
         result.append((text, {"entities": new_annotations}))  # recreate new (text, annotations) tuple
 
-    with open(file_path, mode='w') as file:  # update the file
+    with file_path.open(mode='w') as file:  # update the file
         json.dump(result, file)
 
     pretty_print_training_data(file_path)
@@ -124,19 +125,21 @@ def overlap_between(entity_triplet, next_triplet):
         return None
 
 
-def pretty_print_training_data(path):
+def pretty_print_training_data(path: Path):
     """
     Prints each tuple object of the document in a new line instead of a single
     very long line.
 
-    :type path:  file
+    :type path:  Path
     :param path: The path of the file to be rewritten.
     """
 
-    with open(path, mode='r') as file:
+    path = path.resolve()
+
+    with path.open(mode='r') as file:
         content = json.load(file)
 
-    with open(path, mode='w') as file:
+    with path.open(mode='w') as file:
         file.write('[')
         for i, entry in enumerate(content):
             json.dump(entry, file)
@@ -164,6 +167,4 @@ def write_sentences():
 
 
 if __name__ == '__main__':
-    path = sys.argv[1]
-
-    remove_overlaps_from_file(path)
+    remove_overlaps_from_file(Path(sys.argv[1]))

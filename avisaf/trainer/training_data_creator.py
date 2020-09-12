@@ -1,38 +1,39 @@
 #!/usr/bin/env python3
 
 import sys
+import os
+import json
+import spacy
+from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
+
+SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
+PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
+sys.path.append(str(SOURCES_ROOT_PATH))
+
 from util.data_extractor import get_narratives, get_entities
 from util.indexing import get_spans_indexes
 import util.training_data_build as train
-import spacy
-import json
-import os
 
-PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-# sys.path.append(os.path.join(PROJECT_ROOT_PATH, 'avisaf'))
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
-MAN_TRAINING_DATA_FILE_PATH = os.path.join(PROJECT_ROOT_PATH, 'data_files', 'man_annotated_data.json')
+MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'man_annotated_data.json').resolve()
 
 
-def annotate_auto(keywords_file_path, label_text,
-                  model='en_core_web_md', tr_src_file=None,
-                  extract_texts=False, use_phrasematcher=True,
-                  save=False, verbose=False):
+def annotate_auto(keywords_file_path: Path, label_text: str,
+                  model='en_core_web_md', tr_src_file: Path = None,
+                  extract_texts: bool = False, use_phrasematcher: bool = True,
+                  save: bool = False, verbose: bool = False):
     """
     Semi-automatic annotation tool. The function takes a file which should 
     contain a list of keywords to be matched.
     
-    :type keywords_file_path:   str
+    :type keywords_file_path:   Path
     :param keywords_file_path:  String representing a path to the file with words to be matched (glossary etc).
     :type label_text:           str
     :param label_text:          The text of the label of an entity.
-    :type model:                str
-    :param model:               Model to be loaded to spaCy.
-    :type tr_src_file:          str
+    :type model:                str, Path
+    :param model:               Model to be loaded to spaCy. Either a valid spaCy pre-trained model
+                                or a path to a local model.
+    :type tr_src_file:          Path
     :param tr_src_file:         Training data source file path.
     :type extract_texts:        bool
     :param extract_texts:       Flag indicating whether new texts should be searched for.
@@ -46,13 +47,15 @@ def annotate_auto(keywords_file_path, label_text,
     """
     # result list
     tr_data_overlaps = []
+    tr_src_file = tr_src_file.resolve()
+    keywords_file_path = keywords_file_path.resolve()
 
     if extract_texts or tr_src_file is None:
         # get testing texts
         texts = list(get_narratives())  # file_path is None
         entities = None
     else:
-        with open(tr_src_file, mode='r') as tr_data_file:
+        with tr_src_file.open(mode='r') as tr_data_file:
             # load the file containing the list of training ('text string', entity dict) tuples
             tr_data = json.load(tr_data_file)
             texts = [text for text, _ in tr_data]
@@ -60,7 +63,7 @@ def annotate_auto(keywords_file_path, label_text,
 
     # create NLP analyzer object of the model
     nlp = spacy.load(model)
-    with open(keywords_file_path, mode='r') as keys_file:
+    with keywords_file_path.open(mode='r') as keys_file:
         patterns = json.load(keys_file)  # phrase/patterns to be matched
 
     if use_phrasematcher:
@@ -76,10 +79,7 @@ def annotate_auto(keywords_file_path, label_text,
         matcher.add(label_text, patterns)
 
     print(f'Using {matcher}', flush=verbose)
-    # print(*patterns, sep='\n', flush=verbose)
     matcher1 = Matcher(nlp.vocab)
-    # matcher1.add("LETISKO",
-    #    [[{"LOWER": {"IN": ["runway", "rwy"]}, "OP": "?"}, {"TEXT": {"REGEX": "(0[1-9]|[1-2][0-9]|3[0-6])(L|C|R)?"}}]])
 
     for doc in nlp.pipe(texts, batch_size=100):
         matches = matcher(doc) + matcher1(doc)
@@ -102,7 +102,7 @@ def annotate_auto(keywords_file_path, label_text,
         TRAINING_DATA.append((text, {"entities": new_annotations}))
 
     if save and tr_src_file is not None:
-        with open(tr_src_file, mode='w') as file:
+        with tr_src_file.open(mode='w') as file:
             json.dump(TRAINING_DATA, file)
 
         train.pretty_print_training_data(tr_src_file)
@@ -112,16 +112,16 @@ def annotate_auto(keywords_file_path, label_text,
     return TRAINING_DATA
 
 
-def annotate_man(file_path, lines,
-                 labels_path=None, start_index=0,
-                 save=False):
+def annotate_man(file_path: Path, lines: int,
+                 labels_path: Path = None, start_index: int = 0,
+                 save: bool = False):
     """
     Manual text annotation tool. A set of 'lines' texts starting with start_index
     is progressively printed in order to be annotated by labels.
 
-    :type labels_path:  file
+    :type labels_path:  Path
     :param labels_path: Path to the file containing available entity labels.
-    :type file_path:    str
+    :type file_path:    Path
     :param file_path:   The path to the file containing texts to be annotated.
                         If None, then a user can write own sentences and annotate them.
     :type lines:        int
@@ -155,7 +155,7 @@ def annotate_man(file_path, lines,
             new_entry = (text, {"entities": []})
             result.append(new_entry)
         else:
-            found_occurs = get_spans_indexes(text, spans)  # find positions of "spans" string list items in the text
+            found_occurs = get_spans_indexes(text, list(spans))  # find positions of "spans" string list items in the text
             for occur_dict in found_occurs:
                 key = list(occur_dict.keys())[0]  # only the first key is desired
                 matches = occur_dict[key]
@@ -184,15 +184,3 @@ def annotate_man(file_path, lines,
             train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
 
     return result
-
-
-if __name__ == '__main__':
-    """path_arg = sys.argv[1]
-    first_text_idx = int(sys.argv[2])
-    print(annotate_man(file_path=path_arg, start_index=first_text_idx, lines=5))
-    train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
-
-    annotate_auto("/home/viktor/Documents/avisaf_ner/data_files/altitude_list.json",
-                           "ALTITUDE",
-                  tr_src_file="/home/viktor/Documents/avisaf_ner/data_files/auto_annotated_data.json",
-                  use_phrasematcher=False)"""

@@ -4,33 +4,39 @@ import pandas as pd
 import tkinter
 from tkinter import filedialog
 from sys import stderr
-import os
 import json
 import sys
+from pathlib import Path
 
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/train')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/main')
-sys.path.append('/home/viktor/Documents/avisaf_ner/avisaf/util')
-PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
+PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
+sys.path.append(str(SOURCES_ROOT_PATH))
 
 
-def get_entities(entities_file_path=os.path.join(PROJECT_ROOT_PATH, '..', 'data_files', 'entities_labels.json')):
+def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'data_files', 'entities_labels.json').resolve()):
     """
 
+    :type entities_file_path: Path
     :param entities_file_path:
     :return:
     """
-    with open(entities_file_path, mode='r') as entities_file:
+    entities_file_path = entities_file_path.resolve()
+
+    with entities_file_path.open(mode='r') as entities_file:
         return json.load(entities_file)
 
 
-def get_training_data(training_data_file_path):
+def get_training_data(training_data_file_path: Path):
+    """
+    :type training_data_file_path: Path
+    :param training_data_file_path:
+    :return: JSON list of (text, annotations) tuples.
     """
 
-    :return:
-    """
-    with open(training_data_file_path, mode='r') as tr_data_file:
+    if not training_data_file_path.is_absolute():
+        training_data_file_path = training_data_file_path.resolve()
+
+    with training_data_file_path.open(mode='r') as tr_data_file:
         return json.load(tr_data_file)
 
 
@@ -47,19 +53,21 @@ def _choose_file():
     return file_path
 
 
-def get_narratives(lines=-1, file_path=None, start_index=0):
+def get_narratives(lines: int = -1, file_path: Path = None, start_index: int = 0):
     """
-    :type lines:
+    :type lines:        int
     :param lines:
-    :type file_path:
+    :type file_path:    Path
     :param file_path:
-    :type start_index:
+    :type start_index:  int
     :param start_index:
     :return: Returns a generator of all texts.
     """
 
     if file_path is None:
         file_path = _choose_file()
+
+    file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 
     report_df = pd.read_csv(file_path, skip_blank_lines=True, index_col=0, header=[0, 1])
     report_df.columns = report_df.columns.map('_'.join)
@@ -90,7 +98,7 @@ if __name__ == '__main__':
     import sys
     path = sys.argv[1]
     # target = sys.argv[2]
-    texts = list(get_narratives(file_path=path))
+    texts = list(get_narratives(file_path=Path(path)))
 
     for text in texts:
         print(f'"{text}",')
