@@ -105,6 +105,7 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
         with tr_src_file.open(mode='w') as file:
             json.dump(TRAINING_DATA, file)
 
+        train.remove_overlaps_from_file(tr_src_file)
         train.pretty_print_training_data(tr_src_file)
     else:
         print(*TRAINING_DATA, sep='\n')

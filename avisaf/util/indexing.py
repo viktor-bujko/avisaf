@@ -82,7 +82,8 @@ def print_matches(match_text: str, entities_dict: dict):
     ent_list = entities_dict['entities']  # list of entities in the form of (start_index, end_index, label)
     for (start, end, label) in ent_list:
         # if str(match_text[start:end]).startswith('calm') and 'wind' not in match_text[start:end]:
-        print(f"'{match_text[start:end]}'", f'"{label}"') #, {start}, {end}, next word:{match_text[end : end + 7]}')
+        # print(f'{match_text[start:end]}, {start}, {end}, next word:{match_text[end : end + 7]}')
+        print(f"'{match_text[start:end]}'", f'"{label}"')
 
 
 def get_training_data(path: Path):

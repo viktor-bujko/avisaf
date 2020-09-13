@@ -17,7 +17,7 @@ from util.data_extractor import get_entities
 
 
 def get_sample_text():
-    return  ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
+    ex =   ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
             " indications were satisfactory and within limitations. Taxied out of run-up area to the hold short line of"
             " Runway 4. Received takeoff clearance from Runway 4 and proceeded to taxi onto runway at which point full"
             " power was added and a takeoff was initiated. Another check of the instruments was done as required and"
