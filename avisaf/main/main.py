@@ -4,7 +4,7 @@ import spacy
 import spacy.displacy as displacy
 import sys
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
@@ -17,7 +17,25 @@ from util.data_extractor import get_entities
 
 
 def get_sample_text():
-    ex =   ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
+    ex = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival to "
+          "ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles powered "
+          "back for descent a loud bang came from the left side of the aircraft followed by significant airframe "
+          "vibration. No EICAS messages were observed at this time however a check of the engine synoptic revealed "
+          "high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but the vibration "
+          "continued and severe damage was determined. We ran the severe damage checklist and secured the engine and "
+          "then requested a slower speed from ATC to lessen the vibration and advised ATC. The slower speed made the "
+          "vibration acceptable and the flight continued to descend on the arrival via ATC instructions. The FO was "
+          "dispatched to the main deck to visually survey damage. He returned with pictures of obvious catastrophic "
+          "damage of the Number 2 Engine and confirmed no visible damage to the leading edge or any other visible "
+          "portion of the left side of the aircraft. The impending three engine approach; landing and possible "
+          "go-around were talked about and briefed as well as the possibilities of leading and trailing edge flap "
+          "malfunctions. A landing on Runway XXC followed and the aircraft was inspected by personnel before "
+          "proceeding to the gate. After block in; inspection of the Number 2 revealed extensive damage.A mention of "
+          "the exceptional level of competency and professionalism exhibited by FO [Name1] and FO [Name] is in order;"
+          " their calm demeanor and practical thinking should be attributed with the safe termination of Flight XXXX!"
+          )
+
+    return ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
             " indications were satisfactory and within limitations. Taxied out of run-up area to the hold short line of"
             " Runway 4. Received takeoff clearance from Runway 4 and proceeded to taxi onto runway at which point full"
             " power was added and a takeoff was initiated. Another check of the instruments was done as required and"
@@ -38,24 +56,6 @@ def get_sample_text():
             "limitations (approximately 100 RPMs below RPM setting for run-up). Incident was reported to maintenance "
             "for further review. No damage was done to the aircraft and the instructor pilot did all flying after the "
             "initial engine power loss was observed. Student pilot and observing passenger were onboard the aircraft.")
-
-    return ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival to "
-            "ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles powered "
-            "back for descent a loud bang came from the left side of the aircraft followed by significant airframe "
-            "vibration. No EICAS messages were observed at this time however a check of the engine synoptic revealed "
-            "high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but the vibration "
-            "continued and severe damage was determined. We ran the severe damage checklist and secured the engine and "
-            "then requested a slower speed from ATC to lessen the vibration and advised ATC. The slower speed made the "
-            "vibration acceptable and the flight continued to descend on the arrival via ATC instructions. The FO was "
-            "dispatched to the main deck to visually survey damage. He returned with pictures of obvious catastrophic "
-            "damage of the Number 2 Engine and confirmed no visible damage to the leading edge or any other visible "
-            "portion of the left side of the aircraft. The impending three engine approach; landing and possible "
-            "go-around were talked about and briefed as well as the possibilities of leading and trailing edge flap "
-            "malfunctions. A landing on Runway XXC followed and the aircraft was inspected by personnel before "
-            "proceeding to the gate. After block in; inspection of the Number 2 revealed extensive damage.A mention of "
-            "the exceptional level of competency and professionalism exhibited by FO [Name1] and FO [Name] is in order;"
-            " their calm demeanor and practical thinking should be attributed with the safe termination of Flight XXXX!"
-            )
 
 
 def test(model='en_core_web_md',
@@ -154,7 +154,7 @@ def test(model='en_core_web_md',
             displacy.serve(document, style='ent', options=options)
 
 
-def choose_action(args):
+def choose_action(args: Namespace):
     """
     Callback function which invokes the correct function with specified
     CLI arguments.
@@ -203,7 +203,8 @@ def main():
     # train subcommand and its arguments
     arg_train = subparser.add_parser(
         'train',
-        help='Train a new NLP NER model.'
+        help='Train a new NLP NER model.',
+        description='Command for training new/updating entities.'
     )
     arg_train.set_defaults(action='train')
     arg_train.add_argument(
@@ -241,7 +242,8 @@ def main():
     # test subcommand and its arguments
     arg_test = subparser.add_parser(
         'test',
-        help='Test a selected model.'
+        help='Test a selected model.',
+        description='Command used for testing the entity recognition on given text.'
     )
     arg_test.set_defaults(action='test')
     arg_test.add_argument(
@@ -276,7 +278,8 @@ def main():
     # automatic training data builder and its arguments
     arg_autobuild = subparser.add_parser(
         'autobuild',
-        help='Automatic annotation tool for new training dataset creation.'
+        help='Automatic annotation tool for new training dataset creation.',
+        description='Automatic annotation tool for new training dataset creation.'
     )
     arg_autobuild.set_defaults(action='annotate_auto')
     arg_autobuild.add_argument(
@@ -324,12 +327,12 @@ def main():
     # manual training data builder and its arguments
     arg_manbuild = subparser.add_parser(
         'build',
-        help='Manual annotation tool for new training dataset creation.'
+        help='Manual annotation tool for new training dataset creation.',
+        description='Manual annotation tool for new training dataset creation.'
     )
     arg_manbuild.set_defaults(action='annotate_man')
     arg_manbuild.add_argument(
         'texts_file',
-        # type=str,
         help='''The path to the file containing texts to be annotated. 
                 If None, then a user can write own sentences and annotate them.''',
         default=None
@@ -356,10 +359,23 @@ def main():
         help='Flag indicating whether the result of the annotation should be saved.',
     )
 
-    args = args.parse_args()
-    exit_code = choose_action(args)
-
-    return exit_code
+    if len(sys.argv) == 1:
+        args.print_help()
+        return 0
+    elif len(sys.argv) == 2:
+        helper = {
+            'test': arg_test.print_help,
+            'train': arg_train.print_help,
+            'autobuild': arg_autobuild.print_help,
+            'build': arg_manbuild.print_help
+        }
+        func = helper.get(sys.argv[1])
+        func()
+        return 0
+    else:
+        parsed = args.parse_args()
+        exit_code = choose_action(parsed)
+        return exit_code
 
 
 if __name__ == '__main__':

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import pandas as pd
-import tkinter
-from tkinter import filedialog
 from sys import stderr
 import json
 import sys
@@ -40,7 +38,7 @@ def get_training_data(training_data_file_path: Path):
         return json.load(tr_data_file)
 
 
-def _choose_file():
+'''def _choose_file():
     """
 
     :return:
@@ -50,7 +48,7 @@ def _choose_file():
                                            title='Select a file',
                                            filetypes=[('csv files', '*.csv')])
 
-    return file_path
+    return file_path'''
 
 
 def get_narratives(lines: int = -1, file_path: Path = None, start_index: int = 0):
@@ -64,8 +62,8 @@ def get_narratives(lines: int = -1, file_path: Path = None, start_index: int = 0
     :return: Returns a generator of all texts.
     """
 
-    if file_path is None:
-        file_path = _choose_file()
+    '''if file_path is None:
+        file_path = _choose_file()'''
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 

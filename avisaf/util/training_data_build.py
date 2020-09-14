@@ -29,7 +29,7 @@ def sort_annotations(file_path: Path):
 
     for text, annotation in training_data:
         annot_list = annotation["entities"]  # get entities list from "entities" key in the annotation dictionary
-        sorted_list = sorted(annot_list, key=lambda tple: tple[0])  # sort entities by the start_index
+        sorted_list = sorted(annot_list, key=lambda tple: (tple[0], tple[1], tple[2]))  # sort entities
         sorted_training_data.append((text, {"entities": sorted_list}))  # recreate new, sorted dictionary
 
     with file_path.open(mode='w') as file:     # write the result to the same file
@@ -40,10 +40,13 @@ def sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps_from_dict(annotations_dict: dict):
+def remove_overlaps_from_dict(annotations_dict: dict, text: str):
     """
     Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
+
+    :type text:                 str
+    :param text:                The text string overlaps should be removed from.
     :type annotations_dict:     dict
     :param annotations_dict:    The dictionary containing the annotations list under
                                 'entities' key.
@@ -59,7 +62,7 @@ def remove_overlaps_from_dict(annotations_dict: dict):
         if entity_triplet == next_triplet:
             entities_list.remove(next_triplet)
             continue
-        triplet_to_remove = overlap_between(entity_triplet, next_triplet)
+        triplet_to_remove = overlap_between(entity_triplet, next_triplet, text)
         if triplet_to_remove is not None:  # an overlap detected and resolved
             remove_list.append(triplet_to_remove)
         index += 1
@@ -83,7 +86,7 @@ def remove_overlaps_from_file(file_path: Path):
     result = []
 
     for text, annotations in training_data:
-        new_annotations = remove_overlaps_from_dict(annotations)
+        new_annotations = remove_overlaps_from_dict(annotations, text)
         result.append((text, {"entities": new_annotations}))  # recreate new (text, annotations) tuple
 
     with file_path.open(mode='w') as file:  # update the file
@@ -94,11 +97,14 @@ def remove_overlaps_from_file(file_path: Path):
     return result
 
 
-def overlap_between(entity_triplet, next_triplet):
+def overlap_between(entity_triplet, next_triplet, text: str):
     """
     Detects whether there is an overlap between two triplets in the given text.
-    In such a case, shorter triplet is removed.
+    If the two entities have the same label, shorter triplet is removed.
+    Otherwise, the user is prompted to decide which one should be removed.
 
+    :type text:            str
+    :param text:           The text string in which the overlap was found.
     :type entity_triplet:  tuple
     :param entity_triplet: First  (start_index, end_index, label) entity descriptor.
     :type next_triplet:    tuple
@@ -106,21 +112,28 @@ def overlap_between(entity_triplet, next_triplet):
     :return:               Returns the triplet to be removed - the one which
                            represents a shorter part of the text.
     """
-    entity_start = entity_triplet[0]  # entity start_index
-    entity_end = entity_triplet[1]    # entity end_index
+    entity_start, entity_end, entity_label = entity_triplet  # entity description
+    next_start, next_end, next_label = next_triplet  # next entity description
 
-    next_start = next_triplet[0]      # next entity start_index
-    next_end = next_triplet[1]        # next entity end_index
     x = set(range(entity_start, entity_end))
     y = range(next_start, next_end)
 
     # if an overlap is detected between two tuples.
     if x.intersection(y):
         # return shorter of the triplets - usually the one which is less correct
-        if (entity_end - entity_start) >= (next_end - next_start):
-            return next_triplet
+        if entity_label == next_label:
+            if (entity_end - entity_start) >= (next_end - next_start):
+                return next_triplet
+            else:
+                return entity_triplet
         else:
-            return entity_triplet
+            text = f"Which one you want to delete? 1 - [{text[entity_start:entity_end]}, {entity_label}] or [{text[next_start:next_end]}, {next_label}: "
+            n = input(text)
+
+            if n == '1':
+                return entity_triplet
+            else:
+                return next_triplet
     else:
         return None
 

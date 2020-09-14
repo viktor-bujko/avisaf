@@ -19,7 +19,7 @@ MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 
 
 
 def annotate_auto(keywords_file_path: Path, label_text: str,
-                  model='en_core_web_md', tr_src_file: Path = None,
+                  model='en_core_web_sm', tr_src_file: Path = None,
                   extract_texts: bool = False, use_phrasematcher: bool = True,
                   save: bool = False, verbose: bool = False):
     """
@@ -98,7 +98,7 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
     TRAINING_DATA = []  # list will contain training data without overlaps
 
     for text, annotations in tr_data_overlaps:
-        new_annotations = train.remove_overlaps_from_dict(annotations)
+        new_annotations = train.remove_overlaps_from_dict(annotations, text)
         TRAINING_DATA.append((text, {"entities": new_annotations}))
 
     if save and tr_src_file is not None:

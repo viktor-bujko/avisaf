@@ -11,7 +11,7 @@ SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
 PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
 sys.path.append(str(SOURCES_ROOT_PATH))
 
-from util.data_extractor import get_entities, get_training_data
+from avisaf.util.data_extractor import get_entities, get_training_data
 
 
 def train_spaCy_model(iter_number: int = 20,
