@@ -110,7 +110,8 @@ def test(model='en_core_web_md',
         if not nlp.has_pipe(u'ner'):
             raise OSError
 
-    except OSError:
+    except OSError as ex:
+        print(ex)
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
         nlp = None
         exit(1)
@@ -380,4 +381,5 @@ def main():
 
 if __name__ == '__main__':
     # todo: add aviation terminology glossary for entity "aviation_term"
+    # todo: add entity combination e.g. nose gear, gear light
     sys.exit(main())

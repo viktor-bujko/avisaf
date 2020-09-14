@@ -1,0 +1,4 @@
+[
+  [{"DEP": "compound", "OP": "+"}, {"POS":  {"IN": ["PROPN", "NOUN"]}}],
+  [{"DEP": {"IN": ["amod","nummod", "advmod"]}, "OP": "+"}, {"POS": {"IN": ["PROPN", "NOUN"]}}]
+]

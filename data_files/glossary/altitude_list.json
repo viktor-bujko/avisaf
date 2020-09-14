@@ -1,4 +1,5 @@
 [
   [{"TEXT": {"REGEX": "FL[0-9]{3}"}}],
-  [{"TEXT": {"REGEX": "[0-9]{0,2};?[0-9]{0,3}"}},  {"LOWER": {"IN": ["foot", "feet", "ft"]}}]
+  [{"TEXT": {"REGEX": "[0-9]{0,2};?[0-9]{0,3}"}},  {"LOWER": {"IN": ["foot", "feet", "ft"]}}],
+  [{"DEP": "compound", "OP": "*"}, {"LEMMA": "altitude"}]
 ]
