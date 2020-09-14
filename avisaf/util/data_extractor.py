@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
+SOURCES_ROOT_PATH = Path(sys.argv[0]).parent.parent.resolve()
 PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
 sys.path.append(str(SOURCES_ROOT_PATH))
 
