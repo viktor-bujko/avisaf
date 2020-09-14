@@ -9,6 +9,7 @@ For Unix-like OS:
 ### Start the application
    * Application can be started by typing `avisaf` + one of the following commands: `test, train, autobuild, build`
    * Program shows usage and help messages if no other arguments are provided.
+   * Example: `avisaf test -m models/large_data_model_4/ -r`
    
 ### Program documentation
 
