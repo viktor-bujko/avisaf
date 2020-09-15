@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
+"""
+Training data build is a module responsible mainly for training data
+manipulation. The module is used for sorting training annotations, removing
+overlaps from entity annotations as well as file content formatting.
+"""
 
 import json
 import sys
 from pathlib import Path
 
-SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
-PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+# looking for project root
+path = Path(__file__)
+while not str(path.resolve()).endswith('avisaf_ner'):
+    path = path.parent.resolve()
 
+SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
+PROJECT_ROOT_PATH = path.resolve()
+sys.path.append(str(SOURCES_ROOT_PATH))
 from util.data_extractor import get_training_data
 
 
@@ -20,6 +29,8 @@ def sort_annotations(file_path: Path):
     :type file_path:  Path
     :param file_path: Path of the JSON file containing the list of
                       (text, entities) tuples, which will have entities sorted.
+
+    :return           Returns sorted annotation data.
     """
 
     file_path = file_path.resolve()
@@ -40,20 +51,20 @@ def sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps_from_dict(annotations_dict: dict, text: str):
+def remove_overlaps_from_dict(annotations_dict: dict):
     """
     Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
-    :type text:                 str
-    :param text:                The text string overlaps should be removed from.
     :type annotations_dict:     dict
-    :param annotations_dict:    The dictionary containing the annotations list under
-                                'entities' key.
+    :param annotations_dict:    The dictionary containing the annotations list
+                                under 'entities' key.
+
     :return:                    The list of new annotations without overlaps.
     """
 
-    entities_list = annotations_dict['entities']  # get entities list from "entities" key in the annotation dictionary
+    # get entities list from "entities" key in the annotation dictionary
+    entities_list = annotations_dict['entities']
     remove_list = []
     index = 0
     while index < len(entities_list) - 1:
@@ -62,7 +73,7 @@ def remove_overlaps_from_dict(annotations_dict: dict, text: str):
         if entity_triplet == next_triplet:
             entities_list.remove(next_triplet)
             continue
-        triplet_to_remove = overlap_between(entity_triplet, next_triplet, text)
+        triplet_to_remove = overlap_between(entity_triplet, next_triplet)
         if triplet_to_remove is not None:  # an overlap detected and resolved
             remove_list.append(triplet_to_remove)
         index += 1
@@ -78,15 +89,19 @@ def remove_overlaps_from_file(file_path: Path):
     tuples in JSON file specified in the file_path argument.
 
     :type file_path:    file
-    :param file_path:   The path to the JSON file which will have all overlapping annotations removed.
-    :return:            Returns the content of the JSON file in the file_path arg without overlapping annotations.
+    :param file_path:   The path to the JSON file which will have all
+                        overlapping annotations removed.
+
+    :return:            Returns the content of the JSON file in the file_path
+                        arg without overlapping annotations.
     """
 
-    training_data = sort_annotations(file_path)  # sorting annotations list for simpler overlap detection
+    # sorting annotations list for simpler overlap detection
+    training_data = sort_annotations(file_path)
     result = []
 
     for text, annotations in training_data:
-        new_annotations = remove_overlaps_from_dict(annotations, text)
+        new_annotations = remove_overlaps_from_dict(annotations)
         result.append((text, {"entities": new_annotations}))  # recreate new (text, annotations) tuple
 
     with file_path.open(mode='w') as file:  # update the file
@@ -97,23 +112,21 @@ def remove_overlaps_from_file(file_path: Path):
     return result
 
 
-def overlap_between(entity_triplet, next_triplet, text: str):
+def overlap_between(entity_triplet, next_triplet):
     """
     Detects whether there is an overlap between two triplets in the given text.
     If the two entities have the same label, shorter triplet is removed.
-    Otherwise, the user is prompted to decide which one should be removed.
 
-    :type text:            str
-    :param text:           The text string in which the overlap was found.
     :type entity_triplet:  tuple
     :param entity_triplet: First  (start_index, end_index, label) entity descriptor.
     :type next_triplet:    tuple
     :param next_triplet:   Second (start_index, end_index, label) entity descriptor.
+
     :return:               Returns the triplet to be removed - the one which
                            represents a shorter part of the text.
     """
-    entity_start, entity_end, entity_label = entity_triplet  # entity description
-    next_start, next_end, next_label = next_triplet  # next entity description
+    entity_start, entity_end, entity_label = entity_triplet  # first entity description
+    next_start, next_end, next_label = next_triplet  # second entity description
 
     x = set(range(entity_start, entity_end))
     y = range(next_start, next_end)
@@ -121,38 +134,29 @@ def overlap_between(entity_triplet, next_triplet, text: str):
     # if an overlap is detected between two tuples.
     if x.intersection(y):
         # return shorter of the triplets - usually the one which is less correct
-        if entity_label == next_label:
-            if (entity_end - entity_start) >= (next_end - next_start):
-                return next_triplet
-            else:
-                return entity_triplet
+        if (entity_end - entity_start) >= (next_end - next_start):
+            return next_triplet
         else:
-            text = f"Which one you want to delete? 1 - [{text[entity_start:entity_end]}, {entity_label}] or [{text[next_start:next_end]}, {next_label}: "
-            n = input(text)
-
-            if n == '1':
-                return entity_triplet
-            else:
-                return next_triplet
+            return entity_triplet
     else:
         return None
 
 
-def pretty_print_training_data(path: Path):
+def pretty_print_training_data(file_path: Path):
     """
     Prints each tuple object of the document in a new line instead of a single
     very long line.
 
-    :type path:  Path
-    :param path: The path of the file to be rewritten.
+    :type file_path:  Path
+    :param file_path: The path of the file to be rewritten.
     """
 
-    path = path.resolve()
+    file_path = file_path.resolve()
 
-    with path.open(mode='r') as file:
+    with file_path.open(mode='r') as file:
         content = json.load(file)
 
-    with path.open(mode='w') as file:
+    with file_path.open(mode='w') as file:
         file.write('[')
         for i, entry in enumerate(content):
             json.dump(entry, file)
@@ -170,7 +174,7 @@ def write_sentences():
     :return: The list of user-written sentences.
     """
     result = []
-    sentence = input('Write a sentence: ')
+    sentence = input('Write a sentence; or "None" to exit the loop: ')
 
     while sentence != 'None':
         result.append(sentence)

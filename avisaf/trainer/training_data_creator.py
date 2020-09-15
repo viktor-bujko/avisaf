@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""
+Training data creator is the module responsible for data annotation which can
+be done either manually or automatically. Automatic data annotation is done
+by using pre-created set of Matcher or PhraseMatcher rules which are then
+applied to each of the given texts. Manual annotation is done by showing
+the texts to the user and then letting him choose the words to be annotated
+as well as the entity labels used for the chosen phrases.
+"""
 
 import sys
 import os
@@ -7,45 +15,61 @@ import spacy
 from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 
-SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
-PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
+# looking for the project root
+path = Path(__file__)
+while not str(path.resolve()).endswith('avisaf_ner'):
+    path = path.parent.resolve()
+
+SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()  # creating the absolute path to the sources root
+PROJECT_ROOT_PATH = path.resolve()
 sys.path.append(str(SOURCES_ROOT_PATH))
 
+# importing own modules used in this module
 from util.data_extractor import get_narratives, get_entities
-from util.indexing import get_spans_indexes
+from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
 
 MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'man_annotated_data.json').resolve()
 
 
 def annotate_auto(keywords_file_path: Path, label_text: str,
-                  model='en_core_web_sm', tr_src_file: Path = None,
-                  extract_texts: bool = False, use_phrasematcher: bool = True,
+                  model='en_core_web_md', tr_src_file: Path = None,
+                  extract_texts: bool = False, use_phrasematcher: bool = False,
                   save: bool = False, verbose: bool = False):
     """
-    Semi-automatic annotation tool. The function takes a file which should 
-    contain a list of keywords to be matched.
+    Automatic annotation tool. The function takes a file which has to contain a
+    JSON list of rules to be matched. The rules are in the format compatible
+    with spaCy Matcher or PhraseMatcher objects. Rule recognition is done by
+    spaCy pattern matching in the given text.
     
     :type keywords_file_path:   Path
-    :param keywords_file_path:  String representing a path to the file with words to be matched (glossary etc).
+    :param keywords_file_path:  String representing a path to the file with
+                                words to be matched (glossary etc).
     :type label_text:           str
     :param label_text:          The text of the label of an entity.
     :type model:                str, Path
-    :param model:               Model to be loaded to spaCy. Either a valid spaCy pre-trained model
-                                or a path to a local model.
+    :param model:               Model to be loaded to spaCy. Either a valid
+                                spaCy pre-trained model or a path to a local
+                                model.
     :type tr_src_file:          Path
-    :param tr_src_file:         Training data source file path.
+    :param tr_src_file:         Training data source file path. JSON file is
+                                supposed to contain list of (text, annotations)
+                                tuples, where the text is the string and
+                                annotations represents a dictionary with list of
+                                (start, end, label) entity descriptors.
     :type extract_texts:        bool
-    :param extract_texts:       Flag indicating whether new texts should be searched for.
+    :param extract_texts:       A flag indicating whether new texts should be
+                                searched for.
     :type use_phrasematcher:    bool
-    :param use_phrasematcher:   Flag indicating whether Matcher or PhraseMatcher spaCy object is used.
+    :param use_phrasematcher:   A flag indicating whether Matcher or PhraseMatcher
+                                spaCy object is used.
     :type save:                 bool
-    :param save:                Flag indicating whether the data should be saved.
+    :param save:                A flag indicating whether the data should be
+                                saved in the same tr_src_file.
     :type verbose:              bool
-    :param verbose:             Flag indicating verbose printing.
-    :return:
+    :param verbose:             A flag indicating verbose stdout printing.
     """
-    # result list
+    # almost result list - list containing all entities - including the overlaps
     tr_data_overlaps = []
     tr_src_file = tr_src_file.resolve()
     keywords_file_path = keywords_file_path.resolve()
@@ -79,10 +103,9 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
         matcher.add(label_text, patterns)
 
     print(f'Using {matcher}', flush=verbose)
-    matcher1 = Matcher(nlp.vocab)
 
     for doc in nlp.pipe(texts, batch_size=100):
-        matches = matcher(doc) + matcher1(doc)
+        matches = matcher(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
         print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
@@ -106,6 +129,7 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
             json.dump(TRAINING_DATA, file)
 
         train.remove_overlaps_from_file(tr_src_file)
+        entity_trimmer(tr_src_file)
         train.pretty_print_training_data(tr_src_file)
     else:
         print(*TRAINING_DATA, sep='\n')
@@ -117,20 +141,22 @@ def annotate_man(file_path: Path, lines: int,
                  labels_path: Path = None, start_index: int = 0,
                  save: bool = False):
     """
-    Manual text annotation tool. A set of 'lines' texts starting with start_index
-    is progressively printed in order to be annotated by labels.
+    Manual text annotation tool. A set of texts from file_path parameter
+    starting with start_index is progressively printed in order to be annotated
+    by labels given in the labels_path.
 
     :type labels_path:  Path
     :param labels_path: Path to the file containing available entity labels.
     :type file_path:    Path
     :param file_path:   The path to the file containing texts to be annotated.
-                        If None, then a user can write own sentences and annotate them.
+                        If None, then a user can write own sentences and
+                        annotate them.
     :type lines:        int
     :param lines:       The number of texts to be annotated (1 text = 1 line).
     :type start_index:  int
     :param start_index: The index of the first text to be annotated.
     :type save:         bool
-    :param save:        Flag indicating whether the result of the annotation
+    :param save:        A flag indicating whether the result of the annotation
                         should be saved.
 
     :return:            List of texts and its annotations.

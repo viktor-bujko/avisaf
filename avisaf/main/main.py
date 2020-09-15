@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""
+Avisaf module is a tool for extracting and highlighting aviation related
+terminology and expressions based on a Natural Language Processing library
+spaCy. This program is able to highlight aviation related entities, train
+new models using existing examples but also build new and improve existing
+entity recognition models.
+"""
 
 import spacy
 import spacy.displacy as displacy
@@ -7,34 +14,22 @@ import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-SOURCES_ROOT_PATH = Path(__file__).parent.parent.resolve()
-PROJECT_ROOT_PATH = SOURCES_ROOT_PATH.parent.resolve()
+# looking for the project root
+path = Path(__file__)
+while not str(path.resolve()).endswith('avisaf_ner'):
+    path = path.parent.resolve()
+
+SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
+PROJECT_ROOT_PATH = path.resolve()
 sys.path.append(str(SOURCES_ROOT_PATH))
 
+# importing own modules
 from trainer.new_entity_trainer import train_spaCy_model
 from trainer.training_data_creator import annotate_auto, annotate_man
 from util.data_extractor import get_entities
 
 
-def get_sample_text():
-    ex = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival to "
-          "ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles powered "
-          "back for descent a loud bang came from the left side of the aircraft followed by significant airframe "
-          "vibration. No EICAS messages were observed at this time however a check of the engine synoptic revealed "
-          "high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but the vibration "
-          "continued and severe damage was determined. We ran the severe damage checklist and secured the engine and "
-          "then requested a slower speed from ATC to lessen the vibration and advised ATC. The slower speed made the "
-          "vibration acceptable and the flight continued to descend on the arrival via ATC instructions. The FO was "
-          "dispatched to the main deck to visually survey damage. He returned with pictures of obvious catastrophic "
-          "damage of the Number 2 Engine and confirmed no visible damage to the leading edge or any other visible "
-          "portion of the left side of the aircraft. The impending three engine approach; landing and possible "
-          "go-around were talked about and briefed as well as the possibilities of leading and trailing edge flap "
-          "malfunctions. A landing on Runway XXC followed and the aircraft was inspected by personnel before "
-          "proceeding to the gate. After block in; inspection of the Number 2 revealed extensive damage.A mention of "
-          "the exceptional level of competency and professionalism exhibited by FO [Name1] and FO [Name] is in order;"
-          " their calm demeanor and practical thinking should be attributed with the safe termination of Flight XXXX!"
-          )
-
+def _get_sample_text():
     return ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
             " indications were satisfactory and within limitations. Taxied out of run-up area to the hold short line of"
             " Runway 4. Received takeoff clearance from Runway 4 and proceeded to taxi onto runway at which point full"
@@ -64,24 +59,36 @@ def test(model='en_core_web_md',
          visualize: bool = False,
          html_result_file: Path = None):
     """
+    Function which executes entity extraction and processing. The function
+    loads and creates spaCy Language model object responsible for Named Entity
+    Recognition. The target text to have its entities recognized may be passed
+    either as string argument or a path to the file containing the text. If any
+    of the above options is used, than a sample text is used as example.
 
     :type model:            str
-    :param model:
-    :type text_path:        Path
-    :param text_path:
+    :param model:           The string representation of a spaCy model. Either
+                            an existing pre-downloaded spaCy model or a path to
+                            a local directory.
+    :type text_path:        str
+    :param text_path:       String representing either a path to the file with
+                            the text to be inspected or the text itself.
     :type cli_result:       bool
-    :param cli_result:
+    :param cli_result:      A flag which will cause the result to be printed to
+                            the stdout.
     :type visualize:        bool
-    :param visualize:
+    :param visualize:       A flag which will use the spaCy visualizer in order
+                            to render the result and show it in the browser.
     :type html_result_file: Path
-    :param html_result_file:
-    :return:
+    :param html_result_file: The file path to the file where the result rendered
+                             by spaCy visualizer tool will be saved. The file
+                             will be created if it does not exist yet.
+    :return                  The exit code of the function.
     """
 
     if text_path is None:
         # use sample text
         # text = input("Please enter the text: \n")
-        text = get_sample_text()
+        text = _get_sample_text()
     else:
         # extract the text
         try:
@@ -113,8 +120,7 @@ def test(model='en_core_web_md',
     except OSError as ex:
         print(ex)
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
-        nlp = None
-        exit(1)
+        return 1
 
     # create doc object nlp(text)
     document = nlp(text)
@@ -154,13 +160,16 @@ def test(model='en_core_web_md',
         else:
             displacy.serve(document, style='ent', options=options)
 
+    return 0
+
 
 def choose_action(args: Namespace):
     """
     Callback function which invokes the correct function with specified
-    CLI arguments.
-    :param args: parseargs command-line arguments.
-    :return:    Exit code.
+    command-line arguments.
+    :type args:  Namespace
+    :param args: argparse command-line arguments wrapped in Namespace object.
+    :return:     The exit code of called function.
     """
 
     FUNCTIONS = {
@@ -191,14 +200,20 @@ def choose_action(args: Namespace):
         print('No action is to be invoked.', file=sys.stderr)
         return 1
     except OSError as e:
-        print(e)
+        print(e, file=sys.stderr)
         return 1
 
 
 def main():
+    """
+    Main function of the program. This function parses command-line arguments
+    using argparse module before performing appropriate callback which actually
+    executes desired operation.
 
+    :return: The function returns the exit code of a sub-function. Any non-zero
+             exit code means that the operation did not end successfully.
+    """
     args = ArgumentParser(description='Named entity recognizer for aviation safety reports.')
-    # args.set_defaults(action=args.print_help())
     subparser = args.add_subparsers(help='Possible actions to perform.')
 
     # train subcommand and its arguments
@@ -255,7 +270,7 @@ def main():
     )
     arg_test.add_argument(
         '-p', '--print',
-        action='store_false',
+        action='store_true',
         help='Print the result on the screen.'
     )
     group = arg_test.add_mutually_exclusive_group(required=False)
@@ -311,8 +326,8 @@ def main():
     )
     arg_autobuild.add_argument(
         '-p',
-        action='store_false',
-        help='Flag indicating that spaCy\'s PhraseMatcher object should NOT be used.'
+        action='store_true',
+        help='Flag indicating that spaCy\'s PhraseMatcher object should be used.'
     )
     arg_autobuild.add_argument(
         '-s', '--save',
@@ -380,6 +395,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # todo: add aviation terminology glossary for entity "aviation_term"
-    # todo: add entity combination e.g. nose gear, gear light
     sys.exit(main())
