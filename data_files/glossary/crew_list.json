@@ -4,7 +4,7 @@
 	[{"LEMMA": "captain"}],
 	[{"TEXT": "Controller"}],
 	[{"DEP": "compound", "OP": "*"}, {"LEMMA": "crew"}],
-	[{"TEXT": "co"}, {"IS_PUNCT": True }, {"LEMMA": "pilot"}],
+	[{"TEXT": "co"}, {"TEXT": "-", "OP": "?"}, {"LEMMA": "pilot"}],
 	[{"TEXT": "Departure"}],
 	[{"TEXT": {"REGEX": "^[Dd]ispatch(er(s){0,1}){0,1}$"}}],
 	[{"LOWER": "first"}, {"LEMMA": "officer"}],

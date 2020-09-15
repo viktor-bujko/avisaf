@@ -21,6 +21,5 @@
   [{"LEMMA": "intercept", "POS": "VERB"}],
   [{"DEP": "compound", "OP": "*"}, {"LEMMA": "speed"}],
   [{"LEMMA": "veer", "POS": "VERB"}],
-  [{"ENT_TYPE": "AIRPLANE"}, {"LOWER": "pressure"}],
-  ["tug tow bar"]
+  [{"ENT_TYPE": "AIRPLANE"}, {"LOWER": "pressure"}]
 ]
