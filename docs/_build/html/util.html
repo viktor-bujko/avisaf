@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>util package &mdash; Avisaf  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Avisaf
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">avisaf</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Avisaf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>util package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/util.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="util-package">
+<h1>util package<a class="headerlink" href="#util-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-util.data_extractor">
+<span id="util-data-extractor-module"></span><h2>util.data_extractor module<a class="headerlink" href="#module-util.data_extractor" title="Permalink to this headline">¶</a></h2>
+<p>The data extractor module is responsible for getting raw text data and
+training data used by other modules.</p>
+<dl class="py function">
+<dt id="util.data_extractor.get_entities">
+<code class="sig-prename descclassname">util.data_extractor.</code><code class="sig-name descname">get_entities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">entities_file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/viktor/Documents/avisaf_ner/data_files/entities_labels.json')</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.data_extractor.get_entities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function which reads given JSON file supposed to contain the list of user
+defined entity labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>entities_file_path</strong> (<em>Path</em>) – The path to the JSON file containing the list
+of entity labels.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the list of available entity labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.data_extractor.get_narratives">
+<code class="sig-prename descclassname">util.data_extractor.</code><code class="sig-name descname">get_narratives</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lines</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start_index</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.data_extractor.get_narratives" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function responsible for reading raw csv file containing the original
+safety reports from the ASRS database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<em>int</em>) – Number of lines to be read.</p></li>
+<li><p><strong>file_path</strong> (<em>Path</em>) – The path to the csv file containing the texts.</p></li>
+<li><p><strong>start_index</strong> (<em>int</em>) – Number indicating the index of the first text to be
+returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns a python generator object of all texts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.data_extractor.get_training_data">
+<code class="sig-prename descclassname">util.data_extractor.</code><code class="sig-name descname">get_training_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">training_data_file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.data_extractor.get_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function which reads given JSON file supposed to contain the training data.
+The training data are supposed to be a list of (text, annotations) tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>training_data_file_path</strong> (<em>Path</em>) – The path to the JSON file containing the
+training data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the JSON list of (text, annotations) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-util.indexing">
+<span id="util-indexing-module"></span><h2>util.indexing module<a class="headerlink" href="#module-util.indexing" title="Permalink to this headline">¶</a></h2>
+<p>Indexing module is used for searching for the spans in the texts.</p>
+<dl class="py function">
+<dt id="util.indexing.entity_trimmer">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">entity_trimmer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.entity_trimmer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function responsible for removing leading and trailing white spaces from
+entity spans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_file_path</strong> (<em>Path</em>) – Data in spaCy JSON format to have leading and trailing
+whitespaces removed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the list without leading/trailing whitespaces.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.indexing.find_indexes">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">find_indexes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">span</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">start_offset</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.find_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which returns the indexes of a substring of a string, if such
+substring exists, otherwise return (-1, -1) tuple.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The source text to be searched in for the span.</p></li>
+<li><p><strong>span</strong> (<em>str</em>) – A substring to be searched for in the text.</p></li>
+<li><p><strong>start_offset</strong> (<em>int</em>) – The index of the text where the search is started.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(start_index, end_index) tuple or (-1, -1) if span is not in the text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.indexing.get_span_indexes">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">get_span_indexes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">text</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">span</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.get_span_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches the search for a given span in given text. Allows also looking
+for more complex, token-composed spans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The source text to be searched in for the span.</p></li>
+<li><p><strong>span</strong> (<em>str</em>) – The substring which is searched in the text.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The dictionary which contains all occurrences of the searched span
+in the text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.indexing.get_spans_indexes">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">get_spans_indexes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sentence</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">spans</span><span class="p">:</span> <span class="n">list</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.get_spans_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as get_span_indexes function, but takes a list of spans instead of
+a single span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sentence</strong> (<em>str</em>) – The sentence string.</p></li>
+<li><p><strong>spans</strong> (<em>list</em>) – List of substrings to be searched for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of (start_index, end_index) pairs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.indexing.get_training_data">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">get_training_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.get_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the training data from a given file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The file path to the training data JSON file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of (text, annotations) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.indexing.print_matches">
+<code class="sig-prename descclassname">util.indexing.</code><code class="sig-name descname">print_matches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">match_text</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">entities_dict</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.indexing.print_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function which takes a text, its annotated entities and prints the
+annotated text along with its labeled entity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>match_text</strong> (<em>str</em>) – The text to be searched in for labeled entities.</p></li>
+<li><p><strong>entities_dict</strong> (<em>dict</em>) – The dictionary with ‘entities key containing the list
+of (start_index, end_index, label) entities of the text.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-util.training_data_build">
+<span id="util-training-data-build-module"></span><h2>util.training_data_build module<a class="headerlink" href="#module-util.training_data_build" title="Permalink to this headline">¶</a></h2>
+<p>Training data build is a module responsible mainly for training data
+manipulation. The module is used for sorting training annotations, removing
+overlaps from entity annotations as well as file content formatting.</p>
+<dl class="py function">
+<dt id="util.training_data_build.overlap_between">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">overlap_between</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">entity_triplet</span></em>, <em class="sig-param"><span class="n">next_triplet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.overlap_between" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects whether there is an overlap between two triplets in the given text.
+If the two entities have the same label, shorter triplet is removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entity_triplet</strong> (<em>tuple</em>) – First  (start_index, end_index, label) entity descriptor.</p></li>
+<li><p><strong>next_triplet</strong> (<em>tuple</em>) – Second (start_index, end_index, label) entity descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the triplet to be removed - the one which represents a
+shorter part of the text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.training_data_build.pretty_print_training_data">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">pretty_print_training_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.pretty_print_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints each tuple object of the document in a new line instead of a single
+very long line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>Path</em>) – The path of the file to be rewritten.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.training_data_build.remove_overlaps_from_dict">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">remove_overlaps_from_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">annotations_dict</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.remove_overlaps_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes overlapping annotations from the annotations_dict[‘entities’] list
+of (start_index, end_index, label) tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>annotations_dict</strong> (<em>dict</em>) – The dictionary containing the annotations list
+under ‘entities’ key.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of new annotations without overlaps.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.training_data_build.remove_overlaps_from_file">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">remove_overlaps_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.remove_overlaps_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function removes overlapping annotations from all the
+(text, annotations) tuples in JSON file specified in the file_path argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>Path</em>) – The path to the JSON file which will have all overlapping
+annotations removed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the content of the JSON file in the file_path arg without
+overlapping annotations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.training_data_build.sort_annotations">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">sort_annotations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.sort_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that sorts the (start_index, end_index, label) tuples based by
+their position in the given text. Sorting is done for every line of a JSON
+training data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>Path</em>) – Path of the JSON file containing the list of
+(text, entities) tuples, which will have entities sorted.</p>
+</dd>
+</dl>
+<p>:return           Returns sorted annotation data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="util.training_data_build.write_sentences">
+<code class="sig-prename descclassname">util.training_data_build.</code><code class="sig-name descname">write_sentences</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#util.training_data_build.write_sentences" title="Permalink to this definition">¶</a></dt>
+<dd><p>A loop which prompts a user to input a sentence which will be annotated
+later. The function end when string ‘None’ is detected</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The list of user-written sentences.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-util">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-util" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Viktor Bujko
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

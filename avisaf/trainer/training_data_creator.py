@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Training data creator is the module responsible for data annotation which can
+"""Training data creator is the module responsible for data annotation which can
 be done either manually or automatically. Automatic data annotation is done
 by using pre-created set of Matcher or PhraseMatcher rules which are then
 applied to each of the given texts. Manual annotation is done by showing
@@ -29,50 +28,45 @@ from util.data_extractor import get_narratives, get_entities
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
 
-MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'man_annotated_data.json').resolve()
 
-
-def annotate_auto(keywords_file_path: Path, label_text: str,
+def annotate_auto(patterns_file_path: Path, label_text: str,
                   model='en_core_web_md', tr_src_file: Path = None,
                   extract_texts: bool = False, use_phrasematcher: bool = False,
                   save: bool = False, verbose: bool = False):
-    """
-    Automatic annotation tool. The function takes a file which has to contain a
+    """Automatic annotation tool. The function takes a file which has to contain a
     JSON list of rules to be matched. The rules are in the format compatible
     with spaCy Matcher or PhraseMatcher objects. Rule recognition is done by
     spaCy pattern matching in the given text.
     
-    :type keywords_file_path:   Path
-    :param keywords_file_path:  String representing a path to the file with
-                                words to be matched (glossary etc).
-    :type label_text:           str
-    :param label_text:          The text of the label of an entity.
-    :type model:                str, Path
-    :param model:               Model to be loaded to spaCy. Either a valid
-                                spaCy pre-trained model or a path to a local
-                                model.
-    :type tr_src_file:          Path
-    :param tr_src_file:         Training data source file path. JSON file is
-                                supposed to contain list of (text, annotations)
-                                tuples, where the text is the string and
-                                annotations represents a dictionary with list of
-                                (start, end, label) entity descriptors.
-    :type extract_texts:        bool
-    :param extract_texts:       A flag indicating whether new texts should be
-                                searched for.
-    :type use_phrasematcher:    bool
-    :param use_phrasematcher:   A flag indicating whether Matcher or PhraseMatcher
-                                spaCy object is used.
-    :type save:                 bool
-    :param save:                A flag indicating whether the data should be
-                                saved in the same tr_src_file.
-    :type verbose:              bool
-    :param verbose:             A flag indicating verbose stdout printing.
+    :type patterns_file_path: Path
+    :param patterns_file_path: String representing a path to the file with
+        words to be matched (glossary etc).
+    :type label_text: str
+    :param label_text: The text of the label of an entity.
+    :type model: str, Path
+    :param model: Model to be loaded to spaCy. Either a valid spaCy pre-trained
+        model or a path to a local model.
+    :type tr_src_file: Path
+    :param tr_src_file: Training data source file path. JSON file is supposed to
+        contain list of (text, annotations) tuples, where the text is the string
+        and annotations represents a dictionary with list of (start, end, label)
+        entity descriptors.
+    :type extract_texts: bool
+    :param extract_texts: A flag indicating whether new texts should be searched
+        for.
+    :type use_phrasematcher: bool
+    :param use_phrasematcher: A flag indicating whether Matcher or PhraseMatcher
+        spaCy object is used.
+    :type save: bool
+    :param save: A flag indicating whether the data should be saved in the same
+        tr_src_file.
+    :type verbose: bool
+    :param verbose: A flag indicating verbose stdout printing.
     """
     # almost result list - list containing all entities - including the overlaps
     tr_data_overlaps = []
     tr_src_file = tr_src_file.resolve()
-    keywords_file_path = keywords_file_path.resolve()
+    patterns_file_path = patterns_file_path.resolve()
 
     if extract_texts or tr_src_file is None:
         # get testing texts
@@ -87,8 +81,8 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
 
     # create NLP analyzer object of the model
     nlp = spacy.load(model)
-    with keywords_file_path.open(mode='r') as keys_file:
-        patterns = json.load(keys_file)  # phrase/patterns to be matched
+    with patterns_file_path.open(mode='r') as pttrns_file:
+        patterns = json.load(pttrns_file)  # phrase/patterns to be matched
 
     if use_phrasematcher:
         # create PhraseMatcher object
@@ -109,6 +103,7 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
         matched_spans = [doc[start:end] for match_id, start, end in matches]
         print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
+        # following line of code also resolves situation when the entities dictionary is None
         tr_example = (doc.text, {"entities": new_entities})
         if entities is not None:
             doc_index = texts.index(doc.text)
@@ -121,7 +116,7 @@ def annotate_auto(keywords_file_path: Path, label_text: str,
     TRAINING_DATA = []  # list will contain training data without overlaps
 
     for text, annotations in tr_data_overlaps:
-        new_annotations = train.remove_overlaps_from_dict(annotations, text)
+        new_annotations = train.remove_overlaps_from_dict(annotations)
         TRAINING_DATA.append((text, {"entities": new_annotations}))
 
     if save and tr_src_file is not None:
@@ -182,11 +177,13 @@ def annotate_man(file_path: Path, lines: int,
             new_entry = (text, {"entities": []})
             result.append(new_entry)
         else:
-            found_occurs = get_spans_indexes(text, list(spans))  # find positions of "spans" string list items in the text
+            # find positions of "spans" string list items in the text
+            found_occurs = get_spans_indexes(text, list(spans))
             for occur_dict in found_occurs:
                 key = list(occur_dict.keys())[0]  # only the first key is desired
                 matches = occur_dict[key]
-                label = input(f'Label \'{key}\' with an item from: {list(enumerate(labels))}: ').upper()
+                label = input(f"Label '{key}' with an item from: {list(enumerate(labels))} or type 'NONE' to skip: ")\
+                    .upper()
                 if label == 'NONE':  # when there is no suitable label in the list
                     continue
                 if label.isdigit():
@@ -195,10 +192,14 @@ def annotate_man(file_path: Path, lines: int,
                     # same as above, but entity label text is directly taken
                     ent_labels += [(start, end, label) for start, end in matches]
 
-            new_entry = (text, {"entities": ent_labels})
+            ents_no_overlaps = train.remove_overlaps_from_dict({"entities": ent_labels})
+
+            new_entry = (text, {"entities": ents_no_overlaps})
             result.append(new_entry)
         print()  # print an empty line
 
+        MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'man_annotated_data.json')\
+            .resolve()
         if save:
             # rewrite the content of the file
             with open(os.path.expanduser(MAN_TRAINING_DATA_FILE_PATH), mode='r') as file:
@@ -209,5 +210,7 @@ def annotate_man(file_path: Path, lines: int,
                 json.dump(old_content, file)
 
             train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
+        else:
+            print(*result, sep='\n')
 
     return result

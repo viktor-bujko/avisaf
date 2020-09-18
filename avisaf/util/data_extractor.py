@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-The data extractor module is responsible for getting raw text data and
+"""The data extractor module is responsible for getting raw text data and
 training data used by other modules.
 """
 
@@ -21,15 +20,14 @@ sys.path.append(str(SOURCES_ROOT_PATH))
 
 
 def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'data_files', 'entities_labels.json').resolve()):
-    """
-    Function which reads given JSON file supposed to contain the list of user
+    """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
-    :type entities_file_path:   Path
-    :param entities_file_path:  The path to the JSON file containing the list
-                                of entity labels.
+    :type entities_file_path: Path
+    :param entities_file_path: The path to the JSON file containing the list
+        of entity labels.
 
-    :return:                    Returns the list of available entity labels.
+    :return: Returns the list of available entity labels.
     """
     entities_file_path = entities_file_path.resolve()
 
@@ -38,14 +36,14 @@ def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'data_files'
 
 
 def get_training_data(training_data_file_path: Path):
-    """
-    Function which reads given JSON file supposed to contain the training data.
+    """Function which reads given JSON file supposed to contain the training data.
     The training data are supposed to be a list of (text, annotations) tuples.
 
-    :type training_data_file_path:  Path
+    :type training_data_file_path: Path
     :param training_data_file_path: The path to the JSON file containing the
-                                    training data.
-    :return:                        Returns the JSON list of (text, annotations) tuples.
+        training data.
+
+    :return: Returns the JSON list of (text, annotations) tuples.
     """
 
     if not training_data_file_path.is_absolute():
@@ -55,37 +53,20 @@ def get_training_data(training_data_file_path: Path):
         return json.load(tr_data_file)
 
 
-'''def _choose_file():
-    """
-
-    :return:
-    """
-    tkinter.Tk()
-    file_path = filedialog.askopenfilename(initialdir='~',
-                                           title='Select a file',
-                                           filetypes=[('csv files', '*.csv')])
-
-    return file_path'''
-
-
 def get_narratives(lines: int = -1, file_path: Path = None, start_index: int = 0):
-    """
-    Function responsible for reading raw csv file containing the original
+    """Function responsible for reading raw csv file containing the original
     safety reports from the ASRS database.
 
-    :type lines:        int
-    :param lines:       Number of lines to be read.
-    :type file_path:    Path
-    :param file_path:   The path to the csv file containing the texts.
-    :type start_index:  int
+    :type lines: int
+    :param lines: Number of lines to be read.
+    :type file_path: Path
+    :param file_path: The path to the csv file containing the texts.
+    :type start_index: int
     :param start_index: Number indicating the index of the first text to be
-                        returned.
+        returned.
 
-    :return:            Returns a python generator object of all texts.
+    :return: Returns a python generator object of all texts.
     """
-
-    '''if file_path is None:
-        file_path = _choose_file()'''
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 

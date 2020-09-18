@@ -52,15 +52,14 @@ def sort_annotations(file_path: Path):
 
 
 def remove_overlaps_from_dict(annotations_dict: dict):
-    """
-    Removes overlapping annotations from the annotations_dict['entities'] list
+    """Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
-    :type annotations_dict:     dict
-    :param annotations_dict:    The dictionary containing the annotations list
-                                under 'entities' key.
+    :type annotations_dict: dict
+    :param annotations_dict: The dictionary containing the annotations list
+        under 'entities' key.
 
-    :return:                    The list of new annotations without overlaps.
+    :return: The list of new annotations without overlaps.
     """
 
     # get entities list from "entities" key in the annotation dictionary
@@ -84,16 +83,15 @@ def remove_overlaps_from_dict(annotations_dict: dict):
 
 
 def remove_overlaps_from_file(file_path: Path):
-    """
-    The function removes overlapping annotations from all the (text, annotations)
-    tuples in JSON file specified in the file_path argument.
+    """The function removes overlapping annotations from all the
+    (text, annotations) tuples in JSON file specified in the file_path argument.
 
-    :type file_path:    file
-    :param file_path:   The path to the JSON file which will have all
-                        overlapping annotations removed.
+    :type file_path: Path
+    :param file_path: The path to the JSON file which will have all overlapping
+        annotations removed.
 
-    :return:            Returns the content of the JSON file in the file_path
-                        arg without overlapping annotations.
+    :return: Returns the content of the JSON file in the file_path arg without
+        overlapping annotations.
     """
 
     # sorting annotations list for simpler overlap detection
@@ -113,17 +111,16 @@ def remove_overlaps_from_file(file_path: Path):
 
 
 def overlap_between(entity_triplet, next_triplet):
-    """
-    Detects whether there is an overlap between two triplets in the given text.
+    """Detects whether there is an overlap between two triplets in the given text.
     If the two entities have the same label, shorter triplet is removed.
 
-    :type entity_triplet:  tuple
+    :type entity_triplet: tuple
     :param entity_triplet: First  (start_index, end_index, label) entity descriptor.
-    :type next_triplet:    tuple
-    :param next_triplet:   Second (start_index, end_index, label) entity descriptor.
+    :type next_triplet: tuple
+    :param next_triplet: Second (start_index, end_index, label) entity descriptor.
 
-    :return:               Returns the triplet to be removed - the one which
-                           represents a shorter part of the text.
+    :return: Returns the triplet to be removed - the one which represents a
+        shorter part of the text.
     """
     entity_start, entity_end, entity_label = entity_triplet  # first entity description
     next_start, next_end, next_label = next_triplet  # second entity description
@@ -143,11 +140,10 @@ def overlap_between(entity_triplet, next_triplet):
 
 
 def pretty_print_training_data(file_path: Path):
-    """
-    Prints each tuple object of the document in a new line instead of a single
+    """Prints each tuple object of the document in a new line instead of a single
     very long line.
 
-    :type file_path:  Path
+    :type file_path: Path
     :param file_path: The path of the file to be rewritten.
     """
 
@@ -168,9 +164,9 @@ def pretty_print_training_data(file_path: Path):
 
 
 def write_sentences():
-    """
-    A loop which prompts a user to input a sentence which will be annotated
+    """A loop which prompts a user to input a sentence which will be annotated
     later. The function end when string 'None' is detected
+
     :return: The list of user-written sentences.
     """
     result = []

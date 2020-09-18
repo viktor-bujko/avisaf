@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Avisaf module is a tool for extracting and highlighting aviation related
+"""Avisaf module is a tool for extracting and highlighting aviation related
 terminology and expressions based on a Natural Language Processing library
 spaCy. This program is able to highlight aviation related entities, train
 new models using existing examples but also build new and improve existing
@@ -28,9 +27,8 @@ from trainer.new_entity_trainer import train_spaCy_model
 from trainer.training_data_creator import annotate_auto, annotate_man
 from util.data_extractor import get_entities
 
-
-def _get_sample_text():
-    return ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
+sample_text = \
+           ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
             " indications were satisfactory and within limitations. Taxied out of run-up area to the hold short line of"
             " Runway 4. Received takeoff clearance from Runway 4 and proceeded to taxi onto runway at which point full"
             " power was added and a takeoff was initiated. Another check of the instruments was done as required and"
@@ -58,37 +56,37 @@ def test(model='en_core_web_md',
          cli_result: bool = False,
          visualize: bool = False,
          html_result_file: Path = None):
-    """
-    Function which executes entity extraction and processing. The function
+    """Function which executes entity extraction and processing. The function
     loads and creates spaCy Language model object responsible for Named Entity
     Recognition. The target text to have its entities recognized may be passed
     either as string argument or a path to the file containing the text. If any
     of the above options is used, than a sample text is used as example.
 
-    :type model:            str
-    :param model:           The string representation of a spaCy model. Either
-                            an existing pre-downloaded spaCy model or a path to
-                            a local directory.
-    :type text_path:        str
-    :param text_path:       String representing either a path to the file with
-                            the text to be inspected or the text itself.
-    :type cli_result:       bool
-    :param cli_result:      A flag which will cause the result to be printed to
-                            the stdout.
-    :type visualize:        bool
-    :param visualize:       A flag which will use the spaCy visualizer in order
-                            to render the result and show it in the browser.
+    :type model: str
+    :param model: The string representation of a spaCy model. Either an existing
+        pre-downloaded spaCy model or a path to a local directory., defaults to
+        'en_core_web_md'
+    :type text_path: str
+    :param text_path: String representing either a path to the file with the
+        text to be inspected or the text itself., defaults to None
+    :type cli_result: bool
+    :param cli_result: A flag which will cause the result to be printed to the
+        stdout., defaults to False
+    :type visualize: bool
+    :param visualize: A flag which will use the spaCy visualizer in order to
+        render the result and show it in the browser., defaults to False
     :type html_result_file: Path
     :param html_result_file: The file path to the file where the result rendered
-                             by spaCy visualizer tool will be saved. The file
-                             will be created if it does not exist yet.
-    :return                  The exit code of the function.
+        by spaCy visualizer tool will be saved. The file will be created if it
+        does not exist yet., defaults to None
+
+    :return The exit code of the function.
+    :rtype: int
     """
 
     if text_path is None:
         # use sample text
-        # text = input("Please enter the text: \n")
-        text = _get_sample_text()
+        text = sample_text
     else:
         # extract the text
         try:
@@ -164,12 +162,14 @@ def test(model='en_core_web_md',
 
 
 def choose_action(args: Namespace):
-    """
-    Callback function which invokes the correct function with specified
+    """Callback function which invokes the correct function with specified
     command-line arguments.
-    :type args:  Namespace
+
+    :type args: Namespace
     :param args: argparse command-line arguments wrapped in Namespace object.
-    :return:     The exit code of called function.
+
+    :return: The exit code of called function.
+    :rtype: int
     """
 
     FUNCTIONS = {
@@ -205,13 +205,13 @@ def choose_action(args: Namespace):
 
 
 def main():
-    """
-    Main function of the program. This function parses command-line arguments
+    """Main function of the program. This function parses command-line arguments
     using argparse module before performing appropriate callback which actually
     executes desired operation.
 
     :return: The function returns the exit code of a sub-function. Any non-zero
              exit code means that the operation did not end successfully.
+    :rtype: int
     """
     args = ArgumentParser(description='Named entity recognizer for aviation safety reports.')
     subparser = args.add_subparsers(help='Possible actions to perform.')

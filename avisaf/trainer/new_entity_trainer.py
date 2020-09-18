@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-New entity trainer is the module responsible for creating a new or updating
+"""New entity trainer is the module responsible for creating a new or updating
 and improving an existing Named Entity Recognition model. The module uses
 train_spaCy_model function which updates the model using spaCy.
 """
@@ -30,28 +29,26 @@ def train_spaCy_model(iter_number: int = 20,
                       new_model_name: str = None,
                       tr_data_srcfile: Path = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'auto_annotated_data.json').resolve(),
                       verbose: bool = False):
-    """
-    SpaCy NER model training function. The function iterates given number of
+    """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
     entity prediction model.
 
-    :type verbose:          bool
-    :param verbose:         A flag indicating verbose stdout printing.
-    :type tr_data_srcfile:  Path
+    :type verbose: bool
+    :param verbose: A flag indicating verbose stdout printing.
+    :type tr_data_srcfile: Path
     :param tr_data_srcfile: A path to the file containing training data based
-                            based on which the spaCy model will be updated.
-    :type iter_number:      int
-    :param iter_number:     Number of iterations for NER model updating.
-    :type model:            str, Path
-    :param model:           The string representation of a spaCy model. Either
-                            an existing pre-downloaded spaCy model or a path to
-                            a local directory.
-    :type new_model_name:   str
-    :param new_model_name:  New spaCy NER model will be saved under this name.
-                            This parameter also makes part of the path where the
-                            model will be saved.
+        based on which the spaCy model will be updated.
+    :type iter_number: int
+    :param iter_number: Number of iterations for NER model updating.
+    :type model: str, Path
+    :param model: The string representation of a spaCy model. Either existing
+        pre-downloaded spaCy model or a path to a local directory.
+    :type new_model_name: str
+    :param new_model_name: New spaCy NER model will be saved under this name.
+        This parameter also makes part of the path where the model will be
+        saved.
 
-    :return:                Returns created NLP spaCy model.
+    :return: Returns created NLP spaCy model.
     """
 
     given_data_src = str(tr_data_srcfile)

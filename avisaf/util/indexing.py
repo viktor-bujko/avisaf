@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Indexing module is used for searching for the spans in the texts
+"""Indexing module is used for searching for the spans in the texts.
 """
 
 import json
@@ -11,17 +10,16 @@ from pathlib import Path
 
 
 def get_span_indexes(text: str, span: str):
-    """
-    Launches the search for a given span in given text. Allows also looking for
-    more complex, token-composed spans.
+    """Launches the search for a given span in given text. Allows also looking
+    for more complex, token-composed spans.
 
-    :type text:     str
-    :param text:    The source text to be searched in for the span.
-    :type span:     str
-    :param span:    The substring which is searched in the text.
+    :type text: str
+    :param text: The source text to be searched in for the span.
+    :type span: str
+    :param span: The substring which is searched in the text.
 
-    :return:        The dictionary which contains all occurrences of the
-                    searched span in the text.
+    :return: The dictionary which contains all occurrences of the searched span
+        in the text.
     """
 
     result = {}
@@ -34,19 +32,17 @@ def get_span_indexes(text: str, span: str):
 
 
 def find_indexes(text: str, span: str, start_offset: int):
-    """
-    Method which returns the indexes of a substring of a string, if such
+    """Method which returns the indexes of a substring of a string, if such
     substring exists, otherwise return (-1, -1) tuple.
 
-    :type text:          str
-    :param text:         The source text to be searched in for the span.
-    :type span:          str
-    :param span:         A substring to be searched for in the text.
-    :type start_offset:  int
+    :type text: str
+    :param text: The source text to be searched in for the span.
+    :type span: str
+    :param span: A substring to be searched for in the text.
+    :type start_offset: int
     :param start_offset: The index of the text where the search is started.
 
-    :return:             (start_index, end_index) tuple or (-1, -1) if span is
-                         not in the text.
+    :return: (start_index, end_index) tuple or (-1, -1) if span is not in the text.
     """
     try:
         result = []
@@ -63,16 +59,15 @@ def find_indexes(text: str, span: str, start_offset: int):
 
 
 def get_spans_indexes(sentence: str, spans: list):
-    """
-    Same as get_span_indexes function, but takes a list of spans instead of a
-    single span.
+    """Same as get_span_indexes function, but takes a list of spans instead of
+    a single span.
 
-    :type sentence:     str
-    :param sentence:    The sentence string.
-    :type spans:        list
-    :param spans:       List of substrings to be searched for.
+    :type sentence: str
+    :param sentence: The sentence string.
+    :type spans: list
+    :param spans: List of substrings to be searched for.
 
-    :return:            List of (start_index, end_index) pairs.
+    :return: List of (start_index, end_index) pairs.
     """
     RESULT = []
     for span in spans:
@@ -82,16 +77,14 @@ def get_spans_indexes(sentence: str, spans: list):
 
 
 def print_matches(match_text: str, entities_dict: dict):
-    """
-    Function which takes a text, and its annotated entities,
-    and prints the annotated text along with its labeled entity.
+    """Function which takes a text, its annotated entities and prints the
+    annotated text along with its labeled entity.
 
-    :type match_text:       str
-    :param match_text:      The text to be searched in for labeled entities.
-    :type entities_dict:    dict
-    :param entities_dict:   The dictionary with 'entities key containing the
-                            list of (start_index, end_index, label) entities of
-                            the text.
+    :type match_text: str
+    :param match_text: The text to be searched in for labeled entities.
+    :type entities_dict: dict
+    :param entities_dict: The dictionary with 'entities key containing the list
+        of (start_index, end_index, label) entities of the text.
     """
     ent_list = entities_dict['entities']  # list of entities in the form of (start_index, end_index, label)
     for (start, end, label) in ent_list:
@@ -99,13 +92,12 @@ def print_matches(match_text: str, entities_dict: dict):
 
 
 def get_training_data(path: Path):
-    """
-    Gets the training data from a given file.
+    """Gets the training data from a given file.
 
-    :type path:  Path
+    :type path: Path
     :param path: The file path to the training data JSON file.
 
-    :return:     The list of (text, annotations) tuples.
+    :return: The list of (text, annotations) tuples.
     """
     path = path if path.is_absolute() else path.resolve()
 
@@ -115,16 +107,14 @@ def get_training_data(path: Path):
 
 
 def entity_trimmer(data_file_path: Path):
-    """
-    Function responsible for removing leading and trailing white spaces from
+    """Function responsible for removing leading and trailing white spaces from
     entity spans.
 
-    :type data_file_path:   Path
-    :param data_file_path:  Data in spaCy JSON format to have leading and
-                            trailing whitespaces removed.
+    :type data_file_path: Path
+    :param data_file_path: Data in spaCy JSON format to have leading and trailing
+        whitespaces removed.
 
-    :return                 Returns the list without leading/trailing
-                            whitespaces.
+    :return: Returns the list without leading/trailing whitespaces.
     """
     invalid_span_tokens = re.compile(r'\s')
     clean_data = []
