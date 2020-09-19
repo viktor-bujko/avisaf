@@ -12,6 +12,7 @@ import sys
 import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from colorama import Style, Fore
 
 # looking for the project root
 path = Path(__file__)
@@ -27,28 +28,23 @@ from trainer.new_entity_trainer import train_spaCy_model
 from trainer.training_data_creator import annotate_auto, annotate_man
 from util.data_extractor import get_entities
 
-sample_text = \
-           ("Departed ramp and taxied to Runway 4. Arrived at runway 4 run-up area and performed pre-flight run-up. All"
-            " indications were satisfactory and within limitations. Taxied out of run-up area to the hold short line of"
-            " Runway 4. Received takeoff clearance from Runway 4 and proceeded to taxi onto runway at which point full"
-            " power was added and a takeoff was initiated. Another check of the instruments was done as required and"
-            " all were within limitations; RPMs were 2400; and airspeed was rising steadily. After rotation at "
-            "approximately 200 feet a loud bang came from the engine compartment that sounded like the engine "
-            "backfiring but normal operation continued. Upon reaching approximately 400 feet engine power loss began. "
-            "Engine power dropped by about 400-500 RPMs to approximately 2000 RPMs. After the initial drop; RPMs rose "
-            "by about 200 RPMs to 2200 RPMs. However; following the rise; the engine RPMs dropped in and out ranging "
-            "from 200 RPM drops to 1000 RPM drops. At this point a sufficient climb was unable to be maintained due to "
-            "loss of power. Tower was contacted and a request to return to the opposite direction runway (Runway 22) "
-            "was made. Tower cleared all traffic from the runway and gave priority handling to us. At that point a "
-            "landing was made on Runway 22. Due to excessive braking from landing on a shortened runway (only about 50%"
-            " of runway was remaining at touchdown; about 2;000 feet) and a tailwind of 12 knots gusting to 19 knots "
-            "the right main gear tire became worn but did not blow out. There was however a large flat spot on the tire"
-            ". After making the landing; turned off the runway and returned to ramp where a secondary run-up was "
-            "performed. The only noticeable problem was that when checking the right magneto a popping noise was made "
-            "followed by a drop of 200-300 RPMs; but would then rise and steadily maintain an RPM setting within "
-            "limitations (approximately 100 RPMs below RPM setting for run-up). Incident was reported to maintenance "
-            "for further review. No damage was done to the aircraft and the instructor pilot did all flying after the "
-            "initial engine power loss was observed. Student pilot and observing passenger were onboard the aircraft.")
+sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
+               "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
+               "powered back for descent a loud bang came from the left side of the aircraft followed by significant "
+               "airframe vibration. No EICAS messages were observed at this time however a check of the engine synoptic"
+               " revealed high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but "
+               "the vibration continued and severe damage was determined. We ran the severe damage checklist and "
+               "secured the engine and then requested a slower speed from ATC to lessen the vibration and advised ATC. "
+               "The slower speed made the vibration acceptable and the flight continued to descend on the arrival via "
+               "ATC instructions. The FO was dispatched to the main deck to visually survey damage. He returned with "
+               "pictures of obvious catastrophic damage of the Number 2 Engine and confirmed no visible damage to the "
+               "leading edge or any other visible portion of the left side of the aircraft. The impending three engine "
+               "approach; landing and possible go-around were talked about and briefed as well as the possibilities of "
+               "leading and trailing edge flap malfunctions. A landing on Runway XXC followed and the aircraft was "
+               "inspected by personnel before proceeding to the gate. After block in; inspection of the Number 2 "
+               "revealed extensive damage.A mention of the exceptional level of competency and professionalism "
+               "exhibited by FO [Name1] and FO [Name] is in order; their calm demeanor and practical thinking should be"
+               " attributed with the safe termination of Flight XXXX!")
 
 
 def test(model='en_core_web_md',
@@ -124,13 +120,26 @@ def test(model='en_core_web_md',
     document = nlp(text)
 
     # identify entities
-    entities = document.ents
-
-    longest_entity = max([len(entity.text) for entity in entities])
-    # print them using displacy renderer
-    for ent in entities:
-        dist = longest_entity - len(ent.text) + 4
-        print(f'{ent.text}{" " * dist}{ent.label_}', flush=cli_result)
+    if cli_result:
+        result_string = ""
+        for token in document:
+            if token.ent_type_ == "":
+                result_string += f"{token.text} "
+            else:
+                colors = {
+                    "AIRPLANE": Fore.LIGHTGREEN_EX,
+                    "CREW": Fore.LIGHTYELLOW_EX,
+                    "AIRPORT_TERM": Fore.MAGENTA,
+                    "FLIGHT_PHASE": Fore.LIGHTRED_EX,
+                    "AVIATION_TERM": Fore.BLUE,
+                    "NAV_WAYPOINT": Fore.LIGHTWHITE_EX,
+                    "ALTITUDE": Fore.CYAN,
+                    "WEATHER": Fore.LIGHTCYAN_EX,
+                    "ABBREVIATION": Fore.RED
+                }
+                color = colors.get(token.ent_type_)
+                result_string += f"{color}[{token.text}: {token.ent_type_}]{Style.RESET_ALL} "
+        print(result_string)
 
     if html_result_file is not None or visualize:
         colors = {
@@ -266,14 +275,15 @@ def main():
         '-m', '--model',
         metavar='PATH/MODEL',
         default='en_core_web_md',
+        required=True,
         help='File path to an existing spaCy model or existing spaCy model name for NER.'
     )
-    arg_test.add_argument(
+    group = arg_test.add_mutually_exclusive_group(required=False)
+    group.add_argument(
         '-p', '--print',
         action='store_true',
         help='Print the result on the screen.'
     )
-    group = arg_test.add_mutually_exclusive_group(required=False)
     group.add_argument(
         '-r', '--render',
         action='store_true',
@@ -390,6 +400,11 @@ def main():
         return 0
     else:
         parsed = args.parse_args()
+        if (parsed.action == 'test' and not parsed.print and
+                not parsed.render and parsed.save is None):
+            print("The output will not be visible without one of --print, --render or --save argument.\n", file=sys.stderr)
+            arg_test.print_help()
+            return 1
         exit_code = choose_action(parsed)
         return exit_code
 

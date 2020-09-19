@@ -58,14 +58,14 @@ def train_spaCy_model(iter_number: int = 20,
     start_time = time.time()
     try:
         nlp = spacy.load(model)
-        print(f'An already existing spaCy model was successfully loaded: {model}.', flush=verbose, file=sys.stderr)
+        print(f'An already existing spaCy model was successfully loaded: {model}.', flush=verbose)
     except OSError:
         # using a blank English language spaCy model
         nlp = spacy.blank('en')
-        print('A new blank model has been created.', flush=verbose, file=sys.stderr)
+        print('A new blank model has been created.', flush=verbose)
 
     print(f'Using training dataset: {given_data_src}', flush=verbose)
-    # getting a list of currently used entities from default location
+    # getting a list of currently used entities from **default** location
     entity_labels = get_entities()
 
     if not nlp.has_pipe('ner'):
@@ -74,30 +74,30 @@ def train_spaCy_model(iter_number: int = 20,
     else:
         ner = nlp.get_pipe('ner')
 
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    other_pipe_names = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
 
     for label in entity_labels:
         ner.add_label(label)
 
     TRAINING_DATA = get_training_data(tr_data_srcfile)
 
-    with nlp.disable_pipes(*other_pipes):
-        # Start the training
-        optimizer = nlp.begin_training() if model is None else nlp.resume_training()
+    # Start the training
+    optimizer = nlp.begin_training() if model is None else nlp.resume_training()
 
-        # Iterate iter_number times
-        for itn in range(iter_number):
-            print(f'Iteration: {itn}.')
+    # Iterate iter_number times
+    for itn in range(iter_number):
+        print(f'Iteration: {itn}.')
 
-            random.shuffle(TRAINING_DATA)
-            losses = {}
-            start = time.time()
+        random.shuffle(TRAINING_DATA)
+        losses = {}
+        start = time.time()
 
-            if new_model_name is None:
-                new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
+        if new_model_name is None:
+            new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-            model_path = str(Path(PROJECT_ROOT_PATH, 'models', new_model_name).resolve())
+        model_path = str(Path(PROJECT_ROOT_PATH, 'models', new_model_name).resolve())
 
+        with nlp.disable_pipes(*other_pipe_names):
             for batch in spacy.util.minibatch(TRAINING_DATA, size=3):
                 # Get all the texts from the batch
                 texts = [text for text, entities in batch]
@@ -115,22 +115,18 @@ def train_spaCy_model(iter_number: int = 20,
                     if new_time - start > 60:
                         print(datetime.now().strftime("%H:%M:%S"), flush=verbose)
                         start = new_time
+
                 except ValueError as e:
                     print(e)
                     print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}")
                     print(f"for file: {given_data_src}.", file=sys.stderr)
                     sys.exit(1)
 
-            nlp.to_disk(model_path)
-            print(f'Model saved successfully to {model_path}')
-            print(f'Iteration {itn} losses: {losses}.', flush=verbose)
+        nlp.to_disk(model_path)
+        print(f'Model saved successfully to {model_path}')
+        print(nlp.pipe_names)
+        print(f'Iteration {itn} losses: {losses}.', flush=verbose)
 
-    # if new_model_name is None:
-    #     new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
-
-    # model_path = str(Path(PROJECT_ROOT_PATH, 'models', new_model_name).resolve())
-
-    # nlp.to_disk(model_path)
     if verbose:
         print('Model saved')
         print(f'Execution time: {time.time() - start_time}')
