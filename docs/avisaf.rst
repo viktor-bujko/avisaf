@@ -1,5 +1,5 @@
-avisaf package
-==============
+Avisaf  main package
+====================
 
 Subpackages
 -----------
@@ -7,12 +7,9 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   avisaf.main
-   avisaf.trainer
-   avisaf.util
-
-Module contents
----------------
+   main
+   trainer
+   util
 
 .. automodule:: avisaf
    :members:

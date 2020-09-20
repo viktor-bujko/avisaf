@@ -1,16 +1,18 @@
 .. Avisaf documentation master file, created by
    sphinx-quickstart on Fri Sep 18 19:29:42 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   
 
-Welcome to Avisaf's documentation!
-==================================
+Avisaf - Named entity recognition tool for Aviation Safety Reports
+==================================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 4
+   :caption: Content:
 
-   modules
+   avisaf
+   main
+   trainer
+   util
 
 Indices and tables
 ==================

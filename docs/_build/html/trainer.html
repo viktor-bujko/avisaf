@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>trainer package &mdash; Avisaf  documentation</title>
+  <title>Trainer subpackage &mdash; Avisaf  documentation</title>
   
 
   
@@ -35,7 +35,9 @@
 
     
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Util subpackage" href="util.html" />
+    <link rel="prev" title="Main subpackage" href="main.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -80,9 +82,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">avisaf</a></li>
+              <p class="caption"><span class="caption-text">Content:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="avisaf.html">Avisaf  main package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">Main subpackage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Trainer subpackage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-trainer.new_entity_trainer">new_entity_trainer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-trainer.training_data_creator">training_data_creator module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="util.html">Util subpackage</a></li>
 </ul>
 
             
@@ -129,7 +138,9 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>trainer package</li>
+          <li><a href="avisaf.html">Avisaf  main package</a> &raquo;</li>
+        
+      <li>Trainer subpackage</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -148,19 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="trainer-package">
-<h1>trainer package<a class="headerlink" href="#trainer-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
+  <div class="section" id="trainer-subpackage">
+<h1>Trainer subpackage<a class="headerlink" href="#trainer-subpackage" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-trainer.new_entity_trainer">
-<span id="trainer-new-entity-trainer-module"></span><h2>trainer.new_entity_trainer module<a class="headerlink" href="#module-trainer.new_entity_trainer" title="Permalink to this headline">¶</a></h2>
+<span id="new-entity-trainer-module"></span><h2>new_entity_trainer module<a class="headerlink" href="#module-trainer.new_entity_trainer" title="Permalink to this headline">¶</a></h2>
 <p>New entity trainer is the module responsible for creating a new or updating
 and improving an existing Named Entity Recognition model. The module uses
 train_spaCy_model function which updates the model using spaCy.</p>
 <dl class="py function">
 <dt id="trainer.new_entity_trainer.train_spaCy_model">
-<code class="sig-prename descclassname">trainer.new_entity_trainer.</code><code class="sig-name descname">train_spaCy_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">iter_number</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">20</span></em>, <em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">new_model_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tr_data_srcfile</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/viktor/Documents/avisaf_ner/data_files/training/auto_annotated_data.json')</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#trainer.new_entity_trainer.train_spaCy_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">trainer.new_entity_trainer.</code><code class="sig-name descname">train_spaCy_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">iter_number</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">20</span></em>, <em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">new_model_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tr_data_srcfile</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">PosixPath('/home/viktor/Documents/avisaf_ner/new_doc/data_files/training_data/auto_annotated_data.json')</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#trainer.new_entity_trainer.train_spaCy_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>SpaCy NER model training function. The function iterates given number of
 times over the given data in order to create an appropriate statistical
 entity prediction model.</p>
@@ -186,7 +194,7 @@ saved.</p></li>
 
 </div>
 <div class="section" id="module-trainer.training_data_creator">
-<span id="trainer-training-data-creator-module"></span><h2>trainer.training_data_creator module<a class="headerlink" href="#module-trainer.training_data_creator" title="Permalink to this headline">¶</a></h2>
+<span id="training-data-creator-module"></span><h2>training_data_creator module<a class="headerlink" href="#module-trainer.training_data_creator" title="Permalink to this headline">¶</a></h2>
 <p>Training data creator is the module responsible for data annotation which can
 be done either manually or automatically. Automatic data annotation is done
 by using pre-created set of Matcher or PhraseMatcher rules which are then
@@ -195,7 +203,7 @@ the texts to the user and then letting him choose the words to be annotated
 as well as the entity labels used for the chosen phrases.</p>
 <dl class="py function">
 <dt id="trainer.training_data_creator.annotate_auto">
-<code class="sig-prename descclassname">trainer.training_data_creator.</code><code class="sig-name descname">annotate_auto</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keywords_file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">label_text</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">'en_core_web_md'</span></em>, <em class="sig-param"><span class="n">tr_src_file</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">extract_texts</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">use_phrasematcher</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#trainer.training_data_creator.annotate_auto" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">trainer.training_data_creator.</code><code class="sig-name descname">annotate_auto</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">patterns_file_path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">label_text</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">model</span><span class="o">=</span><span class="default_value">'en_core_web_md'</span></em>, <em class="sig-param"><span class="n">tr_src_file</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">extract_texts</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">use_phrasematcher</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#trainer.training_data_creator.annotate_auto" title="Permalink to this definition">¶</a></dt>
 <dd><p>Automatic annotation tool. The function takes a file which has to contain a
 JSON list of rules to be matched. The rules are in the format compatible
 with spaCy Matcher or PhraseMatcher objects. Rule recognition is done by
@@ -203,7 +211,7 @@ spaCy pattern matching in the given text.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>keywords_file_path</strong> (<em>Path</em>) – String representing a path to the file with
+<li><p><strong>patterns_file_path</strong> (<em>Path</em>) – String representing a path to the file with
 words to be matched (glossary etc).</p></li>
 <li><p><strong>label_text</strong> (<em>str</em>) – The text of the label of an entity.</p></li>
 <li><p><strong>model</strong> (<em>str</em><em>, </em><em>Path</em>) – Model to be loaded to spaCy. Either a valid spaCy pre-trained
@@ -249,10 +257,7 @@ should be saved.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-trainer">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-trainer" title="Permalink to this headline">¶</a></h2>
-</div>
+<span class="target" id="module-trainer"></span></div>
 </div>
 
 
@@ -260,6 +265,15 @@ should be saved.</p></li>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="util.html" class="btn btn-neutral float-right" title="Util subpackage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="main.html" class="btn btn-neutral float-left" title="Main subpackage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

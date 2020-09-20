@@ -132,7 +132,7 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
     return TRAINING_DATA
 
 
-def annotate_man(file_path: Path, lines: int,
+def annotate_man(file_path: Path, lines: int = -1,
                  labels_path: Path = None, start_index: int = 0,
                  save: bool = False):
     """
@@ -141,13 +141,15 @@ def annotate_man(file_path: Path, lines: int,
     by labels given in the labels_path.
 
     :type labels_path:  Path
-    :param labels_path: Path to the file containing available entity labels.
+    :param labels_path: Path to the file containing available entity labels,
+        defaults to None.
     :type file_path:    Path
     :param file_path:   The path to the file containing texts to be annotated.
                         If None, then a user can write own sentences and
                         annotate them.
     :type lines:        int
-    :param lines:       The number of texts to be annotated (1 text = 1 line).
+    :param lines:       The number of texts to be annotated (1 text = 1 line),
+        defaults to -1 - means all the lines.
     :type start_index:  int
     :param start_index: The index of the first text to be annotated.
     :type save:         bool
@@ -160,7 +162,15 @@ def annotate_man(file_path: Path, lines: int,
     labels = get_entities(labels_path) if labels_path is not None else get_entities()
 
     if file_path is not None:
-        texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
+        try:
+            if file_path.exists():
+                texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
+            else:
+                # use given argument as the text to be annotated
+                raise OSError
+        except OSError:
+            texts = [str(file_path)]
+            print()  # print an empty line
     else:
         texts = train.write_sentences()
 
@@ -210,7 +220,5 @@ def annotate_man(file_path: Path, lines: int,
                 json.dump(old_content, file)
 
             train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
-        else:
-            print(*result, sep='\n')
 
     return result

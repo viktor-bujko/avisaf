@@ -1,19 +1,13 @@
-main package
-============
+Main subpackage
+===============
 
-Submodules
-----------
-
-main.main module
-----------------
+main module
+-----------
 
 .. automodule:: main.main
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
 
 .. automodule:: main
    :members:

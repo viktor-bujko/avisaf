@@ -106,7 +106,7 @@ default browser. User also has the possibility of saving such generated html
 file by using the appropriate arguments with the desired target file name. 
 Click [here] for more details about testing method.
 
-[here]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/avisaf.main.html#avisaf.main.main.test
+[here]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/main.html#main.main.test
 
 ### Obtained results
 
@@ -139,8 +139,8 @@ also compound names, modifiers of certain words etc...
    
 ![third model example](results/large_model_4_result.png)
 
-[autobuild]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/avisaf.trainer.html#avisaf.trainer.training_data_creator.annotate_auto
-[build]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/avisaf.trainer.html#avisaf.trainer.training_data_creator.annotate_man
+[autobuild]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/trainer.html#trainer.training_data_creator.annotate_auto
+[build]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/trainer.html#trainer.training_data_creator.annotate_man
 [link]: https://spacy.io/usage/rule-based-matching#matcher
 [Matcher]: https://spacy.io/api/matcher
 [PhraseMatcher]: https://spacy.io/api/phrasematcher

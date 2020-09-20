@@ -30,7 +30,7 @@ def sort_annotations(file_path: Path):
     :param file_path: Path of the JSON file containing the list of
                       (text, entities) tuples, which will have entities sorted.
 
-    :return           Returns sorted annotation data.
+    :return: Returns sorted annotation data.
     """
 
     file_path = file_path.resolve()

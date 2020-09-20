@@ -27,7 +27,7 @@ from avisaf.util.data_extractor import get_entities, get_training_data
 def train_spaCy_model(iter_number: int = 20,
                       model=None,
                       new_model_name: str = None,
-                      tr_data_srcfile: Path = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'auto_annotated_data.json').resolve(),
+                      tr_data_srcfile: Path = Path('data_files', 'training_data', 'annotated_data_part_01.json').resolve(),
                       verbose: bool = False):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
@@ -124,7 +124,6 @@ def train_spaCy_model(iter_number: int = 20,
 
         nlp.to_disk(model_path)
         print(f'Model saved successfully to {model_path}')
-        print(nlp.pipe_names)
         print(f'Iteration {itn} losses: {losses}.', flush=verbose)
 
     if verbose:

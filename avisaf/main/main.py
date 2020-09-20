@@ -76,7 +76,7 @@ def test(model='en_core_web_md',
         by spaCy visualizer tool will be saved. The file will be created if it
         does not exist yet., defaults to None
 
-    :return The exit code of the function.
+    :return: The exit code of the function.
     :rtype: int
     """
 
@@ -396,7 +396,10 @@ def main():
             'build': arg_manbuild.print_help
         }
         func = helper.get(sys.argv[1])
-        func()
+        if func is not None:
+            func()
+        else:
+            args.print_help()
         return 0
     else:
         parsed = args.parse_args()

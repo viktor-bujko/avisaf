@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>util package &mdash; Avisaf  documentation</title>
+  <title>Util subpackage &mdash; Avisaf  documentation</title>
   
 
   
@@ -35,7 +35,8 @@
 
     
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Trainer subpackage" href="trainer.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -80,9 +81,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">avisaf</a></li>
+              <p class="caption"><span class="caption-text">Content:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="avisaf.html">Avisaf  main package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">Main subpackage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer.html">Trainer subpackage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Util subpackage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-util.data_extractor">data_extractor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-util.indexing">indexing module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-util.training_data_build">training_data_build module</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -129,7 +138,9 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>util package</li>
+          <li><a href="avisaf.html">Avisaf  main package</a> &raquo;</li>
+        
+      <li>Util subpackage</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -148,13 +159,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="util-package">
-<h1>util package<a class="headerlink" href="#util-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
+  <div class="section" id="util-subpackage">
+<h1>Util subpackage<a class="headerlink" href="#util-subpackage" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-util.data_extractor">
-<span id="util-data-extractor-module"></span><h2>util.data_extractor module<a class="headerlink" href="#module-util.data_extractor" title="Permalink to this headline">¶</a></h2>
+<span id="data-extractor-module"></span><h2>data_extractor module<a class="headerlink" href="#module-util.data_extractor" title="Permalink to this headline">¶</a></h2>
 <p>The data extractor module is responsible for getting raw text data and
 training data used by other modules.</p>
 <dl class="py function">
@@ -211,7 +219,7 @@ training data.</p>
 
 </div>
 <div class="section" id="module-util.indexing">
-<span id="util-indexing-module"></span><h2>util.indexing module<a class="headerlink" href="#module-util.indexing" title="Permalink to this headline">¶</a></h2>
+<span id="indexing-module"></span><h2>indexing module<a class="headerlink" href="#module-util.indexing" title="Permalink to this headline">¶</a></h2>
 <p>Indexing module is used for searching for the spans in the texts.</p>
 <dl class="py function">
 <dt id="util.indexing.entity_trimmer">
@@ -317,7 +325,7 @@ of (start_index, end_index, label) entities of the text.</p></li>
 
 </div>
 <div class="section" id="module-util.training_data_build">
-<span id="util-training-data-build-module"></span><h2>util.training_data_build module<a class="headerlink" href="#module-util.training_data_build" title="Permalink to this headline">¶</a></h2>
+<span id="training-data-build-module"></span><h2>training_data_build module<a class="headerlink" href="#module-util.training_data_build" title="Permalink to this headline">¶</a></h2>
 <p>Training data build is a module responsible mainly for training data
 manipulation. The module is used for sorting training annotations, removing
 overlaps from entity annotations as well as file content formatting.</p>
@@ -396,8 +404,10 @@ training data file.</p>
 <dd class="field-odd"><p><strong>file_path</strong> (<em>Path</em>) – Path of the JSON file containing the list of
 (text, entities) tuples, which will have entities sorted.</p>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns sorted annotation data.</p>
+</dd>
 </dl>
-<p>:return           Returns sorted annotation data.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -412,10 +422,7 @@ later. The function end when string ‘None’ is detected</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-util">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-util" title="Permalink to this headline">¶</a></h2>
-</div>
+<span class="target" id="module-util"></span></div>
 </div>
 
 
@@ -423,6 +430,13 @@ later. The function end when string ‘None’ is detected</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="trainer.html" class="btn btn-neutral float-left" title="Trainer subpackage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

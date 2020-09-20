@@ -1,10 +1,7 @@
-util package
-============
+Util subpackage
+===============
 
-Submodules
-----------
-
-util.data\_extractor module
+data\_extractor module
 ---------------------------
 
 .. automodule:: util.data_extractor
@@ -12,7 +9,7 @@ util.data\_extractor module
    :undoc-members:
    :show-inheritance:
 
-util.indexing module
+indexing module
 --------------------
 
 .. automodule:: util.indexing
@@ -20,16 +17,13 @@ util.indexing module
    :undoc-members:
    :show-inheritance:
 
-util.training\_data\_build module
+training\_data\_build module
 ---------------------------------
 
 .. automodule:: util.training_data_build
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
 
 .. automodule:: util
    :members:
