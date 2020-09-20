@@ -26,9 +26,11 @@ Read more details about avisaf in the documentation available [here].
 
 ### Resources
 
-Training data, rules and the result models can be found and downloaded [here].
-
-[here]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/resources/      
+Click on the links to show/download the [training data], [rule patterns] or [result models].
+ 
+[training data]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/resources/training_data/ 
+[rule patterns]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/resources/glossary/
+[result models]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/resources/models/      
 
 ### Program description
 
