@@ -23,7 +23,13 @@ the program should be used.
 Read more details about avisaf in the documentation available [here].
 
 [here]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/index.html
-     
+
+### Resources
+
+Training data, rules and the result models can be found and downloaded [here].
+
+[here]: http://www.ms.mff.cuni.cz/~bujkov/avisaf/resources/      
+
 ### Program description
 
 The program consists of 3 different NER model creation steps which 

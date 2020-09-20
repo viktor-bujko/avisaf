@@ -19,7 +19,7 @@ PROJECT_ROOT_PATH = path.resolve()
 sys.path.append(str(SOURCES_ROOT_PATH))
 
 
-def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'data_files', 'entities_labels.json').resolve()):
+def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'entities_labels.json').resolve()):
     """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
