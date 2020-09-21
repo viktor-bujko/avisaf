@@ -11,14 +11,14 @@ from datetime import datetime
 import time
 from pathlib import Path
 
-# looking for the project root path
+# looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf_ner'):
+while not str(path.resolve()).endswith('avisaf'):
     path = path.parent.resolve()
 
-SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
-PROJECT_ROOT_PATH = path.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+SOURCES_ROOT_PATH = Path(path).resolve()
+if str(SOURCES_ROOT_PATH) not in sys.path:
+    sys.path.append(str(SOURCES_ROOT_PATH))
 
 # importing own modules
 from avisaf.util.data_extractor import get_entities, get_training_data
@@ -95,7 +95,7 @@ def train_spaCy_model(iter_number: int = 20,
         if new_model_name is None:
             new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-        model_path = str(Path(PROJECT_ROOT_PATH, 'models', new_model_name).resolve())
+        model_path = str(Path('models', new_model_name).resolve())
 
         with nlp.disable_pipes(*other_pipe_names):
             for batch in spacy.util.minibatch(TRAINING_DATA, size=3):

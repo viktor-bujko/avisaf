@@ -16,12 +16,12 @@ from spacy.matcher import PhraseMatcher, Matcher
 
 # looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf_ner'):
+while not str(path.resolve()).endswith('avisaf'):
     path = path.parent.resolve()
 
-SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()  # creating the absolute path to the sources root
-PROJECT_ROOT_PATH = path.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+SOURCES_ROOT_PATH = Path(path).resolve()
+if str(SOURCES_ROOT_PATH) not in sys.path:
+    sys.path.append(str(SOURCES_ROOT_PATH))
 
 # importing own modules used in this module
 from util.data_extractor import get_narratives, get_entities
@@ -134,7 +134,7 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
 
 def annotate_man(file_path: Path, lines: int = -1,
                  labels_path: Path = None, start_index: int = 0,
-                 save: bool = False):
+                 save: bool = True):
     """
     Manual text annotation tool. A set of texts from file_path parameter
     starting with start_index is progressively printed in order to be annotated
@@ -164,7 +164,11 @@ def annotate_man(file_path: Path, lines: int = -1,
     if file_path is not None:
         try:
             if file_path.exists():
-                texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
+                if file_path.suffix == '.csv':
+                    texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
+                else:
+                    with file_path.open(mode='r') as file:
+                        texts = json.load(file)
             else:
                 # use given argument as the text to be annotated
                 raise OSError
@@ -175,6 +179,10 @@ def annotate_man(file_path: Path, lines: int = -1,
         texts = train.write_sentences()
 
     result = []
+
+    # if we don't want to annotate all texts
+    if lines != -1:
+        texts = texts[start_index:start_index + lines]
 
     for text in texts:
         ent_labels = []
@@ -194,7 +202,7 @@ def annotate_man(file_path: Path, lines: int = -1,
                 matches = occur_dict[key]
                 label = input(f"Label '{key}' with an item from: {list(enumerate(labels))} or type 'NONE' to skip: ")\
                     .upper()
-                if label == 'NONE':  # when there is no suitable label in the list
+                if label not in labels and not label.isdigit():  # when there is no suitable label in the list
                     continue
                 if label.isdigit():
                     ent_labels += [(start, end, labels[int(label)]) for start, end in matches]  # create the tuple
@@ -208,17 +216,23 @@ def annotate_man(file_path: Path, lines: int = -1,
             result.append(new_entry)
         print()  # print an empty line
 
-        MAN_TRAINING_DATA_FILE_PATH = Path(PROJECT_ROOT_PATH, 'data_files', 'training', 'man_annotated_data.json')\
-            .resolve()
         if save:
-            # rewrite the content of the file
-            with open(os.path.expanduser(MAN_TRAINING_DATA_FILE_PATH), mode='r') as file:
-                old_content = json.load(file)
+            MAN_TRAINING_DATA_FILE = Path('data_files', 'training_data', 'man_annotated_data.json').resolve()
+            MAN_TRAINING_DATA_FILE.touch(exist_ok=True)
 
-            with open(os.path.expanduser(MAN_TRAINING_DATA_FILE_PATH), mode='w') as file:
+            # if the file is not empty
+            if len(MAN_TRAINING_DATA_FILE.read_bytes()) != 0:
+                # rewrite the current content of the file
+                with open(os.path.expanduser(MAN_TRAINING_DATA_FILE), mode='r') as file:
+                    old_content = json.load(file)
+            else:
+                old_content = []
+
+            with open(os.path.expanduser(MAN_TRAINING_DATA_FILE), mode='w') as file:
                 old_content.append(new_entry)
                 json.dump(old_content, file)
+                print(f"Content in the {MAN_TRAINING_DATA_FILE.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
 
-            train.pretty_print_training_data(MAN_TRAINING_DATA_FILE_PATH)
+            train.pretty_print_training_data(MAN_TRAINING_DATA_FILE)
 
     return result

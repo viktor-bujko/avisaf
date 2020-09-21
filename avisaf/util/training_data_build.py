@@ -9,14 +9,15 @@ import json
 import sys
 from pathlib import Path
 
-# looking for project root
+# looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf_ner'):
+while not str(path.resolve()).endswith('avisaf'):
     path = path.parent.resolve()
 
-SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
-PROJECT_ROOT_PATH = path.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+SOURCES_ROOT_PATH = Path(path).resolve()
+if str(SOURCES_ROOT_PATH) not in sys.path:
+    sys.path.append(str(SOURCES_ROOT_PATH))
+
 from util.data_extractor import get_training_data
 
 

@@ -9,19 +9,18 @@ entity recognition models.
 import spacy
 import spacy.displacy as displacy
 import sys
-import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from colorama import Style, Fore
 
 # looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf_ner'):
+while not str(path.resolve()).endswith('avisaf'):
     path = path.parent.resolve()
 
-SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
-PROJECT_ROOT_PATH = path.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+SOURCES_ROOT_PATH = Path(path).resolve()
+if str(SOURCES_ROOT_PATH) not in sys.path:
+    sys.path.append(str(SOURCES_ROOT_PATH))
 
 # importing own modules
 from trainer.new_entity_trainer import train_spaCy_model
@@ -196,7 +195,7 @@ def choose_action(args: Namespace):
                                                save=args.save, verbose=args.verbose),
 
         'annotate_man': lambda: annotate_man(labels_path=Path(args.labels), file_path=Path(args.texts_file),
-                                             lines=args.lines, save=args.save,
+                                             lines=args.lines, save=args.not_save,
                                              start_index=args.start_index)
     }
 
@@ -236,7 +235,7 @@ def main():
         '-d', '--data',
         metavar='PATH',
         help='File path to the file with annotated training data.',
-        default=os.path.join(PROJECT_ROOT_PATH, 'data_files/auto_annotated_data.json'),
+        default=Path('data_files', 'training_data', 'annotated_data_part_01.json'),
         required=True
     )
     arg_train.add_argument(
@@ -359,7 +358,7 @@ def main():
     arg_manbuild.set_defaults(action='annotate_man')
     arg_manbuild.add_argument(
         'texts_file',
-        help='''The path to the file containing texts to be annotated. 
+        help='''The path to the file containing texts to be annotated. (Supports .csv/.json files).
                 If None, then a user can write own sentences and annotate them.''',
         default=None
     )
@@ -371,7 +370,7 @@ def main():
     arg_manbuild.add_argument(
         '-l', '--labels',
         help='Path to the file containing entity labels used for annotation.',
-        default=None
+        default=Path('entities_labels.json')
     )
     arg_manbuild.add_argument(
         '-s', '--start-index',
@@ -380,9 +379,9 @@ def main():
         default=0
     )
     arg_manbuild.add_argument(
-        '--save',
-        action='store_true',
-        help='Flag indicating whether the result of the annotation should be saved.',
+        '--not_save',
+        action='store_false',
+        help='Flag indicating whether the result of the annotation should NOT be saved.',
     )
 
     if len(sys.argv) == 1:

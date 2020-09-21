@@ -11,15 +11,15 @@ from pathlib import Path
 
 # looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf_ner'):
+while not str(path.resolve()).endswith('avisaf'):
     path = path.parent.resolve()
 
-SOURCES_ROOT_PATH = Path(path, 'avisaf').resolve()
-PROJECT_ROOT_PATH = path.resolve()
-sys.path.append(str(SOURCES_ROOT_PATH))
+SOURCES_ROOT_PATH = Path(path).resolve()
+if str(SOURCES_ROOT_PATH) not in sys.path:
+    sys.path.append(str(SOURCES_ROOT_PATH))
 
 
-def get_entities(entities_file_path: Path = Path(PROJECT_ROOT_PATH, 'entities_labels.json').resolve()):
+def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve()):
     """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
