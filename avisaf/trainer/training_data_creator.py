@@ -162,19 +162,21 @@ def annotate_man(file_path: Path, lines: int = -1,
     labels = get_entities(labels_path) if labels_path is not None else get_entities()
 
     if file_path is not None:
-        try:
-            if file_path.exists():
-                if file_path.suffix == '.csv':
-                    texts = list(get_narratives(lines=lines, file_path=file_path, start_index=start_index))
-                else:
-                    with file_path.open(mode='r') as file:
-                        texts = json.load(file)
+        if file_path.exists():
+            if file_path.suffix == '.csv':
+                texts = get_narratives(
+                    lines=lines,
+                    file_path=file_path,
+                    start_index=start_index
+                )
             else:
-                # use given argument as the text to be annotated
-                raise OSError
-        except OSError:
+                with file_path.open(mode='r') as file:
+                    texts = json.load(file)
+        else:
+            # use given argument as the text to be annotated
             texts = [str(file_path)]
             print()  # print an empty line
+
     else:
         texts = train.write_sentences()
 

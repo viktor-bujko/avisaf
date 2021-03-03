@@ -106,10 +106,12 @@ def train_spaCy_model(iter_number: int = 20,
 
                 try:
                     # Update the current model
-                    nlp.update(texts,
-                               entity_offsets,
-                               sgd=optimizer,
-                               losses=losses)
+                    nlp.update(
+                        texts,
+                        entity_offsets,
+                        sgd=optimizer,
+                        losses=losses
+                    )
 
                     new_time = time.time()
                     if new_time - start > 60:

@@ -181,22 +181,37 @@ def choose_action(args: Namespace):
     """
 
     FUNCTIONS = {
-        'train': lambda: train_spaCy_model(iter_number=args.iterations, model=args.model,
-                                           new_model_name=args.name, tr_data_srcfile=Path(args.data),
-                                           verbose=args.verbose),
-
-        'test': lambda: test(model=args.model, cli_result=args.print,
-                             visualize=args.render, text_path=args.text,
-                             html_result_file=args.save),
-
-        'annotate_auto': lambda: annotate_auto(Path(args.keys_file), args.label,
-                                               model=args.model, tr_src_file=Path(args.data),
-                                               extract_texts=args.extract, use_phrasematcher=args.p,
-                                               save=args.save, verbose=args.verbose),
-
-        'annotate_man': lambda: annotate_man(labels_path=Path(args.labels), file_path=Path(args.texts_file),
-                                             lines=args.lines, save=args.not_save,
-                                             start_index=args.start_index)
+        'train': lambda: train_spaCy_model(
+            iter_number=args.iterations,
+            model=args.model,
+            new_model_name=args.name,
+            tr_data_srcfile=Path(args.data),
+            verbose=args.verbose
+        ),
+        'test': lambda: test(
+            model=args.model,
+            cli_result=args.print,
+            visualize=args.render,
+            text_path=args.text,
+            html_result_file=args.save
+        ),
+        'annotate_auto': lambda: annotate_auto(
+            Path(args.keys_file),
+            args.label,
+            model=args.model,
+            tr_src_file=Path(args.data),
+            extract_texts=args.extract,
+            use_phrasematcher=args.p,
+            save=args.save,
+            verbose=args.verbose
+        ),
+        'annotate_man': lambda: annotate_man(
+            labels_path=Path(args.labels),
+            file_path=Path(args.texts_file),
+            lines=args.lines,
+            save=args.not_save,
+            start_index=args.start_index
+        )
     }
 
     try:
