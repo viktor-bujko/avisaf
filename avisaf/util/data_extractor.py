@@ -6,19 +6,15 @@ training data used by other modules.
 import pandas as pd
 from sys import stderr
 import json
-import math
 import sys
-import os
 from pathlib import Path
-
-# looking for the project root
-path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf'):
-    path = path.parent.resolve()
-
-SOURCES_ROOT_PATH = Path(path).resolve()
-if str(SOURCES_ROOT_PATH) not in sys.path:
-    sys.path.append(str(SOURCES_ROOT_PATH))
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from avisaf_ner.avisaf.training.training_data_creator import build_feature_matrices_from_texts
+import sklearn.metrics as metrics
+import numpy as np
 
 
 def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve()):
@@ -72,7 +68,12 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 
-    report_df = pd.read_csv(file_path, skip_blank_lines=True, index_col=0, header=[0, 1])
+    report_df = pd.read_csv(
+        file_path,
+        skip_blank_lines=True,
+        index_col=0,
+        header=[0, 1]
+    )
     report_df.columns = report_df.columns.map('_'.join)
 
     try:
@@ -99,7 +100,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
     return result
 
 
-def get_file_from_path(file_path: [Path, str], max_iterations: int = 5):
+def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
     """
 
     :param max_iterations:
@@ -109,7 +110,7 @@ def get_file_from_path(file_path: [Path, str], max_iterations: int = 5):
 
     current_dir = Path().resolve()
 
-    for iteration in range(max_iterations):
+    for iteration in range(max_iterations):  # Searching at most max_iterations times.
         if current_dir.parent is None or current_dir.parent == current_dir:
             break
 
@@ -123,7 +124,7 @@ def get_file_from_path(file_path: [Path, str], max_iterations: int = 5):
     return None
 
 
-def extract_data_by_title_name(file_path: [Path, list], field_name: [str, list], lines_count: int = -1, start_index: int = 0):
+def extract_data_from_csv_columns(file_path: [Path, list], field_name: [str, list], lines_count: int = -1, start_index: int = 0):
     """
 
     :param field_name:
@@ -133,16 +134,18 @@ def extract_data_by_title_name(file_path: [Path, list], field_name: [str, list],
     :return:
     """
 
+    # Normalizing the type of arguments to fit the rest of the method
     file_paths = file_path if type(file_path) is list else [file_path]
     field_names = field_name if type(field_name) is list else [field_name]
 
-    result = {}
+    label_data_dict = {}
     for a_field_name in field_names:
         extracted_values = []
         for a_file_path in file_paths:
-            requested_file = get_file_from_path(a_file_path)
+            requested_file = find_file_by_path(a_file_path)
             if requested_file is None:
                 print(f'The file given by "{a_file_path}" path was not found in the given range.', file=stderr)
+                # Ignoring the file with current file path
                 continue
 
             csv_dataframe = pd.read_csv(
@@ -151,7 +154,7 @@ def extract_data_by_title_name(file_path: [Path, list], field_name: [str, list],
                 header=[0, 1],
             )
             csv_dataframe.columns = csv_dataframe.columns.map('_'.join)
-            csv_dataframe.replace(math.nan, "")
+            csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
             try:
                 extracted_values_collection = csv_dataframe[a_field_name].values.tolist()
@@ -161,11 +164,11 @@ def extract_data_by_title_name(file_path: [Path, list], field_name: [str, list],
 
             length = len(extracted_values_collection)
             end_index = start_index + lines_count if lines_count != -1 else length
-            extracted_values += extracted_values_collection[start_index: end_index]
+            extracted_values += extracted_values_collection[start_index: end_index]  # Getting only the desired subset of extracted data
 
-        result[a_field_name] = extracted_values
+        label_data_dict[a_field_name] = extracted_values
 
-    return result
+    return label_data_dict
 
 
 def main():
@@ -173,20 +176,48 @@ def main():
     return 1
 
 
-def build_classification_training_data_from_text(texts: list, target_labels: list):
-    """
-
-    :param texts:
-    :param target_labels:
-    :return:
-    """
-
-    # TODO: Keď dostanem list textov a list labelov, potom chcem použiť nejaký scikit text vectorizer alebo také niečo
-    # podľa čoho budem reprezentovať text
-    pass
-
-
 if __name__ == '__main__':
-    result1 = extract_data_by_title_name(Path(sys.argv[1]), ['Report 1_Narrative', 'Events_Detector'])
-    print(len(result1['Report 1_Narrative']), len(result1['Events_Detector']))
-    build_classification_training_data_from_text(result1['Report 1_Narrative'], result1['Events_Detector'])
+    paths = [Path(arg) for arg in sys.argv[1:-1]]
+    result1 = extract_data_from_csv_columns(
+        paths,
+        ['Report 1_Narrative', 'Events_Detector']
+    )
+    data, target = build_feature_matrices_from_texts(
+        result1['Report 1_Narrative'],
+        result1['Events_Detector'],
+        target_label_filter=['Person Flight Crew', 'Person Air Traffic Control']
+    )
+
+    train_data, test_data, train_target, test_target = train_test_split(
+        data, target,
+        test_size=0.15,
+        random_state=1998
+    )
+
+    print(f'train data shape: {train_data.shape}')
+    print(f'train target shape: {train_target.shape}')
+    print(f'test data shape: {test_data.shape}')
+    print(f'test target shape: {test_target.shape}')
+
+    # classifier = MLPClassifier(hidden_layer_sizes=(256, 64, 32))
+    # model = classifier.fit(train_data, train_target)
+
+    classifier = KNeighborsClassifier(weights='uniform')
+
+    # classifier = SVC()
+    model = classifier.fit(train_data, train_target)
+
+    predictions = model.predict(test_data)
+
+    print(predictions)
+    print(f'Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
+    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
+    print('==================================')
+    predictions = np.zeros(test_target.shape)
+    print(f'Accuracy predicting always 0: {metrics.accuracy_score(test_target, predictions) * 100}')
+    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
+    print('==================================')
+    predictions = np.ones(test_target.shape)
+    print(f'Accuracy predicting always 1: {metrics.accuracy_score(test_target, predictions) * 100}')
+    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
+

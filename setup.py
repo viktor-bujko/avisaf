@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
     packages=[
         'avisaf.main',
-        'avisaf.trainer',
+        'avisaf.training',
         'avisaf.util'
     ],
     entry_points={

@@ -12,20 +12,10 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from colorama import Style, Fore
-
-# looking for the project root
-path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf'):
-    path = path.parent.resolve()
-
-SOURCES_ROOT_PATH = Path(path).resolve()
-if str(SOURCES_ROOT_PATH) not in sys.path:
-    sys.path.append(str(SOURCES_ROOT_PATH))
-
 # importing own modules
-from trainer.new_entity_trainer import train_spaCy_model
-from trainer.training_data_creator import annotate_auto, annotate_man
-from util.data_extractor import get_entities
+from avisaf.trainer.new_entity_trainer import train_spaCy_model
+from avisaf.trainer.training_data_creator import annotate_auto, annotate_man
+from avisaf.util.data_extractor import get_entities
 
 sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
                "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
@@ -399,26 +389,27 @@ def main():
         help='Flag indicating whether the result of the annotation should NOT be saved.',
     )
 
-    if len(sys.argv) == 1:
+    if len(sys.argv) <= 1:
         args.print_help()
         return 0
-    elif len(sys.argv) == 2:
-        helper = {
+
+    if len(sys.argv) == 2:
+        helpers = {
             'test': arg_test.print_help,
             'train': arg_train.print_help,
             'autobuild': arg_autobuild.print_help,
             'build': arg_manbuild.print_help
         }
-        func = helper.get(sys.argv[1])
-        if func is not None:
-            func()
+
+        help_function = helpers.get(sys.argv[1])
+        if help_function is not None:
+            help_function()
         else:
             args.print_help()
         return 0
     else:
         parsed = args.parse_args()
-        if (parsed.action == 'test' and not parsed.print and
-                not parsed.render and parsed.save is None):
+        if parsed.action == 'test' and not parsed.print and not parsed.render and parsed.save is None:
             print("The output will not be visible without one of --print, --render or --save argument.\n", file=sys.stderr)
             arg_test.print_help()
             return 1
@@ -427,4 +418,5 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    retval = main()
+    sys.exit(retval)
