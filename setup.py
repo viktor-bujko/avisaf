@@ -15,7 +15,7 @@ setup(
     description='Aviation safety report Named Entity Recognizer',
     long_description='',
     classifiers=[
-        'Programming Language :: Python :: 3.6.9',
+        'Programming Language :: Python :: 3.8.2',
     ],
     keywords=['named entity recognition', 'NER', 'aviation', 'safety'],
     url='',
@@ -23,13 +23,14 @@ setup(
     include_package_data=True,
     zip_safe=False,
     packages=[
-        'avisaf.main',
+        'avisaf',
         'avisaf.training',
+        'avisaf.classification',
         'avisaf.util'
     ],
     entry_points={
         'console_scripts': [
-            'avisaf=avisaf.main.main:main',
+            'avisaf=avisaf.main:main',
         ],
     },
 )

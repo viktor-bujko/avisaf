@@ -167,7 +167,7 @@ def annotate_man(file_path: Path, lines: int = -1,
         if file_path.exists():
             if file_path.suffix == '.csv':
                 texts = get_narratives(
-                    lines=lines,
+                    lines_count=lines,
                     file_path=file_path,
                     start_index=start_index
                 )
@@ -252,7 +252,7 @@ def build_feature_matrices_from_texts(texts: list, target_labels: list, text_vec
     :return:
     """
 
-    texts, target_labels = get_unique_string_labels(texts, target_labels, target_label_filter)
+    texts, target_labels, encoding = get_unique_string_labels(texts, target_labels, target_label_filter)
 
     if texts.shape != target_labels.shape:
         raise ValueError('The number of training examples is not equal to the the number of labels.')
@@ -265,7 +265,7 @@ def build_feature_matrices_from_texts(texts: list, target_labels: list, text_vec
         max_features=10000
     ).fit_transform(texts)  # .toarray() -> create a matrix from csr_matrix
 
-    return texts_vectors, np.array(target_labels)
+    return texts_vectors, np.array(target_labels), encoding
 
 
 def get_unique_string_labels(texts: list, target_labels: list, target_label_filter: list = None):
@@ -296,11 +296,11 @@ def get_unique_string_labels(texts: list, target_labels: list, target_label_filt
                 print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
 
     unique_labels = sorted(unique_labels)
-    new_labels = encode_labels(unique_labels, new_labels)
+    new_labels, encoding = encode_labels(unique_labels, new_labels)
     _, counts = np.unique(new_labels, return_counts=True)
     print(dict(zip(unique_labels, counts)))
 
-    return np.array(new_texts), np.array(new_labels)
+    return np.array(new_texts), np.array(new_labels), encoding
 
 
 def encode_labels(unique: list, labels: list):
@@ -310,9 +310,41 @@ def encode_labels(unique: list, labels: list):
     :param labels:
     :return:
     """
-    encoded = []
+    encoded_labels = []
 
     for label in labels:
-        encoded.append(unique.index(label))
+        encoded_labels.append(unique.index(label))
 
-    return encoded
+    encoding = dict(zip(range(len(unique)), unique))
+
+    return encoded_labels, encoding
+
+
+def normalize_data_distribution(data, target):
+    """
+
+    :param data:
+    :param target:
+    :return:
+    """
+
+    distribution_counts = np.histogram(target, bins=len(np.unique(target)))[0]
+    dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
+
+    most_even_distribution = 1 / len(distribution_counts)
+
+    filtered_indices = []
+    for more_present_index in np.where(dist > most_even_distribution):
+        distribution_surplus = dist[more_present_index] - most_even_distribution
+        examples_to_remove = int(distribution_surplus * data.shape[0])  # Calculates the number of examples with given class to remove
+
+        while examples_to_remove > 0:
+            rnd_index = np.random.randint(0, data.shape[0])
+            should_be_filtered = target[rnd_index] == more_present_index
+            if should_be_filtered and rnd_index not in filtered_indices:
+                filtered_indices.append(rnd_index)
+                examples_to_remove -= 1
+
+    arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
+
+    return data[arr_filter], target[arr_filter]

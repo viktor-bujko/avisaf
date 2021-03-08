@@ -12,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from avisaf_ner.avisaf.training.training_data_creator import build_feature_matrices_from_texts
 import sklearn.metrics as metrics
 import numpy as np
 
@@ -177,21 +176,30 @@ def main():
 
 
 if __name__ == '__main__':
+
+    from avisaf.training.training_data_creator import build_feature_matrices_from_texts, normalize_data_distribution
     paths = [Path(arg) for arg in sys.argv[1:-1]]
     result1 = extract_data_from_csv_columns(
         paths,
         ['Report 1_Narrative', 'Events_Detector']
     )
-    data, target = build_feature_matrices_from_texts(
+    data, target, encoding = build_feature_matrices_from_texts(
         result1['Report 1_Narrative'],
         result1['Events_Detector'],
         target_label_filter=['Person Flight Crew', 'Person Air Traffic Control']
     )
 
+    old_data_rows = data.shape[0]
+    data, target = normalize_data_distribution(data, target)
+    new_data_rows = data.shape[0]
+
+    if old_data_rows - new_data_rows > 0:
+        print(f'Normalization: { old_data_rows - new_data_rows } of examples had to be removed to have an even distribution of examples')
+
     train_data, test_data, train_target, test_target = train_test_split(
         data, target,
         test_size=0.15,
-        random_state=1998
+        random_state=0
     )
 
     print(f'train data shape: {train_data.shape}')
@@ -200,23 +208,21 @@ if __name__ == '__main__':
     print(f'test target shape: {test_target.shape}')
 
     # classifier = MLPClassifier(hidden_layer_sizes=(256, 64, 32))
-    # model = classifier.fit(train_data, train_target)
-
+    # classifier = SVC()
     classifier = KNeighborsClassifier(weights='uniform')
 
-    # classifier = SVC()
     model = classifier.fit(train_data, train_target)
 
     predictions = model.predict(test_data)
 
-    print(predictions)
-    print(f'Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
-    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
-    print('==================================')
+    print('==============================================')
+    print(f'Model Based Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
+    print(f'Model Based F1-score: {metrics.f1_score(test_target, predictions) * 100}')
+    print('==============================================')
     predictions = np.zeros(test_target.shape)
     print(f'Accuracy predicting always 0: {metrics.accuracy_score(test_target, predictions) * 100}')
     print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
-    print('==================================')
+    print('==============================================')
     predictions = np.ones(test_target.shape)
     print(f'Accuracy predicting always 1: {metrics.accuracy_score(test_target, predictions) * 100}')
     print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')

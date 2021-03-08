@@ -13,9 +13,9 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from colorama import Style, Fore
 # importing own modules
-from avisaf.trainer.new_entity_trainer import train_spaCy_model
-from avisaf.trainer.training_data_creator import annotate_auto, annotate_man
-from avisaf.util.data_extractor import get_entities
+from .training.new_entity_trainer import train_spaCy_model
+from .training.training_data_creator import annotate_auto, annotate_man
+from .util.data_extractor import get_entities
 
 sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
                "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
