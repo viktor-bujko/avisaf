@@ -8,17 +8,7 @@ overlaps from entity annotations as well as file content formatting.
 import json
 import sys
 from pathlib import Path
-
-# looking for the project root
-path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf'):
-    path = path.parent.resolve()
-
-SOURCES_ROOT_PATH = Path(path).resolve()
-if str(SOURCES_ROOT_PATH) not in sys.path:
-    sys.path.append(str(SOURCES_ROOT_PATH))
-
-from util.data_extractor import get_training_data
+from avisaf.util.data_extractor import get_training_data
 
 
 def sort_annotations(file_path: Path):
