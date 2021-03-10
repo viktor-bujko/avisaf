@@ -14,7 +14,7 @@ from pathlib import Path
 from avisaf.util.data_extractor import get_entities, get_training_data
 
 
-def train_spaCy_model(iter_number: int = 20,
+def train_spacy_model(iter_number: int = 20,
                       model=None,
                       new_model_name: str = None,
                       tr_data_srcfile: Path = Path('data_files', 'training_data', 'annotated_data_part_01.json').resolve(),
@@ -69,7 +69,7 @@ def train_spaCy_model(iter_number: int = 20,
     for label in entity_labels:
         ner.add_label(label)
 
-    TRAINING_DATA = get_training_data(tr_data_srcfile)
+    training_data = get_training_data(tr_data_srcfile)
 
     # Start the training
     optimizer = nlp.begin_training() if model is None else nlp.resume_training()
@@ -78,7 +78,7 @@ def train_spaCy_model(iter_number: int = 20,
     for itn in range(iter_number):
         print(f'Iteration: {itn}.')
 
-        random.shuffle(TRAINING_DATA)
+        random.shuffle(training_data)
         losses = {}
         start = time.time()
 
@@ -88,7 +88,7 @@ def train_spaCy_model(iter_number: int = 20,
         model_path = str(Path('models', new_model_name).resolve())
 
         with nlp.disable_pipes(*other_pipe_names):
-            for batch in spacy.util.minibatch(TRAINING_DATA, size=3):
+            for batch in spacy.util.minibatch(training_data, size=3):
                 # Get all the texts from the batch
                 texts = [text for text, entities in batch]
                 # Get all entity annotations from the batch

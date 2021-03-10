@@ -4,16 +4,17 @@ training data used by other modules.
 """
 
 import pandas as pd
-from sys import stderr
-import json
 import sys
+import json
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-import sklearn.metrics as metrics
-import numpy as np
+from sklearn.model_selection import train_test_split
 
 
 def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve()):
@@ -82,7 +83,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
         calls2 = report_df['Report 2_Callback'].values.tolist()
 
     except KeyError:
-        print('No such key was found', file=stderr)
+        print('No such key was found', file=sys.stderr)
         return None
 
     length = len(narratives1)
@@ -123,107 +124,128 @@ def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
     return None
 
 
-def extract_data_from_csv_columns(file_path: [Path, list], field_name: [str, list], lines_count: int = -1, start_index: int = 0):
-    """
+class DataExtractor:
 
-    :param field_name:
-    :param file_path:
-    :param lines_count:
-    :param start_index:
-    :return:
-    """
+    def __init__(self):
+        self._delete = 0
 
-    # Normalizing the type of arguments to fit the rest of the method
-    file_paths = file_path if type(file_path) is list else [file_path]
-    field_names = field_name if type(field_name) is list else [field_name]
+    def extract_data_from_csv_columns(self, file_path: [Path, list], field_name: [str, list], lines_count: int = -1,
+                                      start_index: int = 0):
+        """
 
-    label_data_dict = {}
-    for a_field_name in field_names:
-        extracted_values = []
-        for a_file_path in file_paths:
-            requested_file = find_file_by_path(a_file_path)
-            if requested_file is None:
-                print(f'The file given by "{a_file_path}" path was not found in the given range.', file=stderr)
-                # Ignoring the file with current file path
-                continue
+        :param field_name:
+        :param file_path:
+        :param lines_count:
+        :param start_index:
+        :return:
+        """
 
-            csv_dataframe = pd.read_csv(
-                requested_file,
-                skip_blank_lines=True,
-                header=[0, 1],
-            )
-            csv_dataframe.columns = csv_dataframe.columns.map('_'.join)
-            csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
+        self._delete = 1
+        # Normalizing the type of arguments to fit the rest of the method
+        file_paths = file_path if type(file_path) is list else [file_path]
+        field_names = field_name if type(field_name) is list else [field_name]
 
-            try:
-                extracted_values_collection = csv_dataframe[a_field_name].values.tolist()
-            except KeyError:
-                print(f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"', file=stderr)
-                continue
+        label_data_dict = {}
+        for a_field_name in field_names:
+            extracted_values = []
+            for a_file_path in file_paths:
+                requested_file = find_file_by_path(a_file_path)
+                if requested_file is None:
+                    print(f'The file given by "{a_file_path}" path was not found in the given range.', file=sys.stderr)
+                    # Ignoring the file with current file path
+                    continue
 
-            length = len(extracted_values_collection)
-            end_index = start_index + lines_count if lines_count != -1 else length
-            extracted_values += extracted_values_collection[start_index: end_index]  # Getting only the desired subset of extracted data
+                csv_dataframe = pd.read_csv(
+                    requested_file,
+                    skip_blank_lines=True,
+                    header=[0, 1],
+                )
+                csv_dataframe.columns = csv_dataframe.columns.map('_'.join)
+                csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
-        label_data_dict[a_field_name] = extracted_values
+                try:
+                    extracted_values_collection = csv_dataframe[a_field_name].values.tolist()
+                except KeyError:
+                    print(
+                        f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"',
+                        file=sys.stderr)
+                    continue
 
-    return label_data_dict
+                length = len(extracted_values_collection)
+                end_index = start_index + lines_count if lines_count != -1 else length
+                extracted_values += extracted_values_collection[
+                                    start_index: end_index]  # Getting only the desired subset of extracted data
+
+            label_data_dict[a_field_name] = extracted_values
+
+        return label_data_dict
 
 
-def main():
-    # TODO: Vytvor main funkciu ktorá použije argparser na výber funkcie
-    return 1
+def classification_main(labels, paths, label_filter, algorithm):
+    from avisaf.classification.classifier import ASRSReportClassifier
+    from avisaf.training.training_data_creator import build_feature_matrices_from_texts, normalize_data_distribution, get_data_distribution
+
+    alg = {
+        'mlp': MLPClassifier(hidden_layer_sizes=32),
+        'svm': SVC(),
+        'tree': DecisionTreeClassifier(criterion='entropy'),
+        'forest': RandomForestClassifier(n_estimators=150, criterion='entropy', min_samples_split=15),
+        'knn': KNeighborsClassifier(n_neighbors=10)
+    }
+    algor = alg['knn']
+
+    if alg.get(algorithm) is not None:
+        algor = alg.get(algorithm)
+
+    classifier = ASRSReportClassifier(algor)
+
+    extractor = DataExtractor()
+
+    for label in labels:
+
+        extracted_dict = extractor.extract_data_from_csv_columns(
+            paths,
+            [label] + ['Report 1_Narrative']  # ['Report 1_Narrative', 'Events_Detector']
+            # texts have to be always extracted
+        )
+        data, target, encoding = build_feature_matrices_from_texts(
+            extracted_dict['Report 1_Narrative'],
+            extracted_dict[label],
+            target_label_filter=label_filter  # ['Person Flight Crew', 'Person Air Traffic Control']
+        )
+
+        old_data_rows = data.shape[0]
+        print(get_data_distribution(target)[1])
+        normalize = False
+
+        if normalize:
+            data, target = normalize_data_distribution(data, target)
+            print(get_data_distribution(target)[1])
+            new_data_rows = data.shape[0]
+
+            if old_data_rows - new_data_rows > 0:
+                print(
+                    f'Normalization: {old_data_rows - new_data_rows} of examples had to be removed to have an even distribution of examples')
+
+        train_data, test_data, train_target, test_target = train_test_split(
+            data, target,
+            test_size=0.1,
+            random_state=0
+        )
+
+        classifier.train_report_classification(train_data, train_target)
+        classifier.evaluate(test_data, test_target)
 
 
 if __name__ == '__main__':
+    labels_out = ['Events_Detector', 'Report 1_Narrative']
+    paths_out = ['./ASRS/ASRS-csv-reports/ASRS_DBOnline-01-2018-06-2018.csv']
+    # label_filter = ['Person Flight Crew', 'Person Air Traffic Control']
+    algorithm = KNeighborsClassifier()
 
-    from avisaf.training.training_data_creator import build_feature_matrices_from_texts, normalize_data_distribution
-    paths = [Path(arg) for arg in sys.argv[1:-1]]
-    result1 = extract_data_from_csv_columns(
-        paths,
-        ['Report 1_Narrative', 'Events_Detector']
+    classification_main(
+        labels=labels_out,
+        paths=paths_out,
+        label_filter=None,  # label_filter
+        algorithm=algorithm
     )
-    data, target, encoding = build_feature_matrices_from_texts(
-        result1['Report 1_Narrative'],
-        result1['Events_Detector'],
-        target_label_filter=['Person Flight Crew', 'Person Air Traffic Control']
-    )
-
-    old_data_rows = data.shape[0]
-    data, target = normalize_data_distribution(data, target)
-    new_data_rows = data.shape[0]
-
-    if old_data_rows - new_data_rows > 0:
-        print(f'Normalization: { old_data_rows - new_data_rows } of examples had to be removed to have an even distribution of examples')
-
-    train_data, test_data, train_target, test_target = train_test_split(
-        data, target,
-        test_size=0.15,
-        random_state=0
-    )
-
-    print(f'train data shape: {train_data.shape}')
-    print(f'train target shape: {train_target.shape}')
-    print(f'test data shape: {test_data.shape}')
-    print(f'test target shape: {test_target.shape}')
-
-    # classifier = MLPClassifier(hidden_layer_sizes=(256, 64, 32))
-    # classifier = SVC()
-    classifier = KNeighborsClassifier(weights='uniform')
-
-    model = classifier.fit(train_data, train_target)
-
-    predictions = model.predict(test_data)
-
-    print('==============================================')
-    print(f'Model Based Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
-    print(f'Model Based F1-score: {metrics.f1_score(test_target, predictions) * 100}')
-    print('==============================================')
-    predictions = np.zeros(test_target.shape)
-    print(f'Accuracy predicting always 0: {metrics.accuracy_score(test_target, predictions) * 100}')
-    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
-    print('==============================================')
-    predictions = np.ones(test_target.shape)
-    print(f'Accuracy predicting always 1: {metrics.accuracy_score(test_target, predictions) * 100}')
-    print(f'F1-score: {metrics.f1_score(test_target, predictions) * 100}')
-

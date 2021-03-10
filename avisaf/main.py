@@ -13,9 +13,9 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from colorama import Style, Fore
 # importing own modules
-from .training.new_entity_trainer import train_spaCy_model
+from .training.new_entity_trainer import train_spacy_model
 from .training.training_data_creator import annotate_auto, annotate_man
-from .util.data_extractor import get_entities
+from .util.data_extractor import get_entities, classification_main
 
 sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
                "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
@@ -75,10 +75,10 @@ def test(model='en_core_web_md',
     else:
         # extract the text
         try:
-            text_Path = Path(text_path).resolve()
-            if text_Path.exists():
+            text_path = Path(text_path).resolve()
+            if text_path.exists():
                 # in case the argument is the path to the file containing the text
-                with text_Path.open(mode='r') as file:
+                with text_path.open(mode='r') as file:
                     text = file.read()
             else:
                 raise OSError
@@ -147,10 +147,10 @@ def test(model='en_core_web_md',
             "colors": colors
         }
         if html_result_file is not None:
-            result_file_Path = Path(html_result_file)
-            result_file_Path.touch(exist_ok=True)
+            result_file_path = Path(html_result_file)
+            result_file_path.touch(exist_ok=True)
 
-            with result_file_Path.open(mode='w') as file:
+            with result_file_path.open(mode='w') as file:
                 html = displacy.render(document, style='ent', options=options)
                 file.write(html)
         else:
@@ -170,8 +170,8 @@ def choose_action(args: Namespace):
     :rtype: int
     """
 
-    FUNCTIONS = {
-        'train': lambda: train_spaCy_model(
+    functions = {
+        'train': lambda: train_spacy_model(
             iter_number=args.iterations,
             model=args.model,
             new_model_name=args.name,
@@ -201,11 +201,17 @@ def choose_action(args: Namespace):
             lines=args.lines,
             save=args.not_save,
             start_index=args.start_index
+        ),
+        'train_classifier': lambda: classification_main(
+            labels=args.labels,
+            paths=args.paths,
+            label_filter=args.filter,
+            algorithm=args.algorithm
         )
     }
 
     try:
-        func = FUNCTIONS.get(args.action)
+        func = functions.get(args.action)
         func()
         return 0
     except AttributeError as ex:
@@ -230,6 +236,7 @@ def main():
     subparser = args.add_subparsers(help='Possible actions to perform.')
 
     # train subcommand and its arguments
+    # ========================================================================================
     arg_train = subparser.add_parser(
         'train',
         help='Train a new NLP NER model.',
@@ -269,6 +276,7 @@ def main():
     )
 
     # test subcommand and its arguments
+    # ========================================================================================
     arg_test = subparser.add_parser(
         'test',
         help='Test a selected model.',
@@ -306,6 +314,7 @@ def main():
     )
 
     # automatic training data builder and its arguments
+    # ========================================================================================
     arg_autobuild = subparser.add_parser(
         'autobuild',
         help='Automatic annotation tool for new training dataset creation.',
@@ -355,6 +364,7 @@ def main():
     )
 
     # manual training data builder and its arguments
+    # ========================================================================================
     arg_manbuild = subparser.add_parser(
         'build',
         help='Manual annotation tool for new training dataset creation.',
@@ -389,6 +399,38 @@ def main():
         help='Flag indicating whether the result of the annotation should NOT be saved.',
     )
 
+    # classification module and its arguments
+    # ========================================================================================
+    arg_classifier = subparser.add_parser(
+        'train_classifier',
+        help='Train an ASRS reports classification model.'
+    )
+    arg_classifier.set_defaults(action='train_classifier')
+    arg_classifier.add_argument(
+        '-p', '--paths',
+        nargs='+',
+        help='Strings representing the paths to training data texts',
+        default=[],
+        required=True
+    )
+    arg_classifier.add_argument(
+        '-l', '--labels',
+        nargs='+',
+        help='The labels to be extracted from the documents (in format FirstLineLabel_SecondLineLabel)'
+    )
+    arg_classifier.add_argument(
+        '-f', '--filter',
+        nargs='*',
+        help='Subset of values of the column given in the "labels" list',
+        default=None
+    )
+    arg_classifier.add_argument(
+        '-a', '--algorithm',
+        default='knn',
+        help='The algorithm used for classification',
+        choices={'knn', 'svm', 'mlp', 'tree', 'forest'}
+    )
+
     if len(sys.argv) <= 1:
         args.print_help()
         return 0
@@ -398,7 +440,8 @@ def main():
             'test': arg_test.print_help,
             'train': arg_train.print_help,
             'autobuild': arg_autobuild.print_help,
-            'build': arg_manbuild.print_help
+            'build': arg_manbuild.print_help,
+            'train_classifier': arg_classifier.print_help
         }
 
         help_function = helpers.get(sys.argv[1])

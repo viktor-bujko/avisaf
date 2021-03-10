@@ -14,7 +14,6 @@ import spacy
 from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
-from avisaf.util.data_extractor import get_narratives, get_entities
 from avisaf.util.indexing import get_spans_indexes, entity_trimmer
 import avisaf.util.training_data_build as train
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -65,6 +64,8 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
     :type verbose: bool
     :param verbose: A flag indicating verbose stdout printing.
     """
+
+    from avisaf.util.data_extractor import get_narratives
     # almost result list - list containing all entities - including the overlaps
     tr_data_overlaps = []
     tr_src_file = tr_src_file.resolve()
@@ -115,23 +116,23 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
 
         tr_data_overlaps.append(tr_example)
 
-    TRAINING_DATA = []  # list will contain training data without overlaps
+    training_data = []  # list will contain training data without overlaps
 
     for text, annotations in tr_data_overlaps:
         new_annotations = train.remove_overlaps_from_dict(annotations)
-        TRAINING_DATA.append((text, {"entities": new_annotations}))
+        training_data.append((text, {"entities": new_annotations}))
 
     if save and tr_src_file is not None:
         with tr_src_file.open(mode='w') as file:
-            json.dump(TRAINING_DATA, file)
+            json.dump(training_data, file)
 
         train.remove_overlaps_from_file(tr_src_file)
         entity_trimmer(tr_src_file)
         train.pretty_print_training_data(tr_src_file)
     else:
-        print(*TRAINING_DATA, sep='\n')
+        print(*training_data, sep='\n')
 
-    return TRAINING_DATA
+    return training_data
 
 
 def annotate_man(file_path: Path, lines: int = -1,
@@ -160,6 +161,7 @@ def annotate_man(file_path: Path, lines: int = -1,
 
     :return:            List of texts and its annotations.
     """
+    from avisaf.util.data_extractor import get_entities, get_narratives
 
     labels = get_entities(labels_path) if labels_path is not None else get_entities()
 
@@ -221,23 +223,23 @@ def annotate_man(file_path: Path, lines: int = -1,
         print()  # print an empty line
 
         if save:
-            MAN_TRAINING_DATA_FILE = Path('data_files', 'training_data', 'man_annotated_data.json').resolve()
-            MAN_TRAINING_DATA_FILE.touch(exist_ok=True)
+            man_training_data_file = Path('data_files', 'training_data', 'man_annotated_data.json').resolve()
+            man_training_data_file.touch(exist_ok=True)
 
             # if the file is not empty
-            if len(MAN_TRAINING_DATA_FILE.read_bytes()) != 0:
+            if len(man_training_data_file.read_bytes()) != 0:
                 # rewrite the current content of the file
-                with open(os.path.expanduser(MAN_TRAINING_DATA_FILE), mode='r') as file:
+                with open(os.path.expanduser(man_training_data_file), mode='r') as file:
                     old_content = json.load(file)
             else:
                 old_content = []
 
-            with open(os.path.expanduser(MAN_TRAINING_DATA_FILE), mode='w') as file:
+            with open(os.path.expanduser(man_training_data_file), mode='w') as file:
                 old_content.append(new_entry)
                 json.dump(old_content, file)
-                print(f"Content in the {MAN_TRAINING_DATA_FILE.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                print(f"Content in the {man_training_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
 
-            train.pretty_print_training_data(MAN_TRAINING_DATA_FILE)
+            train.pretty_print_training_data(man_training_data_file)
 
     return result
 
@@ -320,10 +322,58 @@ def encode_labels(unique: list, labels: list):
     return encoded_labels, encoding
 
 
-def normalize_data_distribution(data, target):
+def normalize_data_distribution(data, target, deviation_percentage: float = 0.05):
     """
 
+    :param deviation_percentage:
     :param data:
+    :param target:
+    :return:
+    """
+
+    distribution_counts, dist = get_data_distribution(target)
+
+    most_even_distribution = 1 / len(distribution_counts)
+
+    filtered_indices = set()
+    more_present_idxs = np.where(dist > most_even_distribution)[0]
+    # distribution_surplus = dist[more_present_index] - most_even_distribution
+    # examples_to_remove = int(distribution_surplus * data.shape[0])
+    examples_to_remove = int(np.sum(
+        (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * np.random.uniform(
+            low=1 - deviation_percentage,
+            high=1 + deviation_percentage
+        )
+    ))
+
+    repeated_match = 0
+    while examples_to_remove > 0:
+        rnd_index = np.random.randint(0, data.shape[0])
+        should_be_filtered = target[rnd_index] in more_present_idxs
+        if not should_be_filtered:
+            continue
+
+        # rnd_index should be filtered here
+
+        if rnd_index in filtered_indices:
+            repeated_match += 1
+        else:
+            filtered_indices.add(rnd_index)
+            examples_to_remove -= 1
+            repeated_match = 0
+
+        # Avoiding "infinite loop" caused by always matching already filtered examples
+        # Giving up on filtering the exact number of examples -> The distribution will be less even
+        examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
+
+    arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
+
+    return data[arr_filter], target[arr_filter]
+
+
+def get_data_distribution(target: list):
+    """
+
     :param target:
     :return:
     """
@@ -331,20 +381,4 @@ def normalize_data_distribution(data, target):
     distribution_counts = np.histogram(target, bins=len(np.unique(target)))[0]
     dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
 
-    most_even_distribution = 1 / len(distribution_counts)
-
-    filtered_indices = []
-    for more_present_index in np.where(dist > most_even_distribution):
-        distribution_surplus = dist[more_present_index] - most_even_distribution
-        examples_to_remove = int(distribution_surplus * data.shape[0])  # Calculates the number of examples with given class to remove
-
-        while examples_to_remove > 0:
-            rnd_index = np.random.randint(0, data.shape[0])
-            should_be_filtered = target[rnd_index] == more_present_index
-            if should_be_filtered and rnd_index not in filtered_indices:
-                filtered_indices.append(rnd_index)
-                examples_to_remove -= 1
-
-    arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
-
-    return data[arr_filter], target[arr_filter]
+    return distribution_counts, dist
