@@ -6,18 +6,25 @@ training data used by other modules.
 import pandas as pd
 import sys
 import json
+import logging
 from pathlib import Path
 import numpy as np
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=f'[%(levelname)s - %(asctime)s]: %(message)s'
+)
 
 
-def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve()):
+class JsonDataExtractor:
+    # TODO: This class should contain methods for working with json files
+    # get_entities, get_training_data
+    pass
+
+
+def get_entities(entities_file_path: Path = None):
+    # Works with entities_labels.json file = only a simple json list
+    # Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
@@ -27,6 +34,10 @@ def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve
 
     :return: Returns the list of available entity labels.
     """
+    if entities_file_path is None:
+        # entities_file_path = Path(Path().resolve(), 'avisaf_ner/entities_labels.json')
+        entities_file_path = find_file_by_path('entities_labels.json')
+
     entities_file_path = entities_file_path.resolve()
 
     with entities_file_path.open(mode='r') as entities_file:
@@ -34,6 +45,8 @@ def get_entities(entities_file_path: Path = Path('entities_labels.json').resolve
 
 
 def get_training_data(training_data_file_path: Path):
+    # Works with (text, annotations) list JSON file
+    # Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the training data.
     The training data are supposed to be a list of (text, annotations) tuples.
 
@@ -43,6 +56,10 @@ def get_training_data(training_data_file_path: Path):
 
     :return: Returns the JSON list of (text, annotations) tuples.
     """
+    if not training_data_file_path:
+        msg = 'Training data file path cannot be None'
+        logging.error(msg)
+        raise TypeError(msg)
 
     if not training_data_file_path.is_absolute():
         training_data_file_path = training_data_file_path.resolve()
@@ -52,6 +69,8 @@ def get_training_data(training_data_file_path: Path):
 
 
 def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0):
+    # TODO: This method should be replaced by CsvDataExtractor.extract_data_from_csv_columns
+
     """Function responsible for reading raw csv file containing the original
     safety reports from the ASRS database.
 
@@ -65,6 +84,11 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
 
     :return: Returns a python generator object of all texts.
     """
+
+    if file_path is None:
+        msg = 'The file_path to have narratives extracted from cannot be None'
+        logging.error(msg)
+        raise TypeError(msg)
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 
@@ -101,6 +125,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
 
 
 def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
+    # Static utility function not tied to any object
     """
 
     :param max_iterations:
@@ -126,24 +151,25 @@ def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
 
 class DataExtractor:
 
-    def __init__(self):
-        self._delete = 0
+    def __init__(self, file_paths: list):
+        self._file_paths = file_paths
 
-    def extract_data_from_csv_columns(self, file_path: [Path, list], field_name: [str, list], lines_count: int = -1,
-                                      start_index: int = 0):
+    def extract_from_csv_columns(self, field_name: [str, list], lines_count: int = -1,
+                                 start_index: int = 0, file_paths: [list, str] = None):
         """
 
+        :param file_paths:
         :param field_name:
-        :param file_path:
         :param lines_count:
         :param start_index:
         :return:
         """
 
-        self._delete = 1
         # Normalizing the type of arguments to fit the rest of the method
-        file_paths = file_path if type(file_path) is list else [file_path]
         field_names = field_name if type(field_name) is list else [field_name]
+
+        # Overriding default instance file paths list by the passed parameter
+        file_paths = self._file_paths if file_paths is None else (file_paths if file_paths is list else [file_paths])
 
         label_data_dict = {}
         for a_field_name in field_names:
@@ -168,7 +194,8 @@ class DataExtractor:
                 except KeyError:
                     print(
                         f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"',
-                        file=sys.stderr)
+                        file=sys.stderr
+                    )
                     continue
 
                 length = len(extracted_values_collection)
@@ -179,73 +206,3 @@ class DataExtractor:
             label_data_dict[a_field_name] = extracted_values
 
         return label_data_dict
-
-
-def classification_main(labels, paths, label_filter, algorithm):
-    from avisaf.classification.classifier import ASRSReportClassifier
-    from avisaf.training.training_data_creator import build_feature_matrices_from_texts, normalize_data_distribution, get_data_distribution
-
-    alg = {
-        'mlp': MLPClassifier(hidden_layer_sizes=32),
-        'svm': SVC(),
-        'tree': DecisionTreeClassifier(criterion='entropy'),
-        'forest': RandomForestClassifier(n_estimators=150, criterion='entropy', min_samples_split=15),
-        'knn': KNeighborsClassifier(n_neighbors=10)
-    }
-    algor = alg['knn']
-
-    if alg.get(algorithm) is not None:
-        algor = alg.get(algorithm)
-
-    classifier = ASRSReportClassifier(algor)
-
-    extractor = DataExtractor()
-
-    for label in labels:
-
-        extracted_dict = extractor.extract_data_from_csv_columns(
-            paths,
-            [label] + ['Report 1_Narrative']  # ['Report 1_Narrative', 'Events_Detector']
-            # texts have to be always extracted
-        )
-        data, target, encoding = build_feature_matrices_from_texts(
-            extracted_dict['Report 1_Narrative'],
-            extracted_dict[label],
-            target_label_filter=label_filter  # ['Person Flight Crew', 'Person Air Traffic Control']
-        )
-
-        old_data_rows = data.shape[0]
-        print(get_data_distribution(target)[1])
-        normalize = False
-
-        if normalize:
-            data, target = normalize_data_distribution(data, target)
-            print(get_data_distribution(target)[1])
-            new_data_rows = data.shape[0]
-
-            if old_data_rows - new_data_rows > 0:
-                print(
-                    f'Normalization: {old_data_rows - new_data_rows} of examples had to be removed to have an even distribution of examples')
-
-        train_data, test_data, train_target, test_target = train_test_split(
-            data, target,
-            test_size=0.1,
-            random_state=0
-        )
-
-        classifier.train_report_classification(train_data, train_target)
-        classifier.evaluate(test_data, test_target)
-
-
-if __name__ == '__main__':
-    labels_out = ['Events_Detector', 'Report 1_Narrative']
-    paths_out = ['./ASRS/ASRS-csv-reports/ASRS_DBOnline-01-2018-06-2018.csv']
-    # label_filter = ['Person Flight Crew', 'Person Air Traffic Control']
-    algorithm = KNeighborsClassifier()
-
-    classification_main(
-        labels=labels_out,
-        paths=paths_out,
-        label_filter=None,  # label_filter
-        algorithm=algorithm
-    )

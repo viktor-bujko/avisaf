@@ -55,6 +55,7 @@ def train_spacy_model(iter_number: int = 20,
         print('A new blank model has been created.', flush=verbose)
 
     print(f'Using training dataset: {given_data_src}', flush=verbose)
+
     # getting a list of currently used entities from **default** location
     entity_labels = get_entities()
 

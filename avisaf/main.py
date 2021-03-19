@@ -13,9 +13,10 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from colorama import Style, Fore
 # importing own modules
-from .training.new_entity_trainer import train_spacy_model
-from .training.training_data_creator import annotate_auto, annotate_man
-from .util.data_extractor import get_entities, classification_main
+from avisaf.training.new_entity_trainer import train_spacy_model
+from avisaf.training.training_data_creator import annotate_auto, annotate_man
+from avisaf.classification.classifier import launch_classification
+from avisaf.util.data_extractor import get_entities
 
 sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
                "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
@@ -171,14 +172,14 @@ def choose_action(args: Namespace):
     """
 
     functions = {
-        'train': lambda: train_spacy_model(
+        'train_ner': lambda: train_spacy_model(
             iter_number=args.iterations,
             model=args.model,
             new_model_name=args.name,
             tr_data_srcfile=Path(args.data),
             verbose=args.verbose
         ),
-        'test': lambda: test(
+        'test_ner': lambda: test(
             model=args.model,
             cli_result=args.print,
             visualize=args.render,
@@ -189,7 +190,7 @@ def choose_action(args: Namespace):
             Path(args.keys_file),
             args.label,
             model=args.model,
-            tr_src_file=Path(args.data),
+            training_src_file=args.data,
             extract_texts=args.extract,
             use_phrasematcher=args.p,
             save=args.save,
@@ -202,11 +203,15 @@ def choose_action(args: Namespace):
             save=args.not_save,
             start_index=args.start_index
         ),
-        'train_classifier': lambda: classification_main(
-            labels=args.labels,
-            paths=args.paths,
+        'classifier': lambda: launch_classification(
+            label=args.label,
+            texts_paths=args.paths,
             label_filter=args.filter,
-            algorithm=args.algorithm
+            algorithm=args.algorithm,
+            normalize=args.normalize,
+            test=args.test,
+            train=args.train,
+            model_path=args.model
         )
     }
 
@@ -238,11 +243,11 @@ def main():
     # train subcommand and its arguments
     # ========================================================================================
     arg_train = subparser.add_parser(
-        'train',
+        'train_ner',
         help='Train a new NLP NER model.',
         description='Command for training new/updating entities.'
     )
-    arg_train.set_defaults(action='train')
+    arg_train.set_defaults(action='train_ner')
     arg_train.add_argument(
         '-d', '--data',
         metavar='PATH',
@@ -278,11 +283,11 @@ def main():
     # test subcommand and its arguments
     # ========================================================================================
     arg_test = subparser.add_parser(
-        'test',
+        'test_ner',
         help='Test a selected model.',
         description='Command used for testing the entity recognition on given text.'
     )
-    arg_test.set_defaults(action='test')
+    arg_test.set_defaults(action='test_ner')
     arg_test.add_argument(
         '-m', '--model',
         metavar='PATH/MODEL',
@@ -290,7 +295,7 @@ def main():
         required=True,
         help='File path to an existing spaCy model or existing spaCy model name for NER.'
     )
-    group = arg_test.add_mutually_exclusive_group(required=False)
+    group = arg_test.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '-p', '--print',
         action='store_true',
@@ -402,33 +407,53 @@ def main():
     # classification module and its arguments
     # ========================================================================================
     arg_classifier = subparser.add_parser(
-        'train_classifier',
+        'classifier',
         help='Train an ASRS reports classification model.'
     )
-    arg_classifier.set_defaults(action='train_classifier')
+    arg_classifier.set_defaults(action='classifier')
     arg_classifier.add_argument(
-        '-p', '--paths',
+        'paths',
         nargs='+',
         help='Strings representing the paths to training data texts',
-        default=[],
-        required=True
+        default=[]
+    )
+    arg_classifier_test_train = arg_classifier.add_mutually_exclusive_group(required=True)
+    arg_classifier_test_train.add_argument(
+        '--test',
+        action='store_true',
+        help='Use specified arguments for testing'
+    )
+    arg_classifier_test_train.add_argument(
+        '--train',
+        action='store_true',
+        help='Use specified arguments for training'
     )
     arg_classifier.add_argument(
-        '-l', '--labels',
-        nargs='+',
-        help='The labels to be extracted from the documents (in format FirstLineLabel_SecondLineLabel)'
+        '-l', '--label',
+        help='The label of the column to be extracted from the documents (in format FirstLineLabel_SecondLineLabel)',
+        default=None,
     )
     arg_classifier.add_argument(
         '-f', '--filter',
         nargs='*',
-        help='Subset of values of the column given in the "labels" list',
+        help='Subset of the values present in the column given by the label',
         default=None
     )
     arg_classifier.add_argument(
         '-a', '--algorithm',
-        default='knn',
-        help='The algorithm used for classification',
+        default='mlp',
+        help='The algorithm used for classification training.',
         choices={'knn', 'svm', 'mlp', 'tree', 'forest'}
+    )
+    arg_classifier.add_argument(
+        '--normalize',
+        action='store_true',
+        help='Normalize the distribution of classes in training data'
+    )
+    arg_classifier.add_argument(
+        '-m', '--model',
+        default=None,
+        help='The trained model to use',
     )
 
     if len(sys.argv) <= 1:
@@ -452,7 +477,7 @@ def main():
         return 0
     else:
         parsed = args.parse_args()
-        if parsed.action == 'test' and not parsed.print and not parsed.render and parsed.save is None:
+        if parsed.action == 'test_ner' and not parsed.print and not parsed.render and parsed.save is None:
             print("The output will not be visible without one of --print, --render or --save argument.\n", file=sys.stderr)
             arg_test.print_help()
             return 1

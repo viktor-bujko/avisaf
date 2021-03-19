@@ -11,13 +11,20 @@ import sys
 import os
 import json
 import spacy
+import logging
 from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
 from avisaf.util.indexing import get_spans_indexes, entity_trimmer
 import avisaf.util.training_data_build as train
-from sklearn.feature_extraction.text import TfidfVectorizer
+from avisaf.util.data_extractor import DataExtractor
+import avisaf.classification.vectorizers as vectorizers
 import numpy as np
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=f'[%(levelname)s - %(asctime)s]: %(message)s'
+)
 
 
 # looking for the project root
@@ -31,7 +38,7 @@ if str(SOURCES_ROOT_PATH) not in sys.path:
 
 
 def annotate_auto(patterns_file_path: Path, label_text: str,
-                  model='en_core_web_md', tr_src_file: Path = None,
+                  training_src_file: [Path, str], model='en_core_web_md',
                   extract_texts: bool = False, use_phrasematcher: bool = False,
                   save: bool = False, verbose: bool = False):
     """Automatic annotation tool. The function takes a file which has to contain a
@@ -47,8 +54,8 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
     :type model: str, Path
     :param model: Model to be loaded to spaCy. Either a valid spaCy pre-trained
         model or a path to a local model.
-    :type tr_src_file: Path
-    :param tr_src_file: Training data source file path. JSON file is supposed to
+    :type training_src_file: Path
+    :param training_src_file: Training data source file path. JSON file is supposed to
         contain list of (text, annotations) tuples, where the text is the string
         and annotations represents a dictionary with list of (start, end, label)
         entity descriptors.
@@ -66,17 +73,29 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
     """
 
     from avisaf.util.data_extractor import get_narratives
+
+    # TODO: Support also reading from a csv file
+    if training_src_file is None:
+        msg = 'The training data src file path cannot be None'
+        logging.error(msg)
+        raise TypeError(msg)
+
+    if training_src_file is str:
+        training_src_file = Path(training_src_file)
+
     # almost result list - list containing all entities - including the overlaps
     tr_data_overlaps = []
-    tr_src_file = tr_src_file.resolve()
-    patterns_file_path = patterns_file_path.resolve()
+    if training_src_file is not None:
+        training_src_file = training_src_file.resolve()
+    if patterns_file_path is not None:
+        patterns_file_path = patterns_file_path.resolve()
 
-    if extract_texts or tr_src_file is None:
+    if extract_texts:
         # get testing texts
-        texts = list(get_narratives())  # file_path is None
+        texts = list(get_narratives(training_src_file))
         entities = None
     else:
-        with tr_src_file.open(mode='r') as tr_data_file:
+        with training_src_file.open(mode='r') as tr_data_file:
             # load the file containing the list of training ('text string', entity dict) tuples
             tr_data = json.load(tr_data_file)
             texts = [text for text, _ in tr_data]
@@ -100,11 +119,13 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
         matcher.add(label_text, patterns)
 
     print(f'Using {matcher}', flush=verbose)
+    logging.info(f'Using {matcher}')
 
     for doc in nlp.pipe(texts, batch_size=100):
         matches = matcher(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
         print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
+        logging.info(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}')
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
         # following line of code also resolves situation when the entities dictionary is None
         tr_example = (doc.text, {"entities": new_entities})
@@ -122,13 +143,13 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
         new_annotations = train.remove_overlaps_from_dict(annotations)
         training_data.append((text, {"entities": new_annotations}))
 
-    if save and tr_src_file is not None:
-        with tr_src_file.open(mode='w') as file:
+    if save and training_src_file is not None:
+        with training_src_file.open(mode='w') as file:
             json.dump(training_data, file)
 
-        train.remove_overlaps_from_file(tr_src_file)
-        entity_trimmer(tr_src_file)
-        train.pretty_print_training_data(tr_src_file)
+        train.remove_overlaps_from_file(training_src_file)
+        entity_trimmer(training_src_file)
+        train.pretty_print_training_data(training_src_file)
     else:
         print(*training_data, sep='\n')
 
@@ -192,8 +213,7 @@ def annotate_man(file_path: Path, lines: int = -1,
 
     for text in texts:
         ent_labels = []
-        print(text)
-        print()  # print an empty line
+        print(text, "", sep='\n')
         words = input('Write all words you want to annotate (separated by a comma): ')
         spans = set([word.strip() for word in words.split(',') if word.strip()])
 
@@ -244,141 +264,167 @@ def annotate_man(file_path: Path, lines: int = -1,
     return result
 
 
-def build_feature_matrices_from_texts(texts: list, target_labels: list, text_vectorizer=TfidfVectorizer, target_label_filter: list = None):
-    """
+class ASRSReportDataPreprocessor:
 
-    :param target_label_filter:
-    :param texts:
-    :param target_labels:
-    :param text_vectorizer:
-    :return:
-    """
+    def __init__(self, vectorizer=None):
+        self._encoding = None
+        self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.Word2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
-    texts, target_labels, encoding = get_unique_string_labels(texts, target_labels, target_label_filter)
+    def filter_texts_by_label(self, texts: list, target_labels: list, target_label_filter: list = None):
+        """
 
-    if texts.shape != target_labels.shape:
-        raise ValueError('The number of training examples is not equal to the the number of labels.')
+        :param target_label_filter:
+        :param texts:
+        :param target_labels:
+        :return:
+        """
 
-    # stops = spacy.load('en_core_web_md').Defaults.stop_words
+        new_texts, new_labels = [], []
+        unique_labels = set()
 
-    texts_vectors = text_vectorizer(
-        stop_words='english',
-        lowercase=False,
-        max_features=10000
-    ).fit_transform(texts)  # .toarray() -> create a matrix from csr_matrix
+        for text_idx, text in enumerate(texts):
+            labels = target_labels[text_idx].split(';')
+            for label in labels:
+                label = label.strip()
+                if target_label_filter is not None and label not in target_label_filter:
+                    continue
+                new_texts.append(text)
+                new_labels.append(label)
+                unique_labels.add(label)
 
-    return texts_vectors, np.array(target_labels), encoding
+        if target_label_filter is not None:
+            for label in target_label_filter:
+                if label not in unique_labels:
+                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
 
+        unique_labels = sorted(unique_labels)
+        new_labels, encoding = self.encode_labels(unique_labels, new_labels)
+        _, counts = np.unique(new_labels, return_counts=True)
+        logging.info(dict(zip(unique_labels, counts)))
 
-def get_unique_string_labels(texts: list, target_labels: list, target_label_filter: list = None):
-    """
+        return np.array(new_texts), np.array(new_labels), encoding
 
-    :param target_label_filter:
-    :param texts:
-    :param target_labels:
-    :return:
-    """
+    @staticmethod
+    def encode_labels(unique: list, labels: list):
+        """
 
-    new_texts, new_labels = [], []
-    unique_labels = set()
+        :param unique:
+        :param labels:
+        :return:
+        """
+        encoded_labels = []
 
-    for text_idx, text in enumerate(texts):
-        labels = target_labels[text_idx].split(';')
         for label in labels:
-            label = label.strip()
-            if target_label_filter is not None and label not in target_label_filter:
+            encoded_labels.append(unique.index(label))
+
+        encoding = dict(zip(range(len(unique)), unique))
+
+        return encoded_labels, encoding
+
+    def normalize_data_distribution(self, data, target, deviation_percentage: float = 0.05):
+        """
+
+        :param deviation_percentage:
+        :param data:
+        :param target:
+        :return:
+        """
+
+        distribution_counts, dist = self.get_data_distribution(target)
+
+        most_even_distribution = 1 / len(distribution_counts)
+
+        filtered_indices = set()
+        more_present_idxs = np.where(dist > most_even_distribution)[0]
+        # distribution_surplus = dist[more_present_index] - most_even_distribution
+        # examples_to_remove = int(distribution_surplus * data.shape[0])
+        examples_to_remove = int(np.sum(
+            (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * np.random.uniform(
+                low=1 - deviation_percentage,
+                high=1 + deviation_percentage
+            )
+        ))
+
+        repeated_match = 0
+        while examples_to_remove > 0:
+            rnd_index = np.random.randint(0, data.shape[0])
+            should_be_filtered = target[rnd_index] in more_present_idxs
+            if not should_be_filtered:
                 continue
-            new_texts.append(text)
-            new_labels.append(label)
-            unique_labels.add(label)
 
-    if target_label_filter is not None:
-        for label in target_label_filter:
-            if label not in unique_labels:
-                print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
+            # rnd_index should be filtered here
 
-    unique_labels = sorted(unique_labels)
-    new_labels, encoding = encode_labels(unique_labels, new_labels)
-    _, counts = np.unique(new_labels, return_counts=True)
-    print(dict(zip(unique_labels, counts)))
+            if rnd_index in filtered_indices:
+                repeated_match += 1
+            else:
+                filtered_indices.add(rnd_index)
+                examples_to_remove -= 1
+                repeated_match = 0
 
-    return np.array(new_texts), np.array(new_labels), encoding
+            # Avoiding "infinite loop" caused by always matching already filtered examples
+            # Giving up on filtering the exact number of examples -> The distribution will be less even
+            examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
 
+        arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
 
-def encode_labels(unique: list, labels: list):
-    """
+        return data[arr_filter], target[arr_filter]
 
-    :param unique:
-    :param labels:
-    :return:
-    """
-    encoded_labels = []
+    def normalize(self, data, target):
+        old_data_counts = data.shape[0]
+        data, target = self.normalize_data_distribution(data, target)
 
-    for label in labels:
-        encoded_labels.append(unique.index(label))
+        new_data_counts = data.shape[0]
+        logging.debug(self.get_data_distribution(target)[1])
 
-    encoding = dict(zip(range(len(unique)), unique))
+        if old_data_counts - new_data_counts > 0:
+            logging.info(
+                f'Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples'
+            )
 
-    return encoded_labels, encoding
+        return data, target
 
+    def vectorize_texts(self, texts_paths: list, label_to_extract: str, train: bool, label_values_filter: list):
+        narrative_label = 'Report 1_Narrative'
 
-def normalize_data_distribution(data, target, deviation_percentage: float = 0.05):
-    """
+        extractor = DataExtractor(texts_paths)
+        labels_to_extract = [label_to_extract, narrative_label] if label_to_extract is not None else [narrative_label]
+        extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
 
-    :param deviation_percentage:
-    :param data:
-    :param target:
-    :return:
-    """
+        logging.debug(labels_to_extract)
 
-    distribution_counts, dist = get_data_distribution(target)
-
-    most_even_distribution = 1 / len(distribution_counts)
-
-    filtered_indices = set()
-    more_present_idxs = np.where(dist > most_even_distribution)[0]
-    # distribution_surplus = dist[more_present_index] - most_even_distribution
-    # examples_to_remove = int(distribution_surplus * data.shape[0])
-    examples_to_remove = int(np.sum(
-        (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * np.random.uniform(
-            low=1 - deviation_percentage,
-            high=1 + deviation_percentage
+        texts, target_labels, encoding = self.filter_texts_by_label(
+            extracted_dict[narrative_label],
+            extracted_dict[label_to_extract],
+            label_values_filter
         )
-    ))
 
-    repeated_match = 0
-    while examples_to_remove > 0:
-        rnd_index = np.random.randint(0, data.shape[0])
-        should_be_filtered = target[rnd_index] in more_present_idxs
-        if not should_be_filtered:
-            continue
+        data = self.vectorizer.build_feature_vectors(
+            texts,
+            target_labels.shape[0],
+            train=train
+        )
 
-        # rnd_index should be filtered here
+        if train:
+            self._encoding = encoding
 
-        if rnd_index in filtered_indices:
-            repeated_match += 1
-        else:
-            filtered_indices.add(rnd_index)
-            examples_to_remove -= 1
-            repeated_match = 0
+        return data, target_labels
 
-        # Avoiding "infinite loop" caused by always matching already filtered examples
-        # Giving up on filtering the exact number of examples -> The distribution will be less even
-        examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
+    @staticmethod
+    def get_data_distribution(target: list):
+        """
 
-    arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
+        :param target:
+        :return:
+        """
 
-    return data[arr_filter], target[arr_filter]
+        distribution_counts = np.histogram(
+            target,
+            bins=np.unique(target).shape[0]
+        )[0]
+        dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
 
+        return distribution_counts, dist
 
-def get_data_distribution(target: list):
-    """
-
-    :param target:
-    :return:
-    """
-
-    distribution_counts = np.histogram(target, bins=len(np.unique(target)))[0]
-    dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
-
-    return distribution_counts, dist
+    def get_encoding(self):
+        return self._encoding

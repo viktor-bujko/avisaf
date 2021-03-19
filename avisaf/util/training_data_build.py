@@ -156,12 +156,12 @@ def pretty_print_training_data(file_path: Path):
 
 def write_sentences():
     """A loop which prompts a user to input a sentence which will be annotated
-    later. The function end when string 'None' is detected
+    later. The function ends when string 'None' is detected
 
     :return: The list of user-written sentences.
     """
     result = []
-    sentence = input('Write a sentence; or "None" to exit the loop: ')
+    sentence = input('Write a sentence or "None" to exit the loop: ')
 
     while sentence != 'None':
         result.append(sentence)
