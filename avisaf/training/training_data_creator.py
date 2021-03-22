@@ -284,14 +284,25 @@ class ASRSReportDataPreprocessor:
         unique_labels = set()
 
         for text_idx, text in enumerate(texts):
+            # Some reports may be annotated with multiple labels separated by ;
+            # We want to use them all as possible outcomes
             labels = target_labels[text_idx].split(';')
+
             for label in labels:
                 label = label.strip()
-                if target_label_filter is not None and label not in target_label_filter:
-                    continue
+                matched_label = label   # label which will be used as prediction label
+
+                if target_label_filter is not None:
+                    # apply label filtration and truncation
+                    matched_filter = list(filter(lambda x: str(label).startswith(x.strip()), target_label_filter))
+                    if len(matched_filter) != 1:
+                        # The label is not unambiguous
+                        continue
+                    else:
+                        matched_label = matched_filter[0]
                 new_texts.append(text)
-                new_labels.append(label)
-                unique_labels.add(label)
+                new_labels.append(matched_label)
+                unique_labels.add(matched_label)
 
         if target_label_filter is not None:
             for label in target_label_filter:
@@ -392,6 +403,7 @@ class ASRSReportDataPreprocessor:
         extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
 
         logging.debug(labels_to_extract)
+        logging.debug(label_values_filter)
 
         texts, target_labels, encoding = self.filter_texts_by_label(
             extracted_dict[narrative_label],
