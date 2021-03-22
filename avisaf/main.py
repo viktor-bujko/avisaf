@@ -211,7 +211,8 @@ def choose_action(args: Namespace):
             normalize=args.normalize,
             test=args.test,
             train=args.train,
-            model_path=args.model
+            models_dir_paths=args.model,
+            plot=args.plot
         )
     }
 
@@ -451,9 +452,15 @@ def main():
         help='Normalize the distribution of classes in training data'
     )
     arg_classifier.add_argument(
+        '--plot',
+        action='store_true',
+        help='Show AUC for each of selected models'
+    )
+    arg_classifier.add_argument(
         '-m', '--model',
         default=None,
-        help='The trained model to use',
+        nargs='+',
+        help='The trained model(s) to use (at least one is required)',
     )
 
     if len(sys.argv) <= 1:
