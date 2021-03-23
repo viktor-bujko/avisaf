@@ -8,10 +8,10 @@ import lzma
 import json
 import pickle
 import logging
-from datetime import datetime
 import numpy as np
-import sklearn.metrics as metrics
 from re import sub
+from datetime import datetime
+import sklearn.metrics as metrics
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -29,7 +29,7 @@ logging.basicConfig(
 class ASRSReportClassificationPredictor:
 
     def __init__(self, model=None, labels_encoding: dict = None, vectorizer=None, normalized: bool = True,
-                 model_params: dict = None, trained_label: str = None, trained_filter: list = None):
+                 model_params: dict = None, trained_label: str = None, trained_filter: list = None, deviation_rate: float = 0.0):
 
         self._model = model  # Model(s) to be used for evaluation
         if model_params is not None:
@@ -41,6 +41,7 @@ class ASRSReportClassificationPredictor:
         self._vectorizer = vectorizer
         self._trained_label = trained_label
         self._trained_filter = trained_filter
+        self._deviation_rate = deviation_rate
 
     def predict_report_class(self, texts_paths: list, label_to_test: str = None, label_filter: list = None):
 
@@ -60,7 +61,7 @@ class ASRSReportClassificationPredictor:
         logging.debug(self._preprocessor.get_data_distribution(test_target)[1])
 
         if self._normalize:
-            test_data, test_target = self._preprocessor.normalize(test_data, test_target)
+            test_data, test_target = self._preprocessor.normalize(test_data, test_target, self._deviation_rate)
 
         logging.debug(f'Test data shape: {test_data.shape}')
         predictions = self.predict_proba(test_data)
@@ -143,8 +144,10 @@ class ASRSReportClassificationEvaluator:
     @staticmethod
     def evaluate(predictions: list, test_target):
 
+        ensemble = ""
         if len(predictions) > 1:
             logging.debug(f"{len(predictions)} models ensembling")
+            ensemble = f"(ensemble of {len(predictions)} models)"
 
         predictions = np.argmax(np.mean(predictions, axis=0), axis=1)
 
@@ -154,6 +157,8 @@ class ASRSReportClassificationEvaluator:
         print('==============================================')
         print('Confusion matrix: number [i,j] indicates the number of observations of class i which were predicted to be in class j')
         print(metrics.confusion_matrix(test_target, predictions))
+        if ensemble:
+            print(ensemble)
         print(f'Model Based Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
         print(f'Model Based Precision: {metrics.precision_score(test_target, predictions) * 100}')
         print(f'Model Based Recall: {metrics.recall_score(test_target, predictions) * 100}')
@@ -167,18 +172,10 @@ class ASRSReportClassificationEvaluator:
             print(f'Model Based Recall: {metrics.recall_score(test_target, predictions) * 100}')
             print('==============================================')
 
-        # metrics.plot_roc_curve(self._model, test_data, test_target)
-        # for i in range(3):
-        # logging.debug(metrics.roc_curve(test_target, predictions)[i])
-
     @staticmethod
     def plot(probability_predictions, test_target):
-        import matplotlib.pyplot as plt
-
-        preds = probability_predictions[:, 1]
-
-        logging.debug(f'Probas: {probability_predictions}')
-        logging.debug(f'Preds: {preds}')
+        pass
+        """preds = probability_predictions[:, 1]
 
         fpr, tpr, threshold = metrics.roc_curve(test_target, preds)
         roc_auc = metrics.auc(fpr, tpr)
@@ -193,12 +190,12 @@ class ASRSReportClassificationEvaluator:
         plt.ylim([0, 1])
         plt.ylabel('True Positive Rate')
         plt.xlabel('False Positive Rate')
-        plt.show()
+        plt.show()"""
 
 
 class ASRSReportClassificationTrainer:
 
-    def __init__(self, classifier: str = None, normalized: bool = True, vectorizer=None):
+    def __init__(self, classifier: str = None, normalized: bool = True, vectorizer=None, deviation_rate: float = 0.0):
         # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
@@ -226,6 +223,7 @@ class ASRSReportClassificationTrainer:
         self._trained_texts = []
         self._trained_label = None
         self._filter = None
+        self._deviation_rate = deviation_rate
 
     def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None):
 
@@ -245,7 +243,7 @@ class ASRSReportClassificationTrainer:
         logging.debug(self._preprocessor.get_data_distribution(train_target)[1])
 
         if self._normalize:
-            train_data, train_target = self._preprocessor.normalize(train_data, train_target)
+            train_data, train_target = self._preprocessor.normalize(train_data, train_target, self._deviation_rate)
 
         logging.debug(f'Train data shape: {train_data.shape}')
         logging.debug(self._classifier)
@@ -297,9 +295,19 @@ class ASRSReportClassificationTrainer:
             json.dump(parameters, params_file, indent=4)
 
 
-def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, test: bool, train: bool, plot: bool):
+def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, train: bool, plot: bool):
 
-    if test:
+    deviation_rate = np.random.uniform(low=0.95, high=1.05, size=None) if normalize else None  # 5% of maximum deviation between classes
+    if train:
+        logging.debug('Training')
+        classifier = ASRSReportClassificationTrainer(
+            classifier=algorithm,
+            vectorizer=None,
+            normalized=normalize,
+            deviation_rate=deviation_rate
+        )
+        classifier.train_report_classification(texts_paths, label, label_filter)
+    else:
         logging.debug('Testing')
 
         if models_dir_paths is None:
@@ -325,7 +333,8 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
                 vectorizer=vectorizer,
                 trained_label=trained_label,
                 trained_filter=trained_filter,
-                normalized=normalize
+                normalized=normalize,
+                deviation_rate=deviation_rate
             )
 
             predictions, targets = predictor.predict_report_class(texts_paths, label, label_filter)
@@ -336,15 +345,6 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
                 test_targets = targets
 
         ASRSReportClassificationEvaluator.evaluate(models_predictions, test_targets)
-
-    elif train:
-        logging.debug('Training')
-        classifier = ASRSReportClassificationTrainer(
-            classifier=algorithm,
-            vectorizer=None,
-            normalized=normalize
-        )
-        classifier.train_report_classification(texts_paths, label, label_filter)
 
         """
         pre = ASRSReportDataPreprocessor()

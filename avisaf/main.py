@@ -209,7 +209,6 @@ def choose_action(args: Namespace):
             label_filter=args.filter,
             algorithm=args.algorithm,
             normalize=args.normalize,
-            test=args.test,
             train=args.train,
             models_dir_paths=args.model,
             plot=args.plot
@@ -418,13 +417,7 @@ def main():
         help='Strings representing the paths to training data texts',
         default=[]
     )
-    arg_classifier_test_train = arg_classifier.add_mutually_exclusive_group(required=True)
-    arg_classifier_test_train.add_argument(
-        '--test',
-        action='store_true',
-        help='Use specified arguments for testing'
-    )
-    arg_classifier_test_train.add_argument(
+    arg_classifier.add_argument(
         '--train',
         action='store_true',
         help='Use specified arguments for training'

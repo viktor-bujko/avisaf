@@ -333,7 +333,7 @@ class ASRSReportDataPreprocessor:
 
         return encoded_labels, encoding
 
-    def normalize_data_distribution(self, data, target, deviation_percentage: float = 0.05):
+    def normalize_data_distribution(self, data, target, deviation_percentage: float):
         """
 
         :param deviation_percentage:
@@ -351,10 +351,7 @@ class ASRSReportDataPreprocessor:
         # distribution_surplus = dist[more_present_index] - most_even_distribution
         # examples_to_remove = int(distribution_surplus * data.shape[0])
         examples_to_remove = int(np.sum(
-            (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * np.random.uniform(
-                low=1 - deviation_percentage,
-                high=1 + deviation_percentage
-            )
+            (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * deviation_percentage
         ))
 
         repeated_match = 0
@@ -381,9 +378,9 @@ class ASRSReportDataPreprocessor:
 
         return data[arr_filter], target[arr_filter]
 
-    def normalize(self, data, target):
+    def normalize(self, data, target, deviation_rate: float):
         old_data_counts = data.shape[0]
-        data, target = self.normalize_data_distribution(data, target)
+        data, target = self.normalize_data_distribution(data, target, deviation_rate)
 
         new_data_counts = data.shape[0]
         logging.debug(self.get_data_distribution(target)[1])
