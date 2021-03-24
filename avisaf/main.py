@@ -209,7 +209,7 @@ def choose_action(args: Namespace):
             label_filter=args.filter,
             algorithm=args.algorithm,
             normalize=args.normalize,
-            train=args.train,
+            mode=args.mode,
             models_dir_paths=args.model,
             plot=args.plot
         )
@@ -412,15 +412,16 @@ def main():
     )
     arg_classifier.set_defaults(action='classifier')
     arg_classifier.add_argument(
-        'paths',
+        '--paths',
         nargs='+',
         help='Strings representing the paths to training data texts',
         default=[]
     )
     arg_classifier.add_argument(
-        '--train',
-        action='store_true',
-        help='Use specified arguments for training'
+        '--mode',
+        choices={'train', 'dev', 'test'},
+        default='test',
+        help='Choose classifier operating mode (default test)'
     )
     arg_classifier.add_argument(
         '-l', '--label',

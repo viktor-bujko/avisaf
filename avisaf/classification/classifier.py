@@ -293,15 +293,16 @@ class ASRSReportClassificationTrainer:
                 "encoding": self._encoding,
                 "model_params": self._params,
                 "trained_label": {self._trained_label: self._filter},
-                "trained_texts": self._trained_texts
+                "trained_texts": self._trained_texts,
+                "vectorizer_params": self._preprocessor.vectorizer.transformer.get_params()
             }
             json.dump(parameters, params_file, indent=4)
 
 
-def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, train: bool, plot: bool):
+def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, mode: str, plot: bool):
 
     deviation_rate = np.random.uniform(low=0.95, high=1.05, size=None) if normalize else None  # 5% of maximum deviation between classes
-    if train:
+    if mode == 'train':
         logging.debug('Training')
         classifier = ASRSReportClassificationTrainer(
             classifier=algorithm,
@@ -311,7 +312,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
         )
         classifier.train_report_classification(texts_paths, label, label_filter)
     else:
-        logging.debug('Testing')
+        logging.debug(f'Testing on { "normalized " if normalize else "" }{ mode }')
 
         if models_dir_paths is None:
             raise ValueError("The path to the model cannot be null for testing")
@@ -339,6 +340,9 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
                 normalized=normalize,
                 deviation_rate=deviation_rate
             )
+
+            if not texts_paths:
+                texts_paths = [f'../ASRS/ASRS_{ mode }.csv']
 
             predictions, targets = predictor.predict_report_class(texts_paths, label, label_filter)
             models_predictions.append(predictions)
