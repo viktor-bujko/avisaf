@@ -454,7 +454,7 @@ def main():
         '-m', '--model',
         default=None,
         nargs='+',
-        help='The trained model(s) to use (at least one is required)',
+        help='Trained model(s) to use (at least one is required)',
     )
 
     if len(sys.argv) <= 1:

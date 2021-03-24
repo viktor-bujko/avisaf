@@ -13,11 +13,6 @@ from gensim.models.doc2vec import TaggedDocument
 from gensim.models.fasttext import FastText
 from gensim.corpora import Dictionary
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=f'[%(levelname)s - %(asctime)s]: %(message)s'
-)
-
 
 class AsrsReportVectorizer:
 
@@ -47,6 +42,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             lowercase=False,
             ngram_range=(1, 3),
             analyzer='word',
+            max_features=100_000,
             max_df=0.5
         )
 

@@ -10,11 +10,6 @@ import logging
 from pathlib import Path
 import numpy as np
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=f'[%(levelname)s - %(asctime)s]: %(message)s'
-)
-
 
 class JsonDataExtractor:
     # TODO: This class should contain methods for working with json files

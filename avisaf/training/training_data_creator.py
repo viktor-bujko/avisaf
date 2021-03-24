@@ -21,11 +21,6 @@ from avisaf.util.data_extractor import DataExtractor
 import avisaf.classification.vectorizers as vectorizers
 import numpy as np
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=f'[%(levelname)s - %(asctime)s]: %(message)s'
-)
-
 
 # looking for the project root
 path = Path(__file__)
@@ -268,8 +263,8 @@ class ASRSReportDataPreprocessor:
 
     def __init__(self, vectorizer=None):
         self._encoding = None
-        # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
-        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
     def filter_texts_by_label(self, texts: list, target_labels: list, target_label_filter: list = None):
         """
