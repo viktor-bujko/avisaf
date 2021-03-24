@@ -16,6 +16,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
 from sklearn.svm import SVC
 
 from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
@@ -199,11 +200,21 @@ class ASRSReportClassificationTrainer:
         # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
-                'mlp': MLPClassifier(hidden_layer_sizes=32, alpha=0.001),
+                'mlp': MLPClassifier(
+                    hidden_layer_sizes=(128, 64),
+                    alpha=0.001,
+                    batch_size=100,
+                    learning_rate='adaptive',
+                    verbose=True,
+                    early_stopping=True
+                ),
                 'svm': SVC(probability=True),
                 'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
                 'forest': RandomForestClassifier(n_estimators=150, criterion='entropy', min_samples_split=15),
                 'knn': KNeighborsClassifier(n_neighbors=15),
+                'gauss': GaussianNB(),
+                'mnb': MultinomialNB(),
+                'bernoulli': BernoulliNB()
             }
 
             # Setting a default classifier value
@@ -215,6 +226,7 @@ class ASRSReportClassificationTrainer:
             return _classifier
 
         self._classifier = set_classification_algorithm(classifier)
+        self._algorithm = classifier
         self._encoding = dict()
         self._normalize = normalized
         self._model = None
