@@ -5,9 +5,12 @@ import spacy
 import logging
 import concurrent.futures
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest
 from gensim import utils
-from gensim.models import Doc2Vec, Word2Vec, TfidfModel
-from gensim.models.doc2vec import LabeledSentence
+from gensim.test.utils import datapath
+from gensim.models import Doc2Vec, TfidfModel
+from gensim.models.doc2vec import TaggedDocument
+from gensim.models.fasttext import FastText
 from gensim.corpora import Dictionary
 
 logging.basicConfig(
@@ -42,7 +45,9 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         self._transformer = TfidfVectorizer(
             stop_words='english',
             lowercase=False,
-            ngram_range=(1, 3)
+            ngram_range=(1, 3),
+            analyzer='word',
+            max_df=0.5
         )
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels_shape: int, train: bool = False):
@@ -126,21 +131,66 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             "norm": self._transformer.norm,
         }
 
+    @property
+    def transformer(self):
+        return self._transformer
 
-class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
+
+class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
     def __init__(self):
         pass
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels_shape: int, train: bool = False):
-        nlp = spacy.load('en_core_web_md')
 
-        for text in texts:
-            doc = nlp(str(text))
-            for token in doc:
-                if token.is_stop:
-                    print(f'Lemma: {token.lemma_}')
-            input()
+        """corpus_file = datapath('lee_background.cor')
+
+        model = FastText(size=100)
+
+        model.build_vocab(corpus_file=corpus_file)
+
+        model.train(corpus_file=corpus_file, epochs=model.epochs, total_examples=model.corpus_count, total_words=model.corpus_total_words)"""
+
+        try:
+            model = Doc2Vec.load('doc2vec.model')
+        except FileNotFoundError:
+            model = None
+
+        tagged_docs = []
+        for idx, text in enumerate(texts):
+            tokens = utils.simple_preprocess(text)
+            tagged_docs.append(TaggedDocument(tokens, [idx]))
+
+        if model is None:
+            if model is None:
+                model = Doc2Vec(vector_size=200, epochs=40, min_count=2)
+                model.build_vocab(documents=tagged_docs)
+
+            model.train(
+                documents=tagged_docs,
+                total_examples=model.corpus_count,
+                epochs=model.epochs
+            )
+            model.save('doc2vec.model')
+
+        doc2veced = np.ndarray((texts.shape[0], model.vector_size))
+        if len(tagged_docs) != texts.shape[0]:
+            raise ValueError('Incorrect dimensions of tagged_docs and texts on input')
+
+        doc2veced_count = 0
+        for idx, tagged_doc in enumerate(tagged_docs):
+            doc2veced_count += 1
+            if doc2veced_count % 1000 == 0:
+                logging.debug(doc2veced_count)
+            doc2veced[idx] = model.infer_vector(tagged_doc.words)
+
+        return doc2veced
 
     def get_params(self):
         return {}
+
+
+if __name__ == '__main__':
+    x = Doc2VecAsrsReportVectorizer()
+    x.build_feature_vectors(np.ones(10), 10)
+    print(x)
