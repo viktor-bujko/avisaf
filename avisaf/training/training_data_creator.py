@@ -342,12 +342,7 @@ class ASRSReportDataPreprocessor:
         :return:
         """
 
-        distribution_counts, dist = self.get_data_distribution(target)
-
-        most_even_distribution = 1 / len(distribution_counts)
-
-        filtered_indices = set()
-        more_present_idxs = np.where(dist > most_even_distribution)[0]
+        more_present_idxs, distribution_counts = self.get_most_present_idxs(target)
         # distribution_surplus = dist[more_present_index] - most_even_distribution
         # examples_to_remove = int(distribution_surplus * data.shape[0])
         examples_to_remove = int(np.sum(
@@ -355,10 +350,13 @@ class ASRSReportDataPreprocessor:
         ))
 
         repeated_match = 0
+        filtered_indices = set()
+        not_filtered_indices = set()
         while examples_to_remove > 0:
             rnd_index = np.random.randint(0, data.shape[0])
             should_be_filtered = target[rnd_index] in more_present_idxs
             if not should_be_filtered:
+                not_filtered_indices.add(rnd_index)
                 continue
 
             # rnd_index should be filtered here
@@ -375,12 +373,19 @@ class ASRSReportDataPreprocessor:
             examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
 
         arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
+        filtered = [idx in filtered_indices or idx in not_filtered_indices for idx in range(data.shape[0])]
 
-        return data[arr_filter], target[arr_filter]
+        return data[arr_filter], target[arr_filter], data[filtered], target[filtered]
+
+    def get_most_present_idxs(self, target):
+
+        distribution_counts, dist = self.get_data_distribution(target)
+        most_even_distribution = 1 / len(distribution_counts)
+        return np.where(dist > most_even_distribution)[0], distribution_counts
 
     def normalize(self, data, target, deviation_rate: float):
         old_data_counts = data.shape[0]
-        data, target = self.normalize_data_distribution(data, target, deviation_rate)
+        data, target, filtered_data, filtered_targets = self.normalize_data_distribution(data, target, deviation_rate)
 
         new_data_counts = data.shape[0]
         logging.debug(self.get_data_distribution(target)[1])
@@ -390,7 +395,7 @@ class ASRSReportDataPreprocessor:
                 f'Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples'
             )
 
-        return data, target
+        return data, target, filtered_data, filtered_targets
 
     def vectorize_texts(self, texts_paths: list, label_to_extract: str, train: bool, label_values_filter: list):
         narrative_label = 'Report 1_Narrative'

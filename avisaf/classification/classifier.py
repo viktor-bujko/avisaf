@@ -61,7 +61,7 @@ class ASRSReportClassificationPredictor:
         logging.debug(self._preprocessor.get_data_distribution(test_target)[1])
 
         if self._normalize:
-            test_data, test_target = self._preprocessor.normalize(test_data, test_target, self._deviation_rate)
+            test_data, test_target, _, _ = self._preprocessor.normalize(test_data, test_target, self._deviation_rate)
 
         logging.debug(f'Test data shape: {test_data.shape}')
         predictions = self.predict_proba(test_data)
@@ -243,14 +243,17 @@ class ASRSReportClassificationTrainer:
         logging.debug(self._preprocessor.get_data_distribution(train_target)[1])
 
         if self._normalize:
-            train_data, train_target = self._preprocessor.normalize(train_data, train_target, self._deviation_rate)
+            train_data, train_target, filtered_data, filtered_targets = self._preprocessor.normalize(train_data, train_target, self._deviation_rate)
+            logging.debug(f'Train data shape: {filtered_data.shape}')
+            model = self._classifier.fit(filtered_data, filtered_targets)
+            self.save_model(model)
 
         logging.debug(f'Train data shape: {train_data.shape}')
         logging.debug(self._classifier)
 
         self._model = self._classifier.fit(train_data, train_target)
 
-        self.save_model()
+        self.save_model(self._model)
 
         train_data_evaluator = ASRSReportClassificationPredictor(
             model=self._model,
@@ -264,25 +267,25 @@ class ASRSReportClassificationTrainer:
         predictions = train_data_evaluator.predict_proba(train_data)
         ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
 
-    def save_model(self):
+    def save_model(self, model_to_save):
         model_dir_name = "asrs_classifier-{}-{}".format(
             datetime.now().strftime("%Y%m%d_%H%M%S"),
             ",".join(("{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(self._params.items())))
         )
 
+        model_dir_name = model_dir_name[:100]
+
         if self._normalize:
             model_dir_name += ',norm'
-
-        model_dir_name = model_dir_name[:120]
 
         import pathlib
         pathlib.Path("classifiers").mkdir(exist_ok=True)
         pathlib.Path("classifiers", model_dir_name).mkdir(exist_ok=False)
 
         with lzma.open(os.path.join("classifiers", model_dir_name, 'classifier.model'), 'wb') as model_file:
-            logging.debug(f'Saving model: {self._model}')
+            logging.debug(f'Saving model: {model_to_save}')
             logging.debug(f'Saving vectorizer: {self._preprocessor.vectorizer}')
-            pickle.dump((self._model, self._preprocessor.vectorizer), model_file)
+            pickle.dump((model_to_save, self._preprocessor.vectorizer), model_file)
 
         with open(os.path.join("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
             logging.debug(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_label, label_filter]')
