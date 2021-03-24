@@ -31,14 +31,18 @@ class AsrsReportVectorizer:
         """
         pass
 
+    def get_params(self):
+        pass
+
 
 class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
 
     def __init__(self):
+        self.transformer_name = 'tfidf'
         self._transformer = TfidfVectorizer(
             stop_words='english',
             lowercase=False,
-            max_features=10000
+            ngram_range=(1, 3)
         )
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels_shape: int, train: bool = False):
@@ -107,6 +111,21 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
 
         return processed_texts
 
+    def get_params(self):
+        return {
+            "encoding": self._transformer.encoding,
+            "decode_error": self._transformer.decode_error,
+            "stop_words": self._transformer.stop_words,
+            "lowercase": self._transformer.lowercase,
+            "ngram_range": self._transformer.ngram_range,
+            "max_features": self._transformer.max_features,
+            "analyzer": self._transformer.analyzer,
+            "tokenizer": self._transformer.tokenizer,
+            "preprocessor": self._transformer.preprocessor,
+            "use_idf": self._transformer.use_idf,
+            "norm": self._transformer.norm,
+        }
+
 
 class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
@@ -122,3 +141,6 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
                 if token.is_stop:
                     print(f'Lemma: {token.lemma_}')
             input()
+
+    def get_params(self):
+        return {}

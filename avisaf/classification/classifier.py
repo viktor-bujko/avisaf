@@ -11,6 +11,7 @@ import logging
 import numpy as np
 from re import sub
 from datetime import datetime
+import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -175,8 +176,7 @@ class ASRSReportClassificationEvaluator:
 
     @staticmethod
     def plot(probability_predictions, test_target):
-        pass
-        """preds = probability_predictions[:, 1]
+        preds = probability_predictions[:, 1]
 
         fpr, tpr, threshold = metrics.roc_curve(test_target, preds)
         roc_auc = metrics.auc(fpr, tpr)
@@ -191,7 +191,7 @@ class ASRSReportClassificationEvaluator:
         plt.ylim([0, 1])
         plt.ylabel('True Positive Rate')
         plt.xlabel('False Positive Rate')
-        plt.show()"""
+        plt.show()
 
 
 class ASRSReportClassificationTrainer:
@@ -225,17 +225,17 @@ class ASRSReportClassificationTrainer:
 
             return _classifier
 
-        self._classifier = set_classification_algorithm(classifier)
         self._algorithm = classifier
+        self._classifier = set_classification_algorithm(classifier)
+        self._deviation_rate = deviation_rate
         self._encoding = dict()
+        self._filter = None
         self._normalize = normalized
         self._model = None
         self._params = self._classifier.get_params()
         self._preprocessor = ASRSReportDataPreprocessor(vectorizer)
-        self._trained_texts = []
         self._trained_label = None
-        self._filter = None
-        self._deviation_rate = deviation_rate
+        self._trained_texts = []
 
     def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None):
 
@@ -280,7 +280,8 @@ class ASRSReportClassificationTrainer:
         ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
 
     def save_model(self, model_to_save):
-        model_dir_name = "asrs_classifier-{}-{}".format(
+        model_dir_name = "asrs_classifier-{}-{}-{}".format(
+            self._algorithm,
             datetime.now().strftime("%Y%m%d_%H%M%S"),
             ",".join(("{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(self._params.items())))
         )
@@ -306,7 +307,7 @@ class ASRSReportClassificationTrainer:
                 "model_params": self._params,
                 "trained_label": {self._trained_label: self._filter},
                 "trained_texts": self._trained_texts,
-                "vectorizer_params": self._preprocessor.vectorizer.transformer.get_params()
+                "vectorizer_params": self._preprocessor.vectorizer.get_params()
             }
             json.dump(parameters, params_file, indent=4)
 
