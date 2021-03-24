@@ -306,8 +306,18 @@ class ASRSReportClassificationTrainer:
                 "model_params": self._params,
                 "trained_label": {self._trained_label: self._filter},
                 "trained_texts": self._trained_texts,
-                "vectorizer_params": self._preprocessor.vectorizer.transformer.get_params()
             }
+            transformer = getattr(self._preprocessor.vectorizer, '_transformer', None)
+
+            if transformer is not None:
+                transformer_params = getattr(transformer, 'get_params', None)
+                if transformer_params is not None:
+                    params = transformer_params()
+                else:
+                    params = {}
+
+                parameters["vectorizer_params"] = params
+
             json.dump(parameters, params_file, indent=4)
 
 
