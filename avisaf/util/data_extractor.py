@@ -165,11 +165,19 @@ class DataExtractor:
 
         # Overriding default instance file paths list by the passed parameter
         file_paths = self._file_paths if file_paths is None else (file_paths if file_paths is list else [file_paths])
+        skipped_files = 0
 
         label_data_dict = {}
         for a_field_name in field_names:
             extracted_values = []
             for a_file_path in file_paths:
+                if not Path(a_file_path).exists():
+                    skipped_files += 1
+                    if skipped_files == len(file_paths):
+                        raise ValueError("No of the given files exists")
+
+                    continue
+
                 requested_file = find_file_by_path(a_file_path)
                 if requested_file is None:
                     print(f'The file given by "{a_file_path}" path was not found in the given range.', file=sys.stderr)
