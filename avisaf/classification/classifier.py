@@ -65,7 +65,8 @@ class ASRSReportClassificationPredictor:
             texts_paths,
             label_to_test,
             train=False,
-            label_values_filter=label_filter
+            label_values_filter=label_filter,
+            normalize=self._normalize
         )
 
         logger.info(self._preprocessor.get_data_distribution(test_target)[1])
