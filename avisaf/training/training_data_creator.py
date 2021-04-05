@@ -328,18 +328,16 @@ class ASRSReportDataPreprocessor:
 
         return encoded_labels, encoding
 
-    def normalize_data_distribution(self, data, target, deviation_percentage: float):
+    def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         """
 
         :param deviation_percentage:
-        :param data:
-        :param target:
+        :param text_data:
+        :param target_labels:
         :return:
         """
 
-        more_present_idxs, distribution_counts = self.get_most_present_idxs(target)
-        # distribution_surplus = dist[more_present_index] - most_even_distribution
-        # examples_to_remove = int(distribution_surplus * data.shape[0])
+        more_present_idxs, distribution_counts = self.get_most_present_idxs(target_labels)
         examples_to_remove = int(np.sum(
             (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * deviation_percentage
         ))
@@ -348,14 +346,13 @@ class ASRSReportDataPreprocessor:
         filtered_indices = set()
         not_filtered_indices = set()
         while examples_to_remove > 0:
-            rnd_index = np.random.randint(0, data.shape[0])
-            should_be_filtered = target[rnd_index] in more_present_idxs
+            rnd_index = np.random.randint(0, text_data.shape[0])
+            should_be_filtered = target_labels[rnd_index] in more_present_idxs
             if not should_be_filtered:
                 not_filtered_indices.add(rnd_index)
                 continue
 
             # rnd_index should be filtered here
-
             if rnd_index in filtered_indices:
                 repeated_match += 1
             else:
@@ -367,10 +364,42 @@ class ASRSReportDataPreprocessor:
             # Giving up on filtering the exact number of examples -> The distribution will be less even
             examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
 
-        arr_filter = [idx not in filtered_indices for idx in range(data.shape[0])]
-        filtered = [idx in filtered_indices or idx in not_filtered_indices for idx in range(data.shape[0])]
+        arr_filter = [idx not in filtered_indices for idx in range(text_data.shape[0])]
 
-        return data[arr_filter], target[arr_filter], data[filtered], target[filtered]
+        return text_data[arr_filter], target_labels[arr_filter]
+
+    def oversample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
+        distribution_counts, dist = self.get_data_distribution(target_labels)
+        most_even_distribution = 1 / len(distribution_counts)
+        more_present_labels = np.where(dist > most_even_distribution)
+
+        least_present_labels = np.concatenate(np.argwhere(dist < most_even_distribution))
+
+        examples_to_have_per_minor_class = int(np.mean(distribution_counts[more_present_labels]) * 0.9)       # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
+
+        for label in least_present_labels:
+            to_add_per_class = examples_to_have_per_minor_class - distribution_counts[label]      # subtracting the number of examples we already have
+            texts_filtered_by_label = text_data[target_labels == label]
+            labels_filtered = target_labels[target_labels == label]
+            # randomly choose less present data and its label
+            idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_per_class)
+
+            text_data = np.concatenate([text_data, texts_filtered_by_label[idxs]])
+            target_labels = np.concatenate([target_labels, labels_filtered[idxs]])
+
+        state = np.random.get_state()
+        np.random.shuffle(text_data)
+        np.random.set_state(state)
+        np.random.shuffle(target_labels)
+
+        if logging.INFO:
+            distribution_counts, _ = self.get_data_distribution(target_labels)
+            info_dict = {}
+            for label, counts in zip(set(target_labels), distribution_counts):
+                info_dict.update({label: counts})
+            logging.info(f"New data distribution: { info_dict }")
+
+        return text_data, target_labels
 
     def get_most_present_idxs(self, target):
 
@@ -378,21 +407,22 @@ class ASRSReportDataPreprocessor:
         most_even_distribution = 1 / len(distribution_counts)
         return np.where(dist > most_even_distribution)[0], distribution_counts
 
-    def normalize(self, data, target, deviation_rate: float):
-        old_data_counts = data.shape[0]
-        data, target, filtered_data, filtered_targets = self.normalize_data_distribution(data, target, deviation_rate)
+    def normalize(self, text_data, target_labels, deviation_rate: float):
+        old_data_counts = text_data.shape[0]
+        # text_data, target_labels = self.undersample_data_distribution(text_data, target_labels, deviation_rate)
+        text_data, target_labels = self.oversample_data_distribution(text_data, target_labels, deviation_rate)
 
-        new_data_counts = data.shape[0]
-        logging.debug(self.get_data_distribution(target)[1])
+        new_data_counts = text_data.shape[0]
+        logging.debug(self.get_data_distribution(target_labels)[1])
 
         if old_data_counts - new_data_counts > 0:
             logging.info(
                 f'Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples'
             )
 
-        return data, target, filtered_data, filtered_targets
+        return text_data, target_labels
 
-    def vectorize_texts(self, texts_paths: list, label_to_extract: str, train: bool, label_values_filter: list):
+    def vectorize_texts(self, texts_paths: list, label_to_extract: str, train: bool, label_values_filter: list, normalize: bool = False):
         narrative_label = 'Report 1_Narrative'
 
         extractor = DataExtractor(texts_paths)
@@ -407,6 +437,9 @@ class ASRSReportDataPreprocessor:
             extracted_dict[label_to_extract],
             label_values_filter
         )
+
+        if normalize:
+            texts, target_labels = self.normalize(texts, target_labels, 0.1)
 
         data = self.vectorizer.build_feature_vectors(
             texts,

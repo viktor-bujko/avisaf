@@ -195,8 +195,7 @@ class DataExtractor:
 
                 length = len(extracted_values_collection)
                 end_index = start_index + lines_count if lines_count != -1 else length
-                extracted_values += extracted_values_collection[
-                                    start_index: end_index]  # Getting only the desired subset of extracted data
+                extracted_values += extracted_values_collection[start_index: end_index]  # Getting only the desired subset of extracted data
 
             label_data_dict[a_field_name] = extracted_values
 

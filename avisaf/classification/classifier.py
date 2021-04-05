@@ -24,7 +24,7 @@ from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
 logger = logging.getLogger(str(__file__))
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format=f'[%(levelname)s - %(asctime)s]: %(message)s'
 )
 
@@ -69,9 +69,6 @@ class ASRSReportClassificationPredictor:
         )
 
         logger.info(self._preprocessor.get_data_distribution(test_target)[1])
-
-        if self._normalize:
-            test_data, test_target, _, _ = self._preprocessor.normalize(test_data, test_target, self._deviation_rate)
 
         logger.info(f'Test data shape: {test_data.shape}')
         predictions = self.predict_proba(test_data)
@@ -274,19 +271,14 @@ class ASRSReportClassificationTrainer:
             texts_paths,
             label_to_train,
             train=True,
-            label_values_filter=label_filter
+            label_values_filter=label_filter,
+            normalize=self._normalize
         )
 
         # encoding is available only after texts vectorization
         self._encoding.update(self._preprocessor.get_encoding())
 
         logger.debug(self._preprocessor.get_data_distribution(train_target)[1])
-
-        if self._normalize:
-            train_data, train_target, filtered_data, filtered_targets = self._preprocessor.normalize(train_data, train_target, self._deviation_rate)
-            # logger.debug(f'Train data shape: {filtered_data.shape}')
-            # model = self._classifier.fit(filtered_data, filtered_targets)
-            # self.save_model(model)
 
         logger.debug(f'Train data shape: {train_data.shape}')
         logger.info(self._model)
@@ -335,6 +327,7 @@ class ASRSReportClassificationTrainer:
                 "vectorizer_params": self._preprocessor.vectorizer.get_params()
             }
             json.dump(parameters, params_file, indent=4)
+            self._params = parameters
 
 
 def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, mode: str, plot: bool):
@@ -398,11 +391,10 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             predictions, targets = predictor.predict_report_class(texts_paths, label, label_filter)
             models_predictions.append(predictions)
-            if plot:
-                ASRSReportClassificationEvaluator.plot(predictions, targets)
             if test_targets is None:
                 test_targets = targets
-
+        if plot:
+            ASRSReportClassificationEvaluator.plot(models_predictions, test_targets)
         ASRSReportClassificationEvaluator.evaluate(models_predictions, test_targets)
 
     """
