@@ -151,15 +151,20 @@ class ASRSReportClassificationEvaluator:
         unique_predictions_count = np.unique(test_target).shape[0]
         avg = 'binary' if unique_predictions_count == 2 else 'micro'
 
+        # sample_weights = np.ndarray((predictions.shape[0]))
+
+        # for idx, pred in enumerate(predictions):
+        #    sample_weights[idx] = 1 if pred == 1 else 2
+
         print('==============================================')
         print('Confusion matrix: number [i,j] indicates the number of observations of class i which were predicted to be in class j')
         print(metrics.confusion_matrix(test_target, predictions))
         if ensemble:
             print(ensemble)
-        print(f'Model Based Accuracy: {metrics.accuracy_score(test_target, predictions) * 100}')
-        print(f'Model Based Precision: {metrics.precision_score(test_target, predictions) * 100}')
-        print(f'Model Based Recall: {metrics.recall_score(test_target, predictions) * 100}')
-        print(f'Model Based F1-score: {metrics.f1_score(test_target, predictions, average=avg) * 100}')
+        print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(test_target, predictions) * 100))
+        print('Model Based Precision: {:.2f}'.format(metrics.precision_score(test_target, predictions) * 100))
+        print('Model Based Recall: {:.2f}'.format(metrics.recall_score(test_target, predictions) * 100))
+        print('Model Based F1-score: {:.2f}'.format(metrics.f1_score(test_target, predictions, average=avg) * 100))
         print('==============================================')
         for unique_prediction in range(unique_predictions_count):
             predictions = np.full(test_target.shape, unique_prediction)
@@ -171,7 +176,7 @@ class ASRSReportClassificationEvaluator:
 
     @staticmethod
     def plot(probability_predictions, test_target):
-        preds = probability_predictions[:, 1]
+        preds = np.mean(probability_predictions, axis=0)[:, 1]
 
         fpr, tpr, threshold = metrics.roc_curve(test_target, preds)
         roc_auc = metrics.auc(fpr, tpr)
@@ -198,8 +203,10 @@ class ASRSReportClassificationTrainer:
                 'mlp': MLPClassifier(
                     hidden_layer_sizes=(128, 64),
                     alpha=0.001,
-                    batch_size=100,
+                    batch_size=256,
                     learning_rate='adaptive',
+                    learning_rate_init=0.0007,
+                    random_state=6240,
                     verbose=True,
                     early_stopping=True
                 ),
