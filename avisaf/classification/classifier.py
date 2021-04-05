@@ -202,18 +202,24 @@ class ASRSReportClassificationTrainer:
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
-                    hidden_layer_sizes=(128, 64),
-                    alpha=0.001,
+                    hidden_layer_sizes=(256, 32),
+                    alpha=0.005,
                     batch_size=256,
                     learning_rate='adaptive',
-                    learning_rate_init=0.0007,
+                    learning_rate_init=0.005,
                     random_state=6240,
                     verbose=True,
                     early_stopping=True
                 ),
                 'svm': SVC(probability=True),
                 'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
-                'forest': RandomForestClassifier(n_estimators=150, criterion='entropy', min_samples_split=15),
+                'forest': RandomForestClassifier(
+                    n_estimators=200,
+                    criterion='entropy',
+                    min_samples_split=32,
+                    max_features=20000,
+                    verbose=5
+                ),
                 'knn': KNeighborsClassifier(n_neighbors=15),
                 'gauss': GaussianNB(),
                 'mnb': MultinomialNB(),
