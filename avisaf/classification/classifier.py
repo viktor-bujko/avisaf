@@ -162,16 +162,16 @@ class ASRSReportClassificationEvaluator:
             if ensemble:
                 print(ensemble)
             print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(class_targets, class_predictions) * 100))
-            print('Model Based Precision: {:.2f}'.format(metrics.precision_score(class_targets, class_predictions) * 100))
-            print('Model Based Recall: {:.2f}'.format(metrics.recall_score(class_targets, class_predictions) * 100))
+            print('Model Based Precision: {:.2f}'.format(metrics.precision_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Recall: {:.2f}'.format(metrics.recall_score(class_targets, class_predictions, average=avg) * 100))
             print('Model Based F1-score: {:.2f}'.format(metrics.f1_score(class_targets, class_predictions, average=avg) * 100))
             print('==============================================')
             for unique_prediction in range(unique_predictions_count):
                 mockup_predictions = np.full(class_targets.shape, unique_prediction)
                 print(f'Accuracy predicting always {unique_prediction}: {metrics.accuracy_score(class_targets, mockup_predictions) * 100}')
                 print(f'F1-score: {metrics.f1_score(class_targets, mockup_predictions, average=avg) * 100}')
-                print(f'Model Based Precision: {metrics.precision_score(class_targets, mockup_predictions, zero_division=1) * 100}')
-                print(f'Model Based Recall: {metrics.recall_score(class_targets, mockup_predictions) * 100}')
+                print(f'Model Based Precision: {metrics.precision_score(class_targets, mockup_predictions, zero_division=1, average=avg) * 100}')
+                print(f'Model Based Recall: {metrics.recall_score(class_targets, mockup_predictions, average=avg) * 100}')
                 print('==============================================')
 
     @staticmethod
