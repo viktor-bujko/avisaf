@@ -174,7 +174,7 @@ class DataExtractor:
                 if not Path(a_file_path).exists():
                     skipped_files += 1
                     if skipped_files == len(file_paths):
-                        raise ValueError("No of the given files exists")
+                        raise ValueError(f"Any of the given files {file_paths} exists")
 
                     continue
 
