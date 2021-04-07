@@ -213,10 +213,10 @@ class ASRSReportClassificationTrainer:
                 'svm': SVC(probability=True),
                 'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
                 'forest': RandomForestClassifier(
-                    n_estimators=200,
+                    n_estimators=150,
                     criterion='entropy',
-                    min_samples_split=32,
-                    max_features=20000,
+                    min_samples_split=15,
+                    # max_features=20000,
                     verbose=5
                 ),
                 'knn': KNeighborsClassifier(n_neighbors=15),
@@ -346,7 +346,8 @@ class ASRSReportClassificationTrainer:
             predictions = ASRSReportClassificationPredictor.predict(data, self._classifier)
             labels_predictions.append(predictions)
             labels_targets.append(target)
-            # ASRSReportClassificationEvaluator.evaluate([[predictions]], [target])
+            if mode == "train":
+                ASRSReportClassificationEvaluator.evaluate([[predictions]], [target])
 
         if mode == "train":
             self.save_model(self._models)
