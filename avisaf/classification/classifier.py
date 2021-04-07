@@ -163,16 +163,16 @@ class ASRSReportClassificationEvaluator:
         if ensemble:
             print(ensemble)
         print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(test_target, predictions) * 100))
-        print('Model Based Precision: {:.2f}'.format(metrics.precision_score(test_target, predictions) * 100))
-        print('Model Based Recall: {:.2f}'.format(metrics.recall_score(test_target, predictions) * 100))
+        print('Model Based Precision: {:.2f}'.format(metrics.precision_score(test_target, predictions, average=avg) * 100))
+        print('Model Based Recall: {:.2f}'.format(metrics.recall_score(test_target, predictions, average=avg) * 100))
         print('Model Based F1-score: {:.2f}'.format(metrics.f1_score(test_target, predictions, average=avg) * 100))
         print('==============================================')
         for unique_prediction in range(unique_predictions_count):
             predictions = np.full(test_target.shape, unique_prediction)
             print(f'Accuracy predicting always {unique_prediction}: {metrics.accuracy_score(test_target, predictions) * 100}')
             print(f'F1-score: {metrics.f1_score(test_target, predictions, average=avg) * 100}')
-            print(f'Model Based Precision: {metrics.precision_score(test_target, predictions, zero_division=1) * 100}')
-            print(f'Model Based Recall: {metrics.recall_score(test_target, predictions) * 100}')
+            print(f'Model Based Precision: {metrics.precision_score(test_target, predictions, zero_division=1, average=avg) * 100}')
+            print(f'Model Based Recall: {metrics.recall_score(test_target, predictions, average=avg) * 100}')
             print('==============================================')
 
     @staticmethod
@@ -202,22 +202,25 @@ class ASRSReportClassificationTrainer:
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
-                    hidden_layer_sizes=(256, 32),
+                    hidden_layer_sizes=(128, 64),
                     alpha=0.005,
-                    batch_size=256,
+                    batch_size=128,
                     learning_rate='adaptive',
                     learning_rate_init=0.005,
                     random_state=6240,
                     verbose=True,
-                    early_stopping=True
+                    max_iter=80,
+                    early_stopping=True,
+                    n_iter_no_change=30
                 ),
                 'svm': SVC(probability=True),
                 'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
                 'forest': RandomForestClassifier(
-                    n_estimators=200,
+                    n_estimators=150,
                     criterion='entropy',
                     min_samples_split=32,
-                    max_features=20000,
+                    n_jobs=2,
+                    # max_features=20000,
                     verbose=5
                 ),
                 'knn': KNeighborsClassifier(n_neighbors=15),
@@ -300,7 +303,15 @@ class ASRSReportClassificationTrainer:
         self._model = self._model.fit(train_data, train_target)
 
         logging.info(f"MODEL: {self._model}")
-        self.save_model(self._model)
+
+        self._params = {
+                "algorithm": self._algorithm,
+                "encoding": self._encoding,
+                "model_params": self._model_params,
+                "trained_label": self._trained_filtered_labels,
+                "trained_texts": self._trained_texts,
+                "vectorizer_params": self._preprocessor.vectorizer.get_params()
+            }
 
         train_data_evaluator = ASRSReportClassificationPredictor(
             model=self._model,
@@ -310,6 +321,7 @@ class ASRSReportClassificationTrainer:
         )
         predictions = train_data_evaluator.predict_proba(train_data)
         ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
+        self.save_model(self._model)
 
     def save_model(self, model_to_save):
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
@@ -332,16 +344,7 @@ class ASRSReportClassificationTrainer:
 
         with open(Path("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
             logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_label, label_filter]')
-            parameters = {
-                "algorithm": self._algorithm,
-                "encoding": self._encoding,
-                "model_params": self._model_params,
-                "trained_label": self._trained_filtered_labels,
-                "trained_texts": self._trained_texts,
-                "vectorizer_params": self._preprocessor.vectorizer.get_params()
-            }
-            json.dump(parameters, params_file, indent=4)
-            self._params = parameters
+            json.dump(self._params, params_file, indent=4)
 
 
 def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, mode: str, plot: bool):
