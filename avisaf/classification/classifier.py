@@ -353,7 +353,9 @@ class ASRSReportClassificationTrainer:
         )
 
         # encoding is available only after texts vectorization
-        self._encoding.update(self._preprocessor.get_encoding())
+        logging.debug(self._preprocessor.encoder.classes_)
+        for num_label, label in zip(range(0, len(self._preprocessor.encoder.classes_)), self._preprocessor.encoder.classes_):
+            self._encoding.update({num_label: label})
 
         logger.debug(self._preprocessor.get_data_distribution(train_target)[1])
 

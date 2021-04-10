@@ -3,12 +3,16 @@
 import numpy as np
 import spacy
 import logging
+import sys
+import re
 import concurrent.futures
+from pathlib import Path
+from spacy.language import Doc
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest
 from gensim import utils
 from gensim.test.utils import datapath
-from gensim.models import Doc2Vec, TfidfModel
+from gensim.models import Doc2Vec, TfidfModel, Word2Vec, KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
 from gensim.models.fasttext import FastText
 from gensim.corpora import Dictionary
@@ -43,6 +47,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             ngram_range=(1, 3),
             analyzer='word',
             min_df=0.02,
+            max_features=10,
             max_df=0.5
         )
 
@@ -139,14 +144,6 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels_shape: int, train: bool = False):
 
-        """corpus_file = datapath('lee_background.cor')
-
-        model = FastText(size=100)
-
-        model.build_vocab(corpus_file=corpus_file)
-
-        model.train(corpus_file=corpus_file, epochs=model.epochs, total_examples=model.corpus_count, total_words=model.corpus_total_words)"""
-
         try:
             model = Doc2Vec.load('doc2vec.model')
         except FileNotFoundError:
@@ -186,7 +183,131 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         return {}
 
 
+class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
+
+    def __init__(self):
+        logging.debug("Loading spacy model")
+        self._nlp = spacy.load('en_core_web_md')
+
+    def build_feature_vectors(self, texts, target_labels_shape: int, train: bool = False) -> np.ndarray:
+        """
+
+        :param texts:
+        :type texts: list of str
+        :param target_labels_shape:
+        :param train:
+        :return:
+        """
+
+        spacy_doc_vectors = []
+        preprocessed = []
+        for text in texts:
+            text = text.lower()
+            text = re.sub(r'([0-9]{1,2});([0-9]{1,3})', r'\1,\2', text)
+            preprocessed.append(text)
+
+        texts = preprocessed
+
+        for doc_vector_batch in self._generate_vectors(texts, 256):
+            spacy_doc_vectors.append(doc_vector_batch)
+            print("===========================")
+
+        result = np.array(np.concatenate(spacy_doc_vectors, axis=0))
+        logging.debug(f'Vectorized {result.shape[0]} texts')
+
+        return result
+
+    def _generate_vectors(self, texts, batch: int = 50):
+        oov = set()
+        doc_vectors = []
+        for doc in self._nlp.pipe(texts, disable=['ner'], batch_size=batch):
+            lemmas = []
+            for token in doc:
+                # if token.conjuncts:
+                # print(f'"{token.text}" conjuncts: {[conj.text for conj in token.conjuncts]}')
+                if token.is_punct:
+                    # ignore the punctuation
+                    continue
+                if token.is_oov:
+                    oov.add(token.text)
+                    logging.warning(f'Word {token.text} is not in vocabulary! Skipping')
+                    continue
+                if token.pos_ == 'PRON':
+                    # token is pronoun which would be replaced by "-PRON-" tag otherwise
+                    lemmas.append(token.text)
+                    continue
+                if token.like_num:
+                    # replacing all numbers by common tag
+                    lemmas.append("number")
+
+                lemmas.append(token.lemma_)
+            doc_vector = Doc(self._nlp.vocab, words=lemmas).vector * (len(lemmas) / 500)
+            doc_vectors.append(doc_vector)
+
+        yield np.array(doc_vectors)
+
+        # with open('out_of_vocab.txt', 'w') as oov_file:
+        #    print(*sorted(list(oov)), sep='\n', file=oov_file)
+
+
+class GoogleNewsWord2VecAsrsReportVectorizer(AsrsReportVectorizer):
+    def __init__(self):
+        model_path = Path('..', '..', 'GoogleNews-vectors-negative300.bin')
+        if not model_path.exists():
+            logging.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
+            if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N)").lower() != 'y':
+                sys.exit(0)
+
+        # TODO: Download and unzip the model
+
+        print("Loading large GoogleNews model. May take a while.")
+        self._model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+        self._nlp = spacy.load('en_core_web_md')
+
+    def build_feature_vectors(self, texts: list, target_labels_shape: int, train: bool = False) -> np.ndarray:
+
+        texts = [str(text).lower() for text in texts]
+        doc_vectors = []
+
+        for doc_vector_batch in self._generate_vectors(texts):
+            doc_vectors.append(doc_vector_batch)
+
+        result = np.array(np.concatenate(doc_vectors, axis=0))
+        logging.debug(f'Vectorized {result.shape[0]} texts')
+
+        return result
+
+    def _generate_vectors(self, texts, batch: int = 50):
+
+        doc_vectors = []
+        for doc in self._nlp.pipe(texts, disable=['ner'], batch_size=batch):
+            lemmas = []
+            for token in doc:
+                if token.is_punct:
+                    continue
+                if token.lemma_ in self._model.wv:
+                    lemmas.append(token.lemma_)
+            # computes the average of vectors
+            # doesnt take into account the "weight" of each word -> "pilot" in 5 words sentence has 1/5 weight whereas
+            # "pilot" in 200 words sentence has 1/200 weight
+            # checking the avg number of words in the reports
+
+            # word2vec space is invariant to constant multiplication
+            doc_vector = np.mean(self._model[lemmas] * (len(lemmas) / 500), axis=0)
+            doc_vectors.append(doc_vector)
+
+        yield np.array(doc_vectors)
+
+
 if __name__ == '__main__':
-    x = Doc2VecAsrsReportVectorizer()
-    x.build_feature_vectors(np.ones(10), 10)
-    print(x)
+    x = Word2VecAsrsReportVectorizer()
+    # x = GoogleNewsWord2VecAsrsReportVectorizer()
+    result = x.build_feature_vectors([
+        "on approach; captain (pilot flying) called for flaps 8; and i positioned flap lever to 8 position. an amber eicas message 'flaps fail' annunciated with a master caution with the flaps failed at the 0 degree position.",
+        'during climb to 17;000 feet the first officer noticed subtle propeller fluctuations.',
+        'i was conducting ojt with a developmental that has 1 r-side and all d-sides.',
+        'ocean west and offshore west/central were combined.',
+        'during climb to 17;000 ft the first officer noticed subtle propeller fluctuations.',
+    ], 4)
+
+    print(result)
