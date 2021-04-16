@@ -286,28 +286,39 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def _get_doc_vector(self, lemmas):
         return Doc(self._nlp.vocab, words=lemmas).vector * (len(lemmas) / 500)
 
+    def get_params(self):
+        return {
+            "name": "SpaCyWord2Vec"
+        }
+
 
 class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
         logging.debug(Path().absolute())
-        model_path = Path('gensim-data', 'GoogleNews-vectors-negative300.bin')
-        if not model_path.exists():
+        self._model_path = Path('gensim-data', 'GoogleNews-vectors-negative300.bin')
+        if not self._model_path.exists():
             logging.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
             if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) ").lower() == 'y':
                 logging.debug('(down)LOADING')
-                model_path = dnld.load('word2vec-google-news-300', return_path=True)
-                print(f'MODEL PATH: {model_path}')
+                self._model_path = dnld.load('word2vec-google-news-300', return_path=True)
+                print(f'MODEL PATH: {self._model_path}')
             else:
                 sys.exit(1)
 
         # TODO: Download and unzip the model
 
         print("Loading large GoogleNews model. May take a while.")
-        self._model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+        self._model = KeyedVectors.load_word2vec_format(self._model_path, binary=True)
         super().__init__(self._model.wv)
 
     def _get_doc_vector(self, lemmas):
         return np.mean(self._model[lemmas] * (len(lemmas) / 500), axis=0)
+
+    def get_params(self):
+        return {
+            "name": "GoogleNewsWord2Vec",
+            "model_path": str(self._model_path)
+        }
 
 
 if __name__ == '__main__':

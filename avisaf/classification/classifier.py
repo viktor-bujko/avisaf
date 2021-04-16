@@ -73,7 +73,7 @@ class ASRSReportClassificationPredictor:
         logger.info(self._preprocessor.get_data_distribution(test_target)[1])
 
         logger.info(f'Test data shape: {test_data.shape}')
-        predictions = self.predict_proba(test_data)
+        predictions = self.predict_proba(test_data, self._model)
         return predictions, test_target
 
     def predict(self, test_data, model_to_use=None):
@@ -87,8 +87,10 @@ class ASRSReportClassificationPredictor:
 
         return predictions
 
-    def predict_proba(self, test_data, model_to_use=None):
-        model = self._model if model_to_use is None else model_to_use
+    @staticmethod
+    def predict_proba(test_data, model_to_use):
+        # model = self._model if model_to_use is None else model_to_use
+        model = model_to_use
 
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
@@ -256,7 +258,7 @@ class ASRSReportClassificationEvaluator:
 
 class ASRSReportClassificationTrainer:
 
-    def __init__(self, model=None, parameters: dict = None, algorithm=None, normalized: bool = True, vectorizer=None, deviation_rate: float = 0.0):
+    def __init__(self, model=None, parameters: dict = None, algorithm=None, normalized: bool = True, deviation_rate: float = 0.0):
 
         # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
@@ -301,7 +303,7 @@ class ASRSReportClassificationTrainer:
             parameters = dict()
 
         self._normalize = normalized
-        self._preprocessor = ASRSReportDataPreprocessor(vectorizer)
+        self._preprocessor = ASRSReportDataPreprocessor()
 
         if model is None:
             self._model = set_classification_algorithm(algorithm)
@@ -375,13 +377,6 @@ class ASRSReportClassificationTrainer:
                 "vectorizer_params": self._preprocessor.vectorizer.get_params()
             }
 
-        train_data_evaluator = ASRSReportClassificationPredictor(
-            model=self._model,
-            parameters=self._params,
-            vectorizer=self._preprocessor.vectorizer,
-            normalized=self._normalize,
-        )
-
         cross_val = False
         if cross_val:
             print(f'CV scores: {cross_val_score(self._model, train_data, train_target, cv=5, n_jobs=2, verbose=3)}')
@@ -408,7 +403,7 @@ class ASRSReportClassificationTrainer:
             p = ASRSReportClassificationEvaluator.plot_learning_curve(self._model, "TITLE", train_data, train_target, cv=5)
             p.savefig("learning_curve.png")
 
-        predictions = train_data_evaluator.predict_proba(train_data)
+        predictions = ASRSReportClassificationPredictor.predict_proba(train_data, self._model)
         ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
         self.save_model(self._model)
 
@@ -428,8 +423,7 @@ class ASRSReportClassificationTrainer:
         Path("classifiers", model_dir_name).mkdir(exist_ok=False)
         with lzma.open(Path("classifiers", model_dir_name, 'classifier.model'), 'wb') as model_file:
             logger.info(f'Saving model: {model_to_save}')
-            logger.debug(f'Saving vectorizer: {self._preprocessor.vectorizer}')
-            pickle.dump((model_to_save, self._preprocessor.vectorizer), model_file)
+            pickle.dump(model_to_save, model_file)
 
         with open(Path("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
             logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_label, label_filter]')
@@ -450,7 +444,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             if models_dir_paths:
                 with lzma.open(Path(models_dir_paths[idx], 'classifier.model'), 'rb') as model_file:
-                    model, vectorizer = pickle.load(model_file)
+                    model = pickle.load(model_file)
 
                 with open(Path(models_dir_paths[idx], 'parameters.json'), 'r') as params_file:
                     parameters = json.load(params_file)
@@ -462,7 +456,6 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
             classifier = ASRSReportClassificationTrainer(
                 model=model,
                 algorithm=algorithm,
-                vectorizer=vectorizer,
                 parameters=parameters,
                 normalized=normalize,
                 deviation_rate=deviation_rate
@@ -479,7 +472,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
         for model_dir_path in models_dir_paths:
 
             with lzma.open(Path(model_dir_path, 'classifier.model'), 'rb') as model_file:
-                model, vectorizer = pickle.load(model_file)
+                model = pickle.load(model_file)
 
             with open(Path(model_dir_path, 'parameters.json'), 'r') as params_file:
                 parameters = json.load(params_file)
@@ -487,7 +480,6 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
             predictor = ASRSReportClassificationPredictor(
                 model=model,
                 parameters=parameters,
-                vectorizer=vectorizer,
                 normalized=normalize,
                 deviation_rate=deviation_rate
             )
