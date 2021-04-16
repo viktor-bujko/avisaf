@@ -196,10 +196,18 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
         preprocessed = []
         for text in texts:
             text = text.lower()
-            text = re.sub(r'([0-9]{1,2});([0-9]{1,3})', r'\1,\2', text)
-            text = re.sub(r'fl[0-9]{2,3}', 'flight level', text)
-            text = re.sub(r'rwy', r'runway', text)
-            text = re.sub(r'(z){3,}[0-9]*', r'airport', text)
+            text = re.sub(r'([0-9]{1,2});([0-9]{1,3})', r'\1,\2', text)     # ; separated numbers - usually altitude
+            text = re.sub(r'fl[0-9]{2,3}', 'flight level', text)            # flight level representation
+            text = re.sub(r'runway|rwy [0-9]{1,2}[rcl]?', r'runway', text)  # runway identifiers
+            text = re.sub(r'([a-z]*)[?!\-.]([a-z]*)', r'\1 \2', text)       # "word[?!/-.]word" -> "word word"
+            text = re.sub(r'(z){3,}[0-9]*', r'airport', text)               # anonymized "zzz" airports
+            text = re.sub(r'tx?wys?', 'taxiway', text)
+            text = re.sub(r'twrs?[^a-z]', 'tower', text)
+            text = re.sub('tcas', 'traffic collision avoidance system', text)
+            text = re.sub(r'([a-z0-9]+\.){2,}[a-z0-9]*', '', text)          # removing words with several dots
+            text = re.sub(r'(air)?spds?', 'speed', text)
+            text = re.sub(r'qnh', 'pressure', text)
+            text = re.sub(r'lndgs?', 'landing', text)
             preprocessed.append(text)
 
         return preprocessed
@@ -242,6 +250,13 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
                     lemmas.append("number")
                     continue
                 if token.lemma_ not in vectors:
+                    # trying to identify some common mistakes
+                    words = re.sub(r'([a-z]*)[?!\-.]([a-z]*)', r'\1 \2', token.text).split()  # [?!\-.] separated words replaced by space
+                    for word in words:
+                        if word not in vectors:
+                            continue
+                        lemmas.append(word)
+
                     # ignoring word which don't have vector representation
                     logging.warning(f'Word "{token.text}" with lemma "{token.lemma_} not in vocabulary"')
                     oov.add(token.text)
