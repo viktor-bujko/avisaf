@@ -11,6 +11,7 @@ from spacy.language import Doc
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest
 from gensim import utils
+import gensim.downloader as dnld
 from gensim.test.utils import datapath
 from gensim.models import Doc2Vec, TfidfModel, Word2Vec, KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
@@ -252,11 +253,13 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
 class GoogleNewsWord2VecAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
-        model_path = Path('..', '..', 'GoogleNews-vectors-negative300.bin')
+        model_path = Path('..', '..', 'gensim-data', 'GoogleNews-vectors-negative300.bin')
         if not model_path.exists():
             logging.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
-            if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N)").lower() != 'y':
-                sys.exit(0)
+            if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N)").lower() == 'y':
+                logging.debug('(down)LOADING')
+                model_path = dnld.load('word2vec-google-news-300', return_path=True)
+                print(f'MODEL PATH: {model_path}')
 
         # TODO: Download and unzip the model
 
@@ -266,7 +269,20 @@ class GoogleNewsWord2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
     def build_feature_vectors(self, texts: list, target_labels_shape: int, train: bool = False) -> np.ndarray:
 
-        texts = [str(text).lower() for text in texts]
+        logging.debug('Started vectorization')
+
+        # texts = [str(text).lower() for text in texts]
+        preprocessed = []
+
+        for text in texts:
+             text = text.lower()
+             text = re.sub(r'([0-9]{1,2});([0-9]{1,3})', r'\1,\2', text)
+             text = re.sub(r'fl[0-9]{2,3}', 'flight level', text)
+             text = re.sub(r'rwy', r'runway', text)
+             text = re.sub(r'(z){3,}[0-9]*', r'airport', text)
+             preprocessed.append(text)
+
+        texts = preprocessed
         doc_vectors = []
 
         for doc_vector_batch in self._generate_vectors(texts):
@@ -285,8 +301,20 @@ class GoogleNewsWord2VecAsrsReportVectorizer(AsrsReportVectorizer):
             for token in doc:
                 if token.is_punct:
                     continue
+                if token.pos_ == 'PRON' and token.text in self._model.wv:
+                    lemmas.append(token.text)
+                    continue
+                if token.like_num:
+                    lemmas.append('number')
+                    continue
                 if token.lemma_ in self._model.wv:
                     lemmas.append(token.lemma_)
+                    continue
+                if token.text in self._model.wv:
+                    lemmas.append(token.text)
+                    continue
+                else:
+                    logging.warning(f'Word "{token.text}" does not have its lemma "{token.lemma_}" nor the text in the vocabulary. Skipping!')
             # computes the average of vectors
             # doesnt take into account the "weight" of each word -> "pilot" in 5 words sentence has 1/5 weight whereas
             # "pilot" in 200 words sentence has 1/200 weight
