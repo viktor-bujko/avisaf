@@ -265,9 +265,9 @@ class ASRSReportDataPreprocessor:
     def __init__(self, vectorizer=None):
         self._label_encoder = LabelEncoder()
         # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
-        # self.vectorizer = vectorizers.Word2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
-        self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        # self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
+        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
     def filter_texts_by_label(self, texts: list, target_labels: list, target_label_filter: list = None):
         """
@@ -429,9 +429,11 @@ class ASRSReportDataPreprocessor:
 
         data = self.vectorizer.build_feature_vectors(
             texts,
-            target_labels.shape[0],
+            target_labels,  # .shape[0],
             train=train
         )
+
+        vectorizers.show_vector_space_3d(data, target_labels)
 
         if normalize:
             data, target_labels = self.normalize(data, target_labels, 0.1)
