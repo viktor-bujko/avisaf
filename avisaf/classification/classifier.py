@@ -15,11 +15,11 @@ import sklearn.metrics as metrics
 from pathlib import Path
 from sklearn.model_selection import cross_validate, cross_val_score, learning_curve
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
-from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
+from sklearn.svm import LinearSVC, SVC
 
 from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
 logger = logging.getLogger(str(__file__))
@@ -200,7 +200,7 @@ class ASRSReportClassificationEvaluator:
         plt.show()
 
     @staticmethod
-    def plot_learning_curve(estimator, title, X, y, axes=None, ylim=None, cv=None,
+    def plot_learning_curve(estimator, title, x, y, axes=None, ylim=None, cv=None,
                             n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
         if axes is None:
             _, axes = plt.subplots(1, 3, figsize=(20, 5))
@@ -212,7 +212,7 @@ class ASRSReportClassificationEvaluator:
         axes[0].set_ylabel("Score")
 
         train_sizes, train_scores, test_scores, fit_times, _ = \
-            learning_curve(estimator, X, y, cv=cv, n_jobs=n_jobs,
+            learning_curve(estimator, x, y, cv=cv, n_jobs=n_jobs,
                            train_sizes=train_sizes,
                            return_times=True)
         train_scores_mean = np.mean(train_scores, axis=1)
@@ -265,19 +265,16 @@ class ASRSReportClassificationTrainer:
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
-                    hidden_layer_sizes=(128, 64),
-                    alpha=0.005,
+                    hidden_layer_sizes=(512, 256),
+                    alpha=0.007,
                     batch_size=128,
                     learning_rate='adaptive',
-                    learning_rate_init=0.005,
-                    random_state=6240,
+                    learning_rate_init=0.002,
                     verbose=True,
-                    max_iter=80,
                     early_stopping=True,
-                    n_iter_no_change=30
+                    n_iter_no_change=20
                 ),
-                'svm': SVC(probability=True),
-                'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
+                'svm': LinearSVC(dual=False, class_weight='balanced'),
                 'forest': RandomForestClassifier(
                     n_estimators=150,
                     criterion='entropy',
@@ -286,10 +283,10 @@ class ASRSReportClassificationTrainer:
                     # max_features=20000,
                     verbose=5
                 ),
-                'knn': KNeighborsClassifier(n_neighbors=15),
+                'knn': KNeighborsClassifier(n_neighbors=20, weights='distance'),
                 'gauss': GaussianNB(),
                 'mnb': MultinomialNB(),
-                'bernoulli': BernoulliNB()
+                'regression': LogisticRegression()
             }
 
             # Setting a default classifier value
@@ -407,10 +404,8 @@ class ASRSReportClassificationTrainer:
             print(valid_scores)
             p = ASRSReportClassificationEvaluator.plot_learning_curve(self._model, "TITLE", train_data, train_target, cv=5)
             p.savefig("learning_curve.png")
-
-        predictions = ASRSReportClassificationPredictor.predict_proba(train_data, self._model)
-        ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
-        self.save_model(self._model)
+            plt.plot(self._model.loss_curve_, scalex=True, scaley=True)
+            plt.show()
 
     def save_model(self, model_to_save):
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
@@ -455,7 +450,6 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
                     parameters = json.load(params_file)
             else:
                 model = None
-                vectorizer = None
                 parameters = None
 
             classifier = ASRSReportClassificationTrainer(
