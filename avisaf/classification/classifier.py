@@ -76,8 +76,8 @@ class ASRSReportClassificationPredictor:
         predictions = self.predict_proba(test_data, self._model)
         return predictions, test_target
 
-    def predict(self, test_data, model_to_use=None):
-        model = self._model if model_to_use is None else model_to_use
+    @staticmethod
+    def predict(test_data, model=None):
 
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
@@ -88,15 +88,16 @@ class ASRSReportClassificationPredictor:
         return predictions
 
     @staticmethod
-    def predict_proba(test_data, model_to_use):
-        # model = self._model if model_to_use is None else model_to_use
-        model = model_to_use
+    def predict_proba(test_data, model):
 
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
 
         logger.info(f'Probability predictions made using model: {model}')
-        predictions = model.predict_proba(test_data)
+        if getattr(model, 'predict_proba', None) is not None:
+            predictions = model.predict_proba(test_data)
+        else:
+            predictions = model.predict(test_data)
 
         return predictions
 
@@ -376,6 +377,10 @@ class ASRSReportClassificationTrainer:
                 "trained_texts": self._trained_texts,
                 "vectorizer_params": self._preprocessor.vectorizer.get_params()
             }
+
+        predictions = ASRSReportClassificationPredictor.predict_proba(train_data, self._model)
+        ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
+        self.save_model(self._model)
 
         cross_val = False
         if cross_val:
