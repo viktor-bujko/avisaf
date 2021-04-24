@@ -16,7 +16,12 @@ __pycache__
 build/
 dist/
 shell/
+gensim-data/
 *egg-info*
 *.iml
 model_stats.py
+out_of_vocab.txt
+stop_words.txt
+*.vec
+learning_curve.png
 report*.model
