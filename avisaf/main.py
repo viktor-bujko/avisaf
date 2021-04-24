@@ -438,7 +438,7 @@ def main():
         '-a', '--algorithm',
         default='mlp',
         help='The algorithm used for classification training.',
-        choices={'knn', 'svm', 'mlp', 'tree', 'forest', 'gauss', 'mnb', 'bernoulli'}
+        choices={'knn', 'svm', 'mlp', 'forest', 'gauss', 'mnb', 'regression'}
     )
     arg_classifier.add_argument(
         '--normalize',

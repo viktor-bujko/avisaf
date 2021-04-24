@@ -19,6 +19,7 @@ from avisaf.util.indexing import get_spans_indexes, entity_trimmer
 import avisaf.util.training_data_build as train
 from avisaf.util.data_extractor import DataExtractor
 import avisaf.classification.vectorizers as vectorizers
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 
@@ -262,9 +263,11 @@ def annotate_man(file_path: Path, lines: int = -1,
 class ASRSReportDataPreprocessor:
 
     def __init__(self, vectorizer=None):
-        self._encoding = None
-        self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
-        # self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        self._label_encoder = LabelEncoder()
+        # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
+        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
     def filter_texts_by_label(self, texts: list, target_labels: list, target_label_filter: list = None):
         """
@@ -276,7 +279,6 @@ class ASRSReportDataPreprocessor:
         """
 
         new_texts, new_labels = [], []
-        unique_labels = set()
 
         for text_idx, text in enumerate(texts):
             # Some reports may be annotated with multiple labels separated by ;
@@ -289,44 +291,31 @@ class ASRSReportDataPreprocessor:
 
                 if target_label_filter is not None:
                     # apply label filtration and truncation
-                    matched_filter = list(filter(lambda x: str(label).startswith(x.strip()), target_label_filter))
+                    matched_filter = list(filter(lambda x: str(label).startswith(x.strip()), target_label_filter)) + \
+                                     list(filter(lambda x: str(label).endswith(x.strip()), target_label_filter))
+
                     if len(matched_filter) != 1:
-                        # The label is not unambiguous
-                        continue
+
+                        if label in matched_filter:
+                            matched_label = label
+                        else:
+                            # The label is not unambiguous
+                            continue
                     else:
                         matched_label = matched_filter[0]
                 new_texts.append(text)
                 new_labels.append(matched_label)
-                unique_labels.add(matched_label)
 
         if target_label_filter is not None:
             for label in target_label_filter:
-                if label not in unique_labels:
+                if label not in new_labels:
                     print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
 
-        unique_labels = sorted(unique_labels)
-        new_labels, encoding = self.encode_labels(unique_labels, new_labels)
+        new_labels = self._label_encoder.fit_transform(new_labels)
         _, counts = np.unique(new_labels, return_counts=True)
-        logging.info(dict(zip(unique_labels, counts)))
+        logging.info(dict(zip(self._label_encoder.classes_, counts)))
 
-        return np.array(new_texts), np.array(new_labels), encoding
-
-    @staticmethod
-    def encode_labels(unique: list, labels: list):
-        """
-
-        :param unique:
-        :param labels:
-        :return:
-        """
-        encoded_labels = []
-
-        for label in labels:
-            encoded_labels.append(unique.index(label))
-
-        encoding = dict(zip(range(len(unique)), unique))
-
-        return encoded_labels, encoding
+        return np.array(new_texts), new_labels
 
     def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         """
@@ -432,23 +421,22 @@ class ASRSReportDataPreprocessor:
         logging.debug(labels_to_extract)
         logging.debug(label_values_filter)
 
-        texts, target_labels, encoding = self.filter_texts_by_label(
+        texts, target_labels = self.filter_texts_by_label(
             extracted_dict[narrative_label],
             extracted_dict[label_to_extract],
             label_values_filter
         )
 
-        if normalize:
-            texts, target_labels = self.normalize(texts, target_labels, 0.1)
-
         data = self.vectorizer.build_feature_vectors(
             texts,
-            target_labels.shape[0],
+            target_labels,  # .shape[0],
             train=train
         )
 
-        if train:
-            self._encoding = encoding
+        vectorizers.show_vector_space_3d(data, target_labels)
+
+        if normalize:
+            data, target_labels = self.normalize(data, target_labels, 0.1)
 
         return data, target_labels
 
@@ -468,5 +456,6 @@ class ASRSReportDataPreprocessor:
 
         return distribution_counts, dist
 
-    def get_encoding(self):
-        return self._encoding
+    @property
+    def encoder(self):
+        return self._label_encoder

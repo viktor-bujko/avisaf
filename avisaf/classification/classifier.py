@@ -14,12 +14,13 @@ import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 from pathlib import Path
 from sklearn.base import clone
+from sklearn.model_selection import cross_validate, cross_val_score, learning_curve
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
-from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
+from sklearn.svm import LinearSVC, SVC
 
 from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
 logger = logging.getLogger(str(__file__))
@@ -80,22 +81,29 @@ class ASRSReportClassificationPredictor:
                 train=False,
                 label_values_filter=fltr,
                 normalize=self._normalize
-            )
-
-            logger.info(self._preprocessor.get_data_distribution(test_target)[1])
-
-            logger.info(f'Test data shape: {test_data.shape}')
-            predictions = self.predict(test_data, None)
-
-        return predictions, test_target"""
+            )"""
 
     @staticmethod
-    def predict(test_data, model, predict_proba: bool = True):
+    def predict(test_data, model=None):
+
+        if model is None:
+            raise ValueError('A model needs to be trained or loaded first to perform predictions.')
+
+        logger.info(f'Test data shape: {test_data.shape}')
+        predictions = model.predict(test_data, None)
+
+        return predictions
+
+    @staticmethod
+    def predict_proba(test_data, model=None):
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
 
         logger.info(f'Probability predictions made using model: {model}')
-        predictions = model.predict_proba(test_data) if predict_proba else model.predict(test_data)
+        if getattr(model, 'predict_proba', None) is not None:
+            predictions = model.predict_proba(test_data)
+        else:
+            predictions = model.predict(test_data)
 
         return predictions
 
@@ -142,7 +150,7 @@ class ASRSReportClassificationEvaluator:
         pass
 
     @staticmethod
-    def evaluate(predictions: list, test_targets):
+    def evaluate(predictions: list, test_target):
 
         ensemble = ""
         if len(predictions) > 1:
@@ -151,7 +159,7 @@ class ASRSReportClassificationEvaluator:
 
         predictions = np.mean(predictions, axis=0)
 
-        for predictions_distribution, class_targets in zip(predictions, test_targets):
+        for predictions_distribution, class_targets in zip(predictions, test_target):
             class_predictions = np.argmax(predictions_distribution, axis=1)
             unique_predictions_count = np.unique(class_targets).shape[0]
             avg = 'binary' if unique_predictions_count == 2 else 'micro'
@@ -192,37 +200,93 @@ class ASRSReportClassificationEvaluator:
         plt.xlabel('False Positive Rate')
         plt.show()
 
+    @staticmethod
+    def plot_learning_curve(estimator, title, x, y, axes=None, ylim=None, cv=None,
+                            n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
+        if axes is None:
+            _, axes = plt.subplots(1, 3, figsize=(20, 5))
+
+        axes[0].set_title(title)
+        if ylim is not None:
+            axes[0].set_ylim(*ylim)
+        axes[0].set_xlabel("Training examples")
+        axes[0].set_ylabel("Score")
+
+        train_sizes, train_scores, test_scores, fit_times, _ = \
+            learning_curve(estimator, x, y, cv=cv, n_jobs=n_jobs,
+                           train_sizes=train_sizes,
+                           return_times=True)
+        train_scores_mean = np.mean(train_scores, axis=1)
+        train_scores_std = np.std(train_scores, axis=1)
+        test_scores_mean = np.mean(test_scores, axis=1)
+        test_scores_std = np.std(test_scores, axis=1)
+        fit_times_mean = np.mean(fit_times, axis=1)
+        fit_times_std = np.std(fit_times, axis=1)
+
+        # Plot learning curve
+        axes[0].grid()
+        axes[0].fill_between(train_sizes, train_scores_mean - train_scores_std,
+                             train_scores_mean + train_scores_std, alpha=0.1,
+                             color="r")
+        axes[0].fill_between(train_sizes, test_scores_mean - test_scores_std,
+                             test_scores_mean + test_scores_std, alpha=0.1,
+                             color="g")
+        axes[0].plot(train_sizes, train_scores_mean, 'o-', color="r",
+                     label="Training score")
+        axes[0].plot(train_sizes, test_scores_mean, 'o-', color="g",
+                     label="Cross-validation score")
+        axes[0].legend(loc="best")
+
+        # Plot n_samples vs fit_times
+        axes[1].grid()
+        axes[1].plot(train_sizes, fit_times_mean, 'o-')
+        axes[1].fill_between(train_sizes, fit_times_mean - fit_times_std,
+                             fit_times_mean + fit_times_std, alpha=0.1)
+        axes[1].set_xlabel("Training examples")
+        axes[1].set_ylabel("fit_times")
+        axes[1].set_title("Scalability of the model")
+
+        # Plot fit_time vs score
+        axes[2].grid()
+        axes[2].plot(fit_times_mean, test_scores_mean, 'o-')
+        axes[2].fill_between(fit_times_mean, test_scores_mean - test_scores_std,
+                             test_scores_mean + test_scores_std, alpha=0.1)
+        axes[2].set_xlabel("fit_times")
+        axes[2].set_ylabel("Score")
+        axes[2].set_title("Performance of the model")
+
+        return plt
+
 
 class ASRSReportClassificationTrainer:
 
-    def __init__(self, models=None, parameters: dict = None, algorithm=None, normalized: bool = True, vectorizer=None, deviation_rate: float = 0.0):
+    def __init__(self, models=None, parameters: dict = None, algorithm=None, normalized: bool = True, deviation_rate: float = 0.0):
 
         # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
-                    hidden_layer_sizes=(256, 32),
-                    alpha=0.005,
-                    batch_size=256,
+                    hidden_layer_sizes=(512, 256),
+                    alpha=0.007,
+                    batch_size=128,
                     learning_rate='adaptive',
-                    learning_rate_init=0.005,
-                    random_state=6240,
+                    learning_rate_init=0.002,
                     verbose=True,
-                    early_stopping=True
+                    early_stopping=True,
+                    n_iter_no_change=20
                 ),
-                'svm': SVC(probability=True),
-                'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
+                'svm': LinearSVC(dual=False, class_weight='balanced'),
                 'forest': RandomForestClassifier(
                     n_estimators=150,
                     criterion='entropy',
-                    min_samples_split=15,
-                    # max_features=20000,
+                    min_samples_split=32,
+                    n_jobs=2,
                     verbose=5
                 ),
-                'knn': KNeighborsClassifier(n_neighbors=15),
+                'knn': KNeighborsClassifier(n_neighbors=20, weights='distance'),
                 'gauss': GaussianNB(),
                 'mnb': MultinomialNB(),
-                'bernoulli': BernoulliNB()
+                'regression': LogisticRegression()
             }
 
             # Setting a default classifier value
@@ -237,7 +301,7 @@ class ASRSReportClassificationTrainer:
             parameters = dict()
 
         self._normalize = normalized
-        self._preprocessor = ASRSReportDataPreprocessor(vectorizer)
+        self._preprocessor = ASRSReportDataPreprocessor()
 
         if not models:
             self._classifier = set_classification_algorithm(algorithm)
@@ -301,7 +365,9 @@ class ASRSReportClassificationTrainer:
                 filter_update = label_filter
 
             if mode == "train":
-                self._trained_filtered_labels.update({label_to_train: filter_update})
+                logging.debug(self._preprocessor.encoder.classes_)
+                for num_label, label in zip(range(0, len(self._preprocessor.encoder.classes_)), self._preprocessor.encoder.classes_):
+                    self._trained_filtered_labels.update({label_to_train: filter_update})
 
         if not labels_to_train:
             raise ValueError("Nothing to train - please make sure at least one category is specified.")
@@ -310,7 +376,6 @@ class ASRSReportClassificationTrainer:
 
         labels_predictions, labels_targets = [], []
         for lbl, fltr in zip(labels_to_train, labels_filters):
-
             data, target = self._preprocessor.vectorize_texts(
                 texts_paths,
                 lbl,
@@ -325,23 +390,22 @@ class ASRSReportClassificationTrainer:
             if mode == "train":
                 self._classifier = clone(self._classifier)
                 # encoding is available only after texts vectorization
-                self._encodings.update({lbl: self._preprocessor.get_encoding()})
+                logging.debug(self._preprocessor.encoder.classes_)
+                for num_label, label in zip(range(0, len(self._preprocessor.encoder.classes_)), self._preprocessor.encoder.classes_):
+                    self._encodings.update({num_label: label})
 
-                logger.info(self._classifier)
-
-                self._classifier.fit(data, target)
-                self._params = {
+            self._params = {
                     "algorithm": self._algorithm,
-                    "encodings": self._encodings,
+                    "encoding": self._encodings,
                     "model_params": self._model_params,
-                    "trained_labels": self._trained_filtered_labels,
+                    "trained_label": self._trained_filtered_labels,
                     "trained_texts": self._trained_texts,
                     "vectorizer_params": self._preprocessor.vectorizer.get_params()
                 }
 
-                logging.info(f"MODEL: {self._classifier}")
-                # self.save_model(self._model)
-                self._models.append(self._classifier)
+            self._classifier.fit(data, target)
+            logging.info(f"MODEL: {self._classifier}")
+            self._models.append(self._classifier)
 
             predictions = ASRSReportClassificationPredictor.predict(data, self._classifier)
             labels_predictions.append(predictions)
@@ -371,12 +435,11 @@ class ASRSReportClassificationTrainer:
         with lzma.open(Path("classifiers", model_dir_name, 'classifier.model'), 'wb') as model_file:
             logger.info(f'Saving {len(models_to_save)} model(s): {models_to_save}')
             logger.debug(f'Saving vectorizer: {self._preprocessor.vectorizer}')
-            pickle.dump((models_to_save, self._preprocessor.vectorizer), model_file)
+            pickle.dump(models_to_save, model_file)
 
         with open(Path("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
             logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]')
             json.dump(self._params, params_file, indent=4)
-            # self._params = parameters
 
 
 def launch_classification(models_dir_paths: list, texts_paths: list, label: str, label_filter: list, algorithm: str, normalize: bool, mode: str, plot: bool):
@@ -393,19 +456,17 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             if models_dir_paths:
                 with lzma.open(Path(models_dir_paths[idx], 'classifier.model'), 'rb') as model_file:
-                    models, vectorizer = pickle.load(model_file)
+                    models = pickle.load(model_file)
 
                 with open(Path(models_dir_paths[idx], 'parameters.json'), 'r') as params_file:
                     parameters = json.load(params_file)
             else:
                 models = None
-                vectorizer = None
                 parameters = None
 
             classifier = ASRSReportClassificationTrainer(
                 models=models,
                 algorithm=algorithm,
-                vectorizer=vectorizer,
                 parameters=parameters,
                 normalized=normalize,
                 deviation_rate=deviation_rate
@@ -422,7 +483,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
         for model_dir_path in models_dir_paths:
 
             with lzma.open(Path(model_dir_path, 'classifier.model'), 'rb') as model_file:
-                models, vectorizer = pickle.load(model_file)
+                models = pickle.load(model_file)
                 logging.debug(f"Loaded {len(models)} models")
 
             with open(Path(model_dir_path, 'parameters.json'), 'r') as params_file:
@@ -431,7 +492,6 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
             predictor = ASRSReportClassificationTrainer(
                 models=models,
                 parameters=parameters,
-                vectorizer=vectorizer,
                 normalized=normalize,
                 deviation_rate=deviation_rate
             )
