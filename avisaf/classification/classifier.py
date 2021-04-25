@@ -36,7 +36,7 @@ class ASRSReportClassificationPredictor:
     def __init__(self, models, vectorizer=None, normalized: bool = True, deviation_rate: float = 0.0, parameters=None):
 
         if parameters is None:
-            parameters = dict()
+            parameters = {}
         self._models = models  # Model(s) to be used for evaluation
 
         if parameters.get("model_params") is not None:
@@ -273,7 +273,8 @@ class ASRSReportClassificationTrainer:
                     learning_rate_init=0.002,
                     verbose=True,
                     early_stopping=True,
-                    n_iter_no_change=20
+                    n_iter_no_change=20,
+                    warm_start=True
                 ),
                 'svm': LinearSVC(dual=False, class_weight='balanced'),
                 'forest': RandomForestClassifier(
@@ -298,7 +299,7 @@ class ASRSReportClassificationTrainer:
             return _classifier
 
         if parameters is None:
-            parameters = dict()
+            parameters = {}
 
         self._normalize = normalized
         self._preprocessor = ASRSReportDataPreprocessor()
@@ -307,11 +308,11 @@ class ASRSReportClassificationTrainer:
             self._classifier = set_classification_algorithm(algorithm)
             self._models = []
             self._deviation_rate = 0.0
-            self._encodings = dict()
+            self._encodings = {}
             self._model_params = self._classifier.get_params()
-            self._params = dict()
+            self._params = {}
             self._algorithm = algorithm
-            self._trained_filtered_labels = dict()
+            self._trained_filtered_labels = {}
             self._trained_texts = []
         else:
             try:
@@ -354,6 +355,7 @@ class ASRSReportClassificationTrainer:
             labels_to_train = [label_to_train]
 
             if label_filter is None:
+                # trying to get previously saved label filter
                 if self._trained_filtered_labels.get(label_to_train):
                     labels_filters = self._trained_filtered_labels[label_to_train]
                     filter_update = labels_filters
@@ -365,9 +367,7 @@ class ASRSReportClassificationTrainer:
                 filter_update = label_filter
 
             if mode == "train":
-                logging.debug(self._preprocessor.encoder.classes_)
-                for num_label, label in zip(range(0, len(self._preprocessor.encoder.classes_)), self._preprocessor.encoder.classes_):
-                    self._trained_filtered_labels.update({label_to_train: filter_update})
+                self._trained_filtered_labels.update({label_to_train: filter_update})
 
         if not labels_to_train:
             raise ValueError("Nothing to train - please make sure at least one category is specified.")
@@ -383,6 +383,7 @@ class ASRSReportClassificationTrainer:
                 label_values_filter=fltr,
                 normalize=self._normalize
             )
+            # TODO: make vectorize_texts return "data" - ndarray with shape (n_samples, vector_dim) and targets - ndarray with shape (n_samples, m_models)
 
             logger.debug(f'{ mode } data shape: {data.shape}')
             logger.debug(self._preprocessor.get_data_distribution(target)[1])
@@ -390,15 +391,16 @@ class ASRSReportClassificationTrainer:
             if mode == "train":
                 self._classifier = clone(self._classifier)
                 # encoding is available only after texts vectorization
-                logging.debug(self._preprocessor.encoder.classes_)
-                for num_label, label in zip(range(0, len(self._preprocessor.encoder.classes_)), self._preprocessor.encoder.classes_):
-                    self._encodings.update({num_label: label})
+                encoding = {}
+                for label_idx, label in enumerate(self._preprocessor.encoder.classes_):
+                    encoding.update({label_idx: label})
+                self._encodings.update({lbl: encoding})
 
-            self._params = {
+                self._params = {
                     "algorithm": self._algorithm,
-                    "encoding": self._encodings,
+                    "encodings": self._encodings,
                     "model_params": self._model_params,
-                    "trained_label": self._trained_filtered_labels,
+                    "trained_labels": self._trained_filtered_labels,
                     "trained_texts": self._trained_texts,
                     "vectorizer_params": self._preprocessor.vectorizer.get_params()
                 }
