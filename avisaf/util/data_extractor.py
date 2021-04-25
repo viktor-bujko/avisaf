@@ -149,38 +149,33 @@ class DataExtractor:
     def __init__(self, file_paths: list):
         self._file_paths = file_paths
 
-    def extract_from_csv_columns(self, field_name: [str, list], lines_count: int = -1,
-                                 start_index: int = 0, file_paths: [list, str] = None):
+    def extract_from_csv_columns(self, field_names: list, lines_count: int = -1, start_index: int = 0, file_paths: [list, str] = None):
         """
 
         :param file_paths:
-        :param field_name:
+        :param field_names:
         :param lines_count:
         :param start_index:
         :return:
         """
-
-        # Normalizing the type of arguments to fit the rest of the method
-        field_names = field_name if type(field_name) is list else [field_name]
 
         # Overriding default instance file paths list by the passed parameter
         file_paths = self._file_paths if file_paths is None else (file_paths if file_paths is list else [file_paths])
         skipped_files = 0
 
         label_data_dict = {}
-        for a_field_name in field_names:
+        for field_name in field_names:
             extracted_values = []
-            for a_file_path in file_paths:
-                if not Path(a_file_path).exists():
+            for file_path in file_paths:
+                if not Path(file_path).exists():
                     skipped_files += 1
                     if skipped_files == len(file_paths):
                         raise ValueError(f"Any of the given files {file_paths} exists")
-
                     continue
 
-                requested_file = find_file_by_path(a_file_path)
+                requested_file = find_file_by_path(file_path)
                 if requested_file is None:
-                    print(f'The file given by "{a_file_path}" path was not found in the given range.', file=sys.stderr)
+                    print(f'The file given by "{file_path}" path was not found in the given range.', file=sys.stderr)
                     # Ignoring the file with current file path
                     continue
 
@@ -193,7 +188,7 @@ class DataExtractor:
                 csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
                 try:
-                    extracted_values_collection = csv_dataframe[a_field_name].values.tolist()
+                    extracted_values_collection = csv_dataframe[field_name].values.tolist()
                 except KeyError:
                     print(
                         f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"',
@@ -205,6 +200,6 @@ class DataExtractor:
                 end_index = start_index + lines_count if lines_count != -1 else length
                 extracted_values += extracted_values_collection[start_index: end_index]  # Getting only the desired subset of extracted data
 
-            label_data_dict[a_field_name] = extracted_values
+            label_data_dict[field_name] = np.array(extracted_values)
 
         return label_data_dict

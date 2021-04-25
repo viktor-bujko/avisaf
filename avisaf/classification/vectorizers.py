@@ -136,17 +136,19 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         self._transformer = TfidfVectorizer(
             stop_words='english',
             lowercase=True,
-            ngram_range=(1, 4),
+            ngram_range=(1, 1),
             analyzer='word',
-            max_features=50_000,
+            max_features=300, #_000,
             # max_df=0.5
         )
         self._pipeline = Pipeline([
             ('reductor', TruncatedSVD(n_components=300)),
             ('scaler', StandardScaler())
         ])
+        self._pipeline = []  # FIXME:
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels: type(np.ndarray), train: bool = False):
+        logging.debug("Started vectorization")
 
         if texts.shape[0] != target_labels.shape[0]:
             msg = 'The number of training examples is not equal to the the number of labels.'
@@ -160,16 +162,16 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         import pickle
 
         if train:
-            texts_vectors = self._transformer.fit_transform(texts)
-            texts_vectors = self._pipeline.fit_transform(texts_vectors)
+            texts_vectors = self._transformer.fit_transform(texts).toarray()
+            # texts_vectors = self._pipeline.fit_transform(texts_vectors)
             with lzma.open('pipeline.model', 'wb') as pipe:
                 pickle.dump((self._transformer, self._pipeline), pipe)
             # texts_vectors = self._transformer.fit_transform(texts)
         else:
             with lzma.open('pipeline.model', 'rb') as pipe:
                 self._transformer, self._pipeline = pickle.load(pipe)
-            texts_vectors = self._transformer.transform(texts)
-            texts_vectors = self._pipeline.transform(texts_vectors)
+            texts_vectors = self._transformer.transform(texts).toarray()
+            # texts_vectors = self._pipeline.transform(texts_vectors)
             # texts_vectors = self._transformer.transform(texts)
 
         logging.debug("Ended vectorization")

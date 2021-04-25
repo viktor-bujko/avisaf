@@ -264,14 +264,15 @@ class ASRSReportDataPreprocessor:
 
     def __init__(self, vectorizer=None):
         self._label_encoder = LabelEncoder()
-        # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
+        self._label_encoders = []
+        self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
-    def filter_texts_by_label(self, texts: list, target_labels: list, target_label_filter: list = None):
+    def filter_texts_by_label(self, src_dict: dict, texts: np.ndarray, target_labels: list, target_label_filter: list = None):
         """
-
+        :param src_dict:
         :param target_label_filter:
         :param texts:
         :param target_labels:
@@ -279,11 +280,42 @@ class ASRSReportDataPreprocessor:
         """
 
         new_texts, new_labels = [], []
+        target_labels = np.array(list(src_dict.values()))
 
-        for text_idx, text in enumerate(texts):
+        for idx in range(len(src_dict.keys())):
+            matching_texts_mask, matching_texts_labels = [], []
+            for filter_pttrn in target_label_filter[idx]:
+                pattern_mask = []
+
+                def matches_filter(sample_target):
+                    return sample_target.startswith(filter_pttrn) or sample_target.endswith(filter_pttrn)
+                # iterating through all values to filter - this also preserves labels composition
+                for i, sample_targets in enumerate(map(lambda lbl: lbl.split('; '), target_labels[idx])):         # Takes different values in the given column
+                    if any(map(matches_filter, sample_targets)):
+                        pattern_mask.append(i)
+                matching_texts_mask.append(texts[np.array(pattern_mask)])
+                matching_texts_labels.append(np.full(shape=len(pattern_mask), fill_value=filter_pttrn))
+            new_texts.append(
+                # concatenates all the texts and labels into (n_texts, 2) where n_texts corresponds to
+                # all texts with corresponding filtered labels
+
+                # will be used for simpler shuffling
+                np.concatenate([
+                    np.reshape(np.concatenate(matching_texts_mask), (-1, 1)),
+                    np.reshape(np.concatenate(matching_texts_labels), (-1, 1))
+                ], axis=1)
+            )
+
+        state = np.random.get_state()
+        for text_data in new_texts:
+            np.random.shuffle(text_data)
+            np.random.set_state(state)
+            np.random.shuffle(target_labels)
+
+        """for text_idx, text in enumerate(texts):
             # Some reports may be annotated with multiple labels separated by ;
             # We want to use them all as possible outcomes
-            labels = target_labels[text_idx].split(';')
+            labels = [target_label.split('; ') for target_label in target_labels[:, text_idx]]
 
             for label in labels:
                 label = label.strip()
@@ -309,13 +341,19 @@ class ASRSReportDataPreprocessor:
         if target_label_filter is not None:
             for label in target_label_filter:
                 if label not in new_labels:
-                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
+                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)"""
+        result = []
+        for text in new_texts:
+            texts, labels = text[:, 0], text[:, 1]
+            encoder = LabelEncoder()
+            labels = encoder.fit_transform(labels)
+            _, counts = np.unique(labels, return_counts=True)
+            logging.info(dict(zip(encoder.classes_, counts)))
+            result.append((texts, labels))
+            self._label_encoders.append(encoder)
 
-        new_labels = self._label_encoder.fit_transform(new_labels)
-        _, counts = np.unique(new_labels, return_counts=True)
-        logging.info(dict(zip(self._label_encoder.classes_, counts)))
-
-        return np.array(new_texts), new_labels
+        return result
+        # return np.array(new_texts), new_labels
 
     def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         """
@@ -411,34 +449,41 @@ class ASRSReportDataPreprocessor:
 
         return text_data, target_labels
 
-    def vectorize_texts(self, texts_paths: list, label_to_extract: str, train: bool, label_values_filter: list, normalize: bool = False):
+    def vectorize_texts(self, texts_paths: list, labels_to_extract: list, train: bool, label_values_filter: list, normalize: bool = False):
         narrative_label = 'Report 1_Narrative'
 
         extractor = DataExtractor(texts_paths)
-        labels_to_extract = [label_to_extract, narrative_label] if label_to_extract is not None else [narrative_label]
+        labels_to_extract = labels_to_extract if labels_to_extract is not None else [narrative_label]
         extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
+        narratives = extractor.extract_from_csv_columns([narrative_label])[narrative_label]
 
         logging.debug(labels_to_extract)
         logging.debug(label_values_filter)
 
-        texts, target_labels = self.filter_texts_by_label(
-            extracted_dict[narrative_label],
-            extracted_dict[label_to_extract],
+        texts_labels_arr = self.filter_texts_by_label(
+            extracted_dict,  # extracted_dict[narrative_label],
+            narratives,  # extracted_dict[labels_to_extract],
+            labels_to_extract,
             label_values_filter
         )
 
-        data = self.vectorizer.build_feature_vectors(
-            texts,
-            target_labels,  # .shape[0],
-            train=train
-        )
+        result_data, result_targets = [], []
+        for texts, target_labels in texts_labels_arr:
+            data = self.vectorizer.build_feature_vectors(
+                texts,
+                target_labels,  # .shape[0],
+                train=train
+            )
 
-        vectorizers.show_vector_space_3d(data, target_labels)
+            # vectorizers.show_vector_space_3d(data, target_labels)
 
-        if normalize:
-            data, target_labels = self.normalize(data, target_labels, 0.1)
+            if normalize:
+                data, target_labels = self.normalize(data, target_labels, 0.1)
 
-        return data, target_labels
+            result_data.append(data)
+            result_targets.append(target_labels)
+
+        return np.array(result_data), np.array(result_targets)
 
     @staticmethod
     def get_data_distribution(target: list):
