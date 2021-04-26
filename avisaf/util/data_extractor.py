@@ -178,12 +178,13 @@ class DataExtractor:
                     print(f'The file given by "{file_path}" path was not found in the given range.', file=sys.stderr)
                     # Ignoring the file with current file path
                     continue
-
-                csv_dataframe = pd.read_csv(
-                    requested_file,
-                    skip_blank_lines=True,
-                    header=[0, 1],
-                )
+                with open(requested_file) as file:
+                    csv_dataframe = pd.read_csv(
+                        file,
+                        skip_blank_lines=True,
+                        header=[0, 1],
+                    )
+                logging.debug(f'File {requested_file} is closed: {file.closed}')
                 csv_dataframe.columns = csv_dataframe.columns.map('_'.join)
                 csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
