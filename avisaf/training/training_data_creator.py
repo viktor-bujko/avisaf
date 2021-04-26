@@ -265,10 +265,10 @@ class ASRSReportDataPreprocessor:
     def __init__(self, vectorizer=None):
         self._label_encoder = LabelEncoder()
         self._label_encoders = []
-        self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        # self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
 
     def filter_texts_by_label(self, src_dict: dict, texts: np.ndarray, target_labels: list, target_label_filter: list = None):
         """

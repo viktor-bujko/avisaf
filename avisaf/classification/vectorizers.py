@@ -255,7 +255,10 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         return doc2veced
 
     def get_params(self):
-        return {}
+        return {
+            "name": "Doc2Vec",
+            "path": 'doc2vec.model'
+        }
 
 
 class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):

@@ -392,7 +392,12 @@ class ASRSReportClassificationTrainer:
             logger.debug(f'{ mode } data shape: {data[i].shape}')
             # logger.debug(self._preprocessor.get_data_distribution(target[i])[1])
 
-            classifier = self._models[lbl] if self._models.get(lbl) is not None else clone(self._classifier)
+            if self._models.get(lbl) is not None:
+                logging.debug("Found previously trained model")
+                classifier = self._models[lbl]
+                classifier.set_params(warm_start=True)
+            else:
+                classifier = clone(self._classifier)
             if mode == "train":
                 # encoding is available only after texts vectorization
                 encoding = {}
