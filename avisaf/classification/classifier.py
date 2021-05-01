@@ -162,7 +162,7 @@ class ASRSReportClassificationEvaluator:
         for predictions_distribution, class_targets in zip(predictions, test_target):
             class_predictions = np.argmax(predictions_distribution, axis=1)
             unique_predictions_count = np.unique(class_targets).shape[0]
-            avg = 'binary' if unique_predictions_count == 2 else 'micro'
+            avg = 'binary' if unique_predictions_count == 2 else 'macro'
 
             print('==============================================')
             print('Confusion matrix: number [i,j] indicates the number of observations of class i which were predicted to be in class j')
@@ -170,13 +170,17 @@ class ASRSReportClassificationEvaluator:
             if ensemble:
                 print(ensemble)
             print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(class_targets, class_predictions) * 100))
-            print('Model Based Precision: {:.2f}'.format(metrics.precision_score(class_targets, class_predictions, average=avg) * 100))
-            print('Model Based Recall: {:.2f}'.format(metrics.recall_score(class_targets, class_predictions, average=avg) * 100))
-            print('Model Based F1-score: {:.2f}'.format(metrics.f1_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Balanced Accuracy: {:.2f}'.format(metrics.balanced_accuracy_score(class_targets, class_predictions) * 100))
+            print('Model Based ROC-AUC: {:.2f}'.format(metrics.roc_auc_score(class_targets, predictions_distribution, multi_class='ovr') * 100))
+
+            print('Model Based Macro Precision: {:.2f}'.format(metrics.precision_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Macro Recall: {:.2f}'.format(metrics.recall_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Macro F1-score: {:.2f}'.format(metrics.f1_score(class_targets, class_predictions, average=avg) * 100))
             print('==============================================')
             for unique_prediction in range(unique_predictions_count):
                 mockup_predictions = np.full(class_targets.shape, unique_prediction)
                 print(f'Accuracy predicting always {unique_prediction}: {metrics.accuracy_score(class_targets, mockup_predictions) * 100}')
+                print(f'Accuracy predicting always {unique_prediction}: {metrics.balanced_accuracy_score(class_targets, mockup_predictions) * 100}')
                 print(f'F1-score: {metrics.f1_score(class_targets, mockup_predictions, average=avg) * 100}')
                 print(f'Model Based Precision: {metrics.precision_score(class_targets, mockup_predictions, zero_division=1, average=avg) * 100}')
                 print(f'Model Based Recall: {metrics.recall_score(class_targets, mockup_predictions, average=avg) * 100}')
@@ -260,9 +264,8 @@ class ASRSReportClassificationEvaluator:
 
 class ASRSReportClassificationTrainer:
 
-    def __init__(self, models: dict = None, parameters: dict = None, algorithm=None, normalized: bool = True, deviation_rate: float = 0.0):
+    def __init__(self, models: dict = None, encoders: list = None, parameters: dict = None, algorithm=None, normalized: bool = True, deviation_rate: float = 0.0):
 
-        # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
@@ -270,11 +273,10 @@ class ASRSReportClassificationTrainer:
                     alpha=0.007,
                     batch_size=128,
                     learning_rate='adaptive',
-                    learning_rate_init=0.002,
+                    learning_rate_init=0.003,
                     verbose=True,
                     early_stopping=True,
                     n_iter_no_change=20,
-                    warm_start=True
                 ),
                 'svm': LinearSVC(dual=False, class_weight='balanced'),
                 'forest': RandomForestClassifier(
@@ -302,7 +304,7 @@ class ASRSReportClassificationTrainer:
             parameters = {}
 
         self._normalize = normalized
-        self._preprocessor = ASRSReportDataPreprocessor()
+        self._preprocessor = ASRSReportDataPreprocessor(encoders=encoders)
 
         if not models:
             self._classifier = set_classification_algorithm(algorithm)
@@ -376,11 +378,10 @@ class ASRSReportClassificationTrainer:
 
         labels_predictions, labels_targets = [], []
 
-        # TODO: make vectorize_texts return "data" - ndarray with shape (n_samples, vector_dim) and targets - ndarray with shape (n_samples, m_models)
         data, target = self._preprocessor.vectorize_texts(
             texts_paths,
             labels_to_train,
-            train=True,
+            train=mode == "train",
             label_values_filter=labels_filters,
             normalize=self._normalize
         )
@@ -390,18 +391,19 @@ class ASRSReportClassificationTrainer:
             lbl, fltr = zipped
 
             logger.debug(f'{ mode } data shape: {data[i].shape}')
-            # logger.debug(self._preprocessor.get_data_distribution(target[i])[1])
+            logger.debug(self._preprocessor.get_data_distribution(target[i])[1])
 
             if self._models.get(lbl) is not None:
                 logging.debug("Found previously trained model")
                 classifier = self._models[lbl]
-                classifier.set_params(warm_start=True)
+                setattr(classifier, 'warm_start', True)
+                setattr(classifier, 'learning_rate_init', 0.0005)
             else:
                 classifier = clone(self._classifier)
             if mode == "train":
                 # encoding is available only after texts vectorization
                 encoding = {}
-                for label_idx, label in enumerate(self._preprocessor._label_encoders[i].classes_):
+                for label_idx, label in enumerate(self._preprocessor.encoder(i).classes_):
                     encoding.update({label_idx: label})
                 self._encodings.update({lbl: encoding})
 
@@ -418,7 +420,7 @@ class ASRSReportClassificationTrainer:
                 logging.info(f"MODEL: {classifier}")
                 self._models.update({lbl: classifier})
 
-            predictions = ASRSReportClassificationPredictor.predict_proba(data[i], classifier)  # TODO: fails if the classifier is not fitted
+            predictions = ASRSReportClassificationPredictor.predict_proba(data[i], classifier)
             labels_predictions.append(predictions)
             labels_targets.append(target[i])
             if mode == "train":
@@ -445,7 +447,7 @@ class ASRSReportClassificationTrainer:
         Path("classifiers", model_dir_name).mkdir(exist_ok=False)
         with lzma.open(Path("classifiers", model_dir_name, 'classifier.model'), 'wb') as model_file:
             logger.info(f'Saving {len(models_to_save)} model(s): {models_to_save}')
-            pickle.dump(models_to_save, model_file)
+            pickle.dump((models_to_save, self._preprocessor.encoders), model_file)
 
         with open(Path("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
             logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]')
@@ -466,16 +468,18 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             if models_dir_paths:
                 with lzma.open(Path(models_dir_paths[idx], 'classifier.model'), 'rb') as model_file:
-                    models = pickle.load(model_file)
+                    models, encoders = pickle.load(model_file)
 
                 with open(Path(models_dir_paths[idx], 'parameters.json'), 'r') as params_file:
                     parameters = json.load(params_file)
             else:
                 models = None
+                encoders = None
                 parameters = None
 
             classifier = ASRSReportClassificationTrainer(
                 models=models,
+                encoders=encoders,
                 algorithm=algorithm,
                 parameters=parameters,
                 normalized=normalize,
@@ -493,7 +497,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
         for model_dir_path in models_dir_paths:
 
             with lzma.open(Path(model_dir_path, 'classifier.model'), 'rb') as model_file:
-                models = pickle.load(model_file)
+                models, encoders = pickle.load(model_file)
                 logging.debug(f"Loaded {len(models)} models")
 
             with open(Path(model_dir_path, 'parameters.json'), 'r') as params_file:
@@ -501,6 +505,7 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             predictor = ASRSReportClassificationTrainer(
                 models=models,
+                encoders=encoders,
                 parameters=parameters,
                 normalized=normalize,
                 deviation_rate=deviation_rate

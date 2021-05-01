@@ -136,16 +136,14 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         self._transformer = TfidfVectorizer(
             stop_words='english',
             lowercase=True,
-            ngram_range=(1, 1),
+            ngram_range=(1, 4),
             analyzer='word',
-            max_features=300, #_000,
-            # max_df=0.5
+            max_features=300_000
         )
         self._pipeline = Pipeline([
             ('reductor', TruncatedSVD(n_components=300)),
             ('scaler', StandardScaler())
         ])
-        self._pipeline = []  # FIXME:
 
     def build_feature_vectors(self, texts: type(np.ndarray), target_labels: type(np.ndarray), train: bool = False):
         logging.debug("Started vectorization")
@@ -156,23 +154,24 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             logging.error(f'Texts.shape: {texts.shape[0]} vs labels.shape: {target_labels}')
             raise ValueError(msg)
 
+        logging.debug(f"TFIDF is training: {train}")
         texts = self.preprocess(texts)
 
-        import lzma
-        import pickle
-
         if train:
-            texts_vectors = self._transformer.fit_transform(texts).toarray()
-            # texts_vectors = self._pipeline.fit_transform(texts_vectors)
+            texts_vectors = self._transformer.fit_transform(texts)
+            texts_vectors = self._pipeline.fit_transform(texts_vectors)
             with lzma.open('pipeline.model', 'wb') as pipe:
                 pickle.dump((self._transformer, self._pipeline), pipe)
-            # texts_vectors = self._transformer.fit_transform(texts)
+            with lzma.open('tfidf_vectors_dev.vec', 'wb') as pipe:
+                logging.debug("saving vectors")
+                pickle.dump(texts_vectors, pipe)
         else:
             with lzma.open('pipeline.model', 'rb') as pipe:
                 self._transformer, self._pipeline = pickle.load(pipe)
-            texts_vectors = self._transformer.transform(texts).toarray()
-            # texts_vectors = self._pipeline.transform(texts_vectors)
-            # texts_vectors = self._transformer.transform(texts)
+            # with lzma.open('tfidf_vectors.vec', 'rb') as pipe:
+            #    texts_vectors = pickle.load(pipe)
+            texts_vectors = self._transformer.transform(texts)
+            texts_vectors = self._pipeline.transform(texts_vectors)
 
         logging.debug("Ended vectorization")
         return texts_vectors
@@ -279,15 +278,6 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
         result = np.concatenate(doc_vectors, axis=0)
         logging.debug(f'Vectorized {result.shape[0]} texts')
-        """
-
-        import lzma
-        import pickle
-
-        with lzma.open('vectorsdev.vec', 'rb') as f:
-            # logging.debug('Saving vectors')
-            # pickle.dump(result, f)
-            result = pickle.load(f)"""
 
         return result
 
