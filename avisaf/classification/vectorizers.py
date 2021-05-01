@@ -18,6 +18,13 @@ from gensim.models import Doc2Vec, Word2Vec, KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
 from gensim.models.fasttext import FastText
 
+import fasttext
+import fasttext.util
+import tempfile
+
+import lzma
+import pickle
+
 
 def show_vector_space_3d(vectors, targets):
 
@@ -368,6 +375,66 @@ class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             "name": "GoogleNewsWord2Vec",
             "model_path": str(self._model_path)
         }
+
+
+class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
+
+    def __init__(self):
+        model_name = "cc.en.300.bin"
+        self._nlp = spacy.load('en_core_web_md')
+        self._vectors = fasttext.load_model(model_name)
+        super().__init__(vectors=self._vectors.words)
+
+    def build_feature_vectors(self, texts: np.ndarray, target_labels_shape: int, train: bool = False) -> np.ndarray:
+        logging.debug("Started vectorization")
+
+        try:
+            model = fasttext.load_model("fasttext.model")
+        except ValueError:
+            model = None
+
+        texts = self.preprocess(texts)
+
+        if model is None:
+            _, filename = tempfile.mkstemp(text=True)
+            with open(filename, "w") as f:
+                print(*texts, sep='\n', file=f)
+            model = fasttext.train_unsupervised(
+                filename,
+                model="skipgram",
+                dim=300,
+                ws=8,
+                epoch=25,
+                minCount=3
+            )
+
+            self._vectors = model
+            model.save_model("fasttext.model")
+
+        doc_vectors = []
+        for doc_vector_batch in self._generate_vectors(texts, model, 256):
+            doc_vectors.append(doc_vector_batch)
+            print("===========================")
+
+        result = np.concatenate(doc_vectors, axis=0)
+        logging.debug(f'Vectorized {result.shape[0]} texts')
+
+        return result
+
+    def _generate_vectors(self, texts, vectors, batch: int = 100):
+        doc_vectors = []
+        for doc in self._nlp.pipe(texts, disable=['ner'], batch_size=batch):
+            lemmas = []
+            for token in doc:
+                lemmas.append(vectors[token.text])
+
+            doc_vector = self._get_doc_vector(lemmas)
+            doc_vectors.append(doc_vector)
+
+        yield np.array(doc_vectors)
+
+    def _get_doc_vector(self, lemmas):
+        return np.mean(lemmas * (len(lemmas) / 500), axis=0)
 
 
 if __name__ == '__main__':
