@@ -238,23 +238,24 @@ def annotate_man(file_path: Path, lines: int = -1,
         print()  # print an empty line
 
         if save:
-            man_training_data_file = Path('data_files', 'training_data', 'man_annotated_data.json').resolve()
-            man_training_data_file.touch(exist_ok=True)
+            train_data_file = Path('data_files', 'ner', 'train_data', 'annotated_' + file_path.name).resolve()
+            logging.debug(train_data_file)
+            train_data_file.touch(exist_ok=True)
 
             # if the file is not empty
-            if len(man_training_data_file.read_bytes()) != 0:
+            if len(train_data_file.read_bytes()) != 0:
                 # rewrite the current content of the file
-                with open(os.path.expanduser(man_training_data_file), mode='r') as file:
+                with open(os.path.expanduser(train_data_file), mode='r') as file:
                     old_content = json.load(file)
             else:
                 old_content = []
 
-            with open(os.path.expanduser(man_training_data_file), mode='w') as file:
+            with open(os.path.expanduser(train_data_file), mode='w') as file:
                 old_content.append(new_entry)
                 json.dump(old_content, file)
-                print(f"Content in the {man_training_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                print(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
 
-            train.pretty_print_training_data(man_training_data_file)
+            train.pretty_print_training_data(train_data_file)
 
     return result
 
