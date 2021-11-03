@@ -220,11 +220,11 @@ def choose_action(args: Namespace):
         func()
         return 0
     except AttributeError as ex:
-        print(ex, file=sys.stderr)
+        print(ex.with_traceback(sys.exc_info()[0]), file=sys.stderr)
         print('No action is to be invoked.', file=sys.stderr)
         return 1
     except OSError as e:
-        print(e, file=sys.stderr)
+        print(e.with_traceback(sys.exc_info()[2]), file=sys.stderr)
         return 1
 
 
@@ -438,7 +438,7 @@ def main():
         '-a', '--algorithm',
         default='mlp',
         help='The algorithm used for classification training.',
-        choices={'knn', 'svm', 'mlp', 'tree', 'forest', 'gauss', 'mnb', 'bernoulli'}
+        choices={'knn', 'svm', 'mlp', 'forest', 'gauss', 'mnb', 'regression'}
     )
     arg_classifier.add_argument(
         '--normalize',

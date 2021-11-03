@@ -13,13 +13,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 from pathlib import Path
+from sklearn.base import clone
 from sklearn.model_selection import cross_validate, cross_val_score, learning_curve
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB, GaussianNB, BernoulliNB
-from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
+from sklearn.svm import LinearSVC
 
 from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
 logger = logging.getLogger(str(__file__))
@@ -32,15 +33,16 @@ logging.basicConfig(
 
 class ASRSReportClassificationPredictor:
 
-    def __init__(self, model=None, vectorizer=None, normalized: bool = True, deviation_rate: float = 0.0, parameters=None):
+    def __init__(self, models, vectorizer=None, normalized: bool = True, deviation_rate: float = 0.0, parameters=None):
 
         if parameters is None:
-            parameters = dict()
-        self._model = model  # Model(s) to be used for evaluation
+            parameters = {}
+        self._models = models  # Model(s) to be used for evaluation
 
         if parameters.get("model_params") is not None:
-            for param, value in parameters["model_params"].items():
-                setattr(self._model, param, value)
+            for model in self._models.values():
+                for param, value in parameters["model_params"].items():
+                    setattr(model, param, value)
 
         self._normalize = normalized
         self._preprocessor = ASRSReportDataPreprocessor(vectorizer)
@@ -48,61 +50,68 @@ class ASRSReportClassificationPredictor:
         self._deviation_rate = deviation_rate
 
         try:
-            self._encoding = parameters["encoding"]  # "int: label" dictionary of possible classes
-            self._trained_label = list(parameters["trained_label"].keys())[0]
-            self._trained_filter = parameters["trained_label"][self._trained_label]
+            self._encodings = parameters["encodings"]  # "int: label" dictionary of possible classes
+            self._trained_filtered_labels = parameters["trained_labels"]
         except AttributeError:
             raise ValueError("Corrupted model parameters")
 
-    def predict_report_class(self, texts_paths: list, label_to_test: str = None, label_filter: list = None):
+        assert len(self._models.keys()) == len(self._trained_filtered_labels.keys())
 
-        if label_to_test is None and self._trained_label is not None:
-            label_to_test = self._trained_label
+    """def predict_report_class(self, texts_paths: list, label_to_test: str = None, label_filter: list = None):
+        
+        labels_to_test = self._trained_filtered_labels.keys()
+        labels_filters = self._trained_filtered_labels.values()
 
-        if label_filter is None and self._trained_filter is not None:
-            label_filter = self._trained_filter
+        if label_to_test is not None:
+            labels_to_test = [label_to_test]
+            
+            if label_filter is None:
+                if self._trained_filtered_labels.get(label_to_test):
+                    labels_filters = self._trained_filtered_labels[label_to_test]
+                else:
+                    labels_filters = None
+            else:
+                labels_filters = [label_filter]
+            
+        for lbl, fltr in zip(labels_to_test, labels_filters):
 
-        test_data, test_target = self._preprocessor.vectorize_texts(
-            texts_paths,
-            label_to_test,
-            train=False,
-            label_values_filter=label_filter,
-            normalize=self._normalize
-        )
+            test_data, test_target = self._preprocessor.vectorize_texts(
+                texts_paths,
+                lbl,
+                train=False,
+                label_values_filter=fltr,
+                normalize=self._normalize
+            )"""
 
-        logger.info(self._preprocessor.get_data_distribution(test_target)[1])
-
-        logger.info(f'Test data shape: {test_data.shape}')
-        predictions = self.predict_proba(test_data)
-        return predictions, test_target
-
-    def predict(self, test_data, model_to_use=None):
-        model = self._model if model_to_use is None else model_to_use
+    @staticmethod
+    def predict(test_data, model=None):
 
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
 
-        logger.info(f'Predictions made using model: {model}')
-        predictions = model.predict(test_data)
+        logger.info(f'Test data shape: {test_data.shape}')
+        predictions = model.predict(test_data, None)
 
         return predictions
 
-    def predict_proba(self, test_data, model_to_use=None):
-        model = self._model if model_to_use is None else model_to_use
-
+    @staticmethod
+    def predict_proba(test_data, model=None):
         if model is None:
             raise ValueError('A model needs to be trained or loaded first to perform predictions.')
 
         logger.info(f'Probability predictions made using model: {model}')
-        predictions = model.predict_proba(test_data)
+        if getattr(model, 'predict_proba', None) is not None:
+            predictions = model.predict_proba(test_data)
+        else:
+            predictions = model.predict(test_data)
 
         return predictions
 
     def _decode_prediction(self, prediction: int):
-        if not len(self._encoding):
+        if not len(self._encodings):
             raise ValueError('Train a model to get an non-empty encoding.')
 
-        decoded_label = self._encoding.get(prediction)
+        decoded_label = self._encodings.get(prediction)
 
         if decoded_label is None:
             raise ValueError(f'Encoding with value "{prediction}" does not exist.')
@@ -128,7 +137,7 @@ class ASRSReportClassificationPredictor:
             raise ValueError('A model needs to be trained or loaded first to be able to transform texts.')
 
         vectorized_text = self._vectorizer.transform(text)
-        prediction = self._model.predict(vectorized_text)
+        prediction = self._models.predict(vectorized_text)
         predicted_label = self._decode_prediction(prediction)
 
         # TODO: For a given text, the classifier returns a dictionary containing field name as key and its predicted value
@@ -148,34 +157,33 @@ class ASRSReportClassificationEvaluator:
             logger.debug(f"{len(predictions)} models ensembling")
             ensemble = f"(ensemble of {len(predictions)} models)"
 
-        predictions = np.argmax(np.mean(predictions, axis=0), axis=1)
+        predictions = np.mean(predictions, axis=0)
 
-        unique_predictions_count = np.unique(test_target).shape[0]
-        avg = 'binary' if unique_predictions_count == 2 else 'micro'
+        for predictions_distribution, class_targets in zip(predictions, test_target):
+            class_predictions = np.argmax(predictions_distribution, axis=1)
+            unique_predictions_count = np.unique(class_targets).shape[0]
+            avg = 'binary' if unique_predictions_count == 2 else 'macro'
 
-        print('==============================================')
-        print('Confusion matrix: number [i,j] indicates the number of observations of class i which were predicted to be in class j')
-        print(metrics.confusion_matrix(test_target, predictions))
-        if ensemble:
-            print(ensemble)
-        print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(test_target, predictions) * 100))
-        print('Model Based Micro Precision: {:.2f}'.format(metrics.precision_score(test_target, predictions, average=avg) * 100))
-        print('Model Based Macro Precision: {:.2f}'.format(metrics.precision_score(test_target, predictions, average='macro') * 100))
-        print('Model Based Micro Recall: {:.2f}'.format(metrics.recall_score(test_target, predictions, average=avg) * 100))
-        print('Model Based Macro Recall: {:.2f}'.format(metrics.recall_score(test_target, predictions, average='macro') * 100))
-        print('Model Based Micro F1-score: {:.2f}'.format(metrics.f1_score(test_target, predictions, average=avg) * 100))
-        print('Model Based Macro F1-score: {:.2f}'.format(metrics.f1_score(test_target, predictions, average='macro') * 100))
-        print('==============================================')
-        if unique_predictions_count < 5:
+            print('==============================================')
+            print('Confusion matrix: number [i,j] indicates the number of observations of class i which were predicted to be in class j')
+            print(metrics.confusion_matrix(class_targets, class_predictions))
+            if ensemble:
+                print(ensemble)
+            print('Model Based Accuracy: {:.2f}'.format(metrics.accuracy_score(class_targets, class_predictions) * 100))
+            print('Model Based Balanced Accuracy: {:.2f}'.format(metrics.balanced_accuracy_score(class_targets, class_predictions) * 100))
+            print('Model Based ROC-AUC: {:.2f}'.format(metrics.roc_auc_score(class_targets, predictions_distribution, multi_class='ovr') * 100))
+
+            print('Model Based Macro Precision: {:.2f}'.format(metrics.precision_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Macro Recall: {:.2f}'.format(metrics.recall_score(class_targets, class_predictions, average=avg) * 100))
+            print('Model Based Macro F1-score: {:.2f}'.format(metrics.f1_score(class_targets, class_predictions, average=avg) * 100))
+            print('==============================================')
             for unique_prediction in range(unique_predictions_count):
-                predictions = np.full(test_target.shape, unique_prediction)
-                print(f'Accuracy predicting always {unique_prediction}: {metrics.accuracy_score(test_target, predictions) * 100}')
-                print(f'Micro F1-score: {metrics.f1_score(test_target, predictions, average=avg) * 100}')
-                print(f'Macro F1-score: {metrics.f1_score(test_target, predictions, average="macro") * 100}')
-                print(f'Model Based Micro Precision: {metrics.precision_score(test_target, predictions, zero_division=1, average=avg) * 100}')
-                print(f'Model Based Macro Precision: {metrics.precision_score(test_target, predictions, zero_division=1, average="macro") * 100}')
-                print(f'Model Based Micro Recall: {metrics.recall_score(test_target, predictions, average=avg) * 100}')
-                print(f'Model Based Micro Recall: {metrics.recall_score(test_target, predictions, average="macro") * 100}')
+                mockup_predictions = np.full(class_targets.shape, unique_prediction)
+                print(f'Accuracy predicting always {unique_prediction}: {metrics.accuracy_score(class_targets, mockup_predictions) * 100}')
+                print(f'Accuracy predicting always {unique_prediction}: {metrics.balanced_accuracy_score(class_targets, mockup_predictions) * 100}')
+                print(f'F1-score: {metrics.f1_score(class_targets, mockup_predictions, average=avg) * 100}')
+                print(f'Model Based Precision: {metrics.precision_score(class_targets, mockup_predictions, zero_division=1, average=avg) * 100}')
+                print(f'Model Based Recall: {metrics.recall_score(class_targets, mockup_predictions, average=avg) * 100}')
                 print('==============================================')
 
     @staticmethod
@@ -197,7 +205,7 @@ class ASRSReportClassificationEvaluator:
         plt.show()
 
     @staticmethod
-    def plot_learning_curve(estimator, title, X, y, axes=None, ylim=None, cv=None,
+    def plot_learning_curve(estimator, title, x, y, axes=None, ylim=None, cv=None,
                             n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
         if axes is None:
             _, axes = plt.subplots(1, 3, figsize=(20, 5))
@@ -209,7 +217,7 @@ class ASRSReportClassificationEvaluator:
         axes[0].set_ylabel("Score")
 
         train_sizes, train_scores, test_scores, fit_times, _ = \
-            learning_curve(estimator, X, y, cv=cv, n_jobs=n_jobs,
+            learning_curve(estimator, x, y, cv=cv, n_jobs=n_jobs,
                            train_sizes=train_sizes,
                            return_times=True)
         train_scores_mean = np.mean(train_scores, axis=1)
@@ -256,37 +264,32 @@ class ASRSReportClassificationEvaluator:
 
 class ASRSReportClassificationTrainer:
 
-    def __init__(self, model=None, parameters: dict = None, algorithm=None, normalized: bool = True, vectorizer=None, deviation_rate: float = 0.0):
+    def __init__(self, models: dict = None, encoders: list = None, parameters: dict = None, algorithm=None, normalized: bool = True, deviation_rate: float = 0.0):
 
-        # TODO: Initialize an empty model for each field classifier
         def set_classification_algorithm(classification_algorithm: str):
             available_classifiers = {
                 'mlp': MLPClassifier(
-                    hidden_layer_sizes=(128, 64),
-                    alpha=0.005,
+                    hidden_layer_sizes=(512, 256),
+                    alpha=0.007,
                     batch_size=128,
                     learning_rate='adaptive',
-                    learning_rate_init=0.005,
-                    random_state=6240,
+                    learning_rate_init=0.003,
                     verbose=True,
-                    max_iter=80,
                     early_stopping=True,
-                    n_iter_no_change=30
+                    n_iter_no_change=20,
                 ),
-                'svm': SVC(probability=True),
-                'tree': DecisionTreeClassifier(criterion='entropy', max_features=10000),
+                'svm': LinearSVC(dual=False, class_weight='balanced'),
                 'forest': RandomForestClassifier(
                     n_estimators=150,
                     criterion='entropy',
                     min_samples_split=32,
                     n_jobs=2,
-                    # max_features=20000,
                     verbose=5
                 ),
-                'knn': KNeighborsClassifier(n_neighbors=15),
+                'knn': KNeighborsClassifier(n_neighbors=20, weights='distance'),
                 'gauss': GaussianNB(),
                 'mnb': MultinomialNB(),
-                'bernoulli': BernoulliNB()
+                'regression': LogisticRegression()
             }
 
             # Setting a default classifier value
@@ -298,119 +301,137 @@ class ASRSReportClassificationTrainer:
             return _classifier
 
         if parameters is None:
-            parameters = dict()
+            parameters = {}
 
         self._normalize = normalized
-        self._preprocessor = ASRSReportDataPreprocessor(vectorizer)
+        self._preprocessor = ASRSReportDataPreprocessor(encoders=encoders)
 
-        if model is None:
-            self._model = set_classification_algorithm(algorithm)
+        if not models:
+            self._classifier = set_classification_algorithm(algorithm)
+            self._models = {}
             self._deviation_rate = 0.0
-            self._encoding = dict()
-            self._model_params = self._model.get_params()
-            self._params = dict()
+            self._encodings = {}
+            self._model_params = self._classifier.get_params()
+            self._params = {}
             self._algorithm = algorithm
-            self._trained_filtered_labels = dict()
+            self._trained_filtered_labels = {}
             self._trained_texts = []
         else:
             try:
-                self._model = model
+                self._classifier = list(models.values())[0]
+                self._models = models
                 self._deviation_rate = deviation_rate
                 self._params = parameters
-                self._encoding = {int(key): value for key, value in parameters["encoding"].items()}
+                encodings = {}
+                for label, encoding in parameters["encodings"].items():
+                    encodings.update({label: {int(key): value for key, value in encoding.items()}})
+                self._encodings = encodings
                 self._model_params = parameters["model_params"]
                 self._algorithm = parameters["algorithm"]
-                self._trained_filtered_labels = parameters["trained_label"]
+                self._trained_filtered_labels = parameters["trained_labels"]
                 self._trained_texts = parameters["trained_texts"]
             except AttributeError:
                 raise ValueError("Corrupted parameters.json file")
 
-        if self._model is not None and parameters.get("model_params") is not None:
+        assert self._models.keys() == self._encodings.keys()
+
+        if self._classifier is not None and parameters.get("model_params") is not None:
             for param, value in parameters["model_params"].items():
                 try:
-                    setattr(self._model, param, value)
+                    setattr(self._classifier, param, value)
                 except AttributeError:
                     logging.warning(f"Trying to set a non-existing attribute { param } with value { value }")
 
-    def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None):
+    def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None, mode: str = "dev"):
 
-        self._trained_texts += texts_paths
+        if mode not in ["train", "dev", "test"]:
+            raise ValueError("Unsupported argument")
+
+        if mode == "train":
+            self._trained_texts += texts_paths
+
+        labels_to_train = list(self._trained_filtered_labels.keys())
+        labels_filters = list(self._trained_filtered_labels.values())
 
         if label_to_train is not None:
-            x = {label_to_train: label_filter if label_filter else []}
-            self._trained_filtered_labels.update(x)
-        else:
-            # TODO: Add support for extracting multiple labels at the same time
-            label_to_train = list(self._trained_filtered_labels.keys())[0]
-            label_filter = self._trained_filtered_labels[label_to_train]
+            labels_to_train = [label_to_train]
 
-        train_data, train_target = self._preprocessor.vectorize_texts(
+            if label_filter is None:
+                # trying to get previously saved label filter
+                if self._trained_filtered_labels.get(label_to_train):
+                    labels_filters = self._trained_filtered_labels[label_to_train]
+                    filter_update = labels_filters
+                else:
+                    labels_filters = None
+                    filter_update = []
+            else:
+                labels_filters = [label_filter]
+                filter_update = label_filter
+
+            if mode == "train":
+                self._trained_filtered_labels.update({label_to_train: filter_update})
+
+        if not labels_to_train:
+            raise ValueError("Nothing to train - please make sure at least one category is specified.")
+
+        assert len(labels_to_train) == len(labels_filters)
+
+        labels_predictions, labels_targets = [], []
+
+        data, target = self._preprocessor.vectorize_texts(
             texts_paths,
-            label_to_train,
-            train=True,
-            label_values_filter=label_filter,
+            labels_to_train,
+            train=mode == "train",
+            label_values_filter=labels_filters,
             normalize=self._normalize
         )
 
-        # encoding is available only after texts vectorization
-        self._encoding.update(self._preprocessor.get_encoding())
+        for i, zipped in enumerate(zip(labels_to_train, labels_filters)):
 
-        logger.debug(self._preprocessor.get_data_distribution(train_target)[1])
+            lbl, fltr = zipped
 
-        logger.debug(f'Train data shape: {train_data.shape}')
-        logger.info(self._model)
+            logger.debug(f'{ mode } data shape: {data[i].shape}')
+            logger.debug(self._preprocessor.get_data_distribution(target[i])[1])
 
-        self._model = self._model.fit(train_data, train_target)
+            if self._models.get(lbl) is not None:
+                logging.debug("Found previously trained model")
+                classifier = self._models[lbl]
+                setattr(classifier, 'warm_start', True)
+                setattr(classifier, 'learning_rate_init', 0.0005)
+            else:
+                classifier = clone(self._classifier)
+            if mode == "train":
+                # encoding is available only after texts vectorization
+                encoding = {}
+                for label_idx, label in enumerate(self._preprocessor.encoder(i).classes_):
+                    encoding.update({label_idx: label})
+                self._encodings.update({lbl: encoding})
 
-        logging.info(f"MODEL: {self._model}")
+                self._params = {
+                    "algorithm": self._algorithm,
+                    "encodings": self._encodings,
+                    "model_params": self._model_params,
+                    "trained_labels": self._trained_filtered_labels,
+                    "trained_texts": self._trained_texts,
+                    "vectorizer_params": self._preprocessor.vectorizer.get_params()
+                }
 
-        self._params = {
-                "algorithm": self._algorithm,
-                "encoding": self._encoding,
-                "model_params": self._model_params,
-                "trained_label": self._trained_filtered_labels,
-                "trained_texts": self._trained_texts,
-                "vectorizer_params": self._preprocessor.vectorizer.get_params()
-            }
+                classifier.fit(data[i], target[i])
+                logging.info(f"MODEL: {classifier}")
+                self._models.update({lbl: classifier})
 
-        train_data_evaluator = ASRSReportClassificationPredictor(
-            model=self._model,
-            parameters=self._params,
-            vectorizer=self._preprocessor.vectorizer,
-            normalized=self._normalize,
-        )
+            predictions = ASRSReportClassificationPredictor.predict_proba(data[i], classifier)
+            labels_predictions.append(predictions)
+            labels_targets.append(target[i])
+            if mode == "train":
+                ASRSReportClassificationEvaluator.evaluate([[predictions]], [target[i]])
 
-        cross_val = False
-        if cross_val:
-            print(f'CV scores: {cross_val_score(self._model, train_data, train_target, cv=5, n_jobs=2, verbose=3)}')
-            scores = cross_validate(
-                self._model,
-                train_data,
-                train_target,
-                scoring=[
-                    'precision_micro',
-                    'recall_micro',
-                    'precision_macro',
-                    'recall_macro'
-                ],
-                verbose=5
-            )
+        if mode == "train":
+            self.save_model(self._models)
 
-            for key in scores.keys():
-                print(f'Key: "{ key }"\nValue: "{ scores[key] }"')
+        return labels_predictions, labels_targets
 
-            tr_size, tr_scores, valid_scores = learning_curve(self._model, train_data, train_target, cv=5, verbose=3)
-            print(tr_size)
-            print(tr_scores)
-            print(valid_scores)
-            p = ASRSReportClassificationEvaluator.plot_learning_curve(self._model, "TITLE", train_data, train_target, cv=5)
-            p.savefig("learning_curve.png")
-
-        predictions = train_data_evaluator.predict_proba(train_data)
-        ASRSReportClassificationEvaluator.evaluate([predictions], train_target)
-        self.save_model(self._model)
-
-    def save_model(self, model_to_save):
+    def save_model(self, models_to_save: dict):
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
             self._algorithm,
             datetime.now().strftime("%Y%m%d_%H%M%S"),
@@ -425,12 +446,11 @@ class ASRSReportClassificationTrainer:
         Path("classifiers").mkdir(exist_ok=True)
         Path("classifiers", model_dir_name).mkdir(exist_ok=False)
         with lzma.open(Path("classifiers", model_dir_name, 'classifier.model'), 'wb') as model_file:
-            logger.info(f'Saving model: {model_to_save}')
-            logger.debug(f'Saving vectorizer: {self._preprocessor.vectorizer}')
-            pickle.dump((model_to_save, self._preprocessor.vectorizer), model_file)
+            logger.info(f'Saving {len(models_to_save)} model(s): {models_to_save}')
+            pickle.dump((models_to_save, self._preprocessor.encoders), model_file)
 
         with open(Path("classifiers", model_dir_name, 'parameters.json'), 'w', encoding="utf-8") as params_file:
-            logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_label, label_filter]')
+            logger.info(f'Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]')
             json.dump(self._params, params_file, indent=4)
 
 
@@ -448,24 +468,24 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
 
             if models_dir_paths:
                 with lzma.open(Path(models_dir_paths[idx], 'classifier.model'), 'rb') as model_file:
-                    model, vectorizer = pickle.load(model_file)
+                    models, encoders = pickle.load(model_file)
 
                 with open(Path(models_dir_paths[idx], 'parameters.json'), 'r') as params_file:
                     parameters = json.load(params_file)
             else:
-                model = None
-                vectorizer = None
+                models = None
+                encoders = None
                 parameters = None
 
             classifier = ASRSReportClassificationTrainer(
-                model=model,
+                models=models,
+                encoders=encoders,
                 algorithm=algorithm,
-                vectorizer=vectorizer,
                 parameters=parameters,
                 normalized=normalize,
                 deviation_rate=deviation_rate
             )
-            classifier.train_report_classification(texts_paths, label, label_filter)
+            classifier.train_report_classification(texts_paths, label, label_filter, mode=mode)
     else:
         logging.debug(f'Testing on { "normalized " if normalize else "" }{ mode }')
 
@@ -477,15 +497,16 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
         for model_dir_path in models_dir_paths:
 
             with lzma.open(Path(model_dir_path, 'classifier.model'), 'rb') as model_file:
-                model, vectorizer = pickle.load(model_file)
+                models, encoders = pickle.load(model_file)
+                logging.debug(f"Loaded {len(models)} models")
 
             with open(Path(model_dir_path, 'parameters.json'), 'r') as params_file:
                 parameters = json.load(params_file)
 
-            predictor = ASRSReportClassificationPredictor(
-                model=model,
+            predictor = ASRSReportClassificationTrainer(
+                models=models,
+                encoders=encoders,
                 parameters=parameters,
-                vectorizer=vectorizer,
                 normalized=normalize,
                 deviation_rate=deviation_rate
             )
@@ -493,20 +514,11 @@ def launch_classification(models_dir_paths: list, texts_paths: list, label: str,
             if not texts_paths:
                 texts_paths = [f'../ASRS/ASRS_{ mode }.csv']
 
-            predictions, targets = predictor.predict_report_class(texts_paths, label, label_filter)
+            predictions, targets = predictor.train_report_classification(texts_paths, label, label_filter, mode=mode)
             models_predictions.append(predictions)
             if test_targets is None:
                 test_targets = targets
         if plot:
             ASRSReportClassificationEvaluator.plot(models_predictions, test_targets)
+
         ASRSReportClassificationEvaluator.evaluate(models_predictions, test_targets)
-
-    """
-    pre = ASRSReportDataPreprocessor()
-
-    _, targets = pre.vectorize_texts(texts_paths, label, train=True, label_values_filter=label_filter)
-    d = pre.get_data_distribution(targets)
-    print(d)
-    print(f'Different values: {len(d[0])}')
-    print(f'Percentages: {np.around(d[1] * 100, decimals=2)}')
-    print(f'Elements: {np.sum(d[0])}')"""
