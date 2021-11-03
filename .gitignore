@@ -1,3 +1,4 @@
+.gitignore
 models/
 classifiers/
 venv/
@@ -10,13 +11,18 @@ venv/
 data_files/
 notes/
 docs/
-unused/
-.idea
-__pycache__
+fasttext_vectors/
 build/
+unused/
 dist/
 shell/
 gensim-data/
+.idea
+
+print_distributions.py
+pipeline_*.model
+*.svg
+__pycache__
 *egg-info*
 *.iml
 model_stats.py
@@ -25,3 +31,4 @@ stop_words.txt
 *.vec
 learning_curve.png
 report*.model
+doc2vec*.model
