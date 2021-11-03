@@ -57,6 +57,7 @@ def show_vector_space_3d(vectors, targets):
     plt.title('Word embedding space', size=20)
 
     plt.show()
+    plt.savefig(fname='figure_3D', format="svg")
     show_vector_space_2d(vectors, targets)
 
 
@@ -165,8 +166,11 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         texts = self.preprocess(texts)
 
         if train:
+            logging.debug("tfidf fit transform")
             texts_vectors = self._transformer.fit_transform(texts)
+            logging.debug("dimension reduction, scaling")
             texts_vectors = self._pipeline.fit_transform(texts_vectors)
+            logging.debug("scaling done")
             with lzma.open('pipeline.model', 'wb') as pipe:
                 pickle.dump((self._transformer, self._pipeline), pipe)
             with lzma.open('tfidf_vectors_dev.vec', 'wb') as pipe:
@@ -238,7 +242,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
                 alpha=0.001,
                 min_alpha=0.0001
             )
-            logging.debug(model.estimate_memory())
+            logging.debug(f"Estimated memory: {model.estimate_memory()}")
             model.build_vocab(documents=tagged_docs)
 
             model.train(
@@ -383,7 +387,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         model_name = "cc.en.300.bin"
         self._nlp = spacy.load('en_core_web_md')
         self._vectors = fasttext.load_model(model_name)
-        super().__init__(vectors=self._vectors.words)
+        super().__init__(vectors=self._vectors)
 
     def build_feature_vectors(self, texts: np.ndarray, target_labels_shape: int, train: bool = False) -> np.ndarray:
         logging.debug("Started vectorization")
@@ -428,7 +432,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             for token in doc:
                 lemmas.append(vectors[token.text])
 
-            doc_vector = self._get_doc_vector(lemmas)
+            doc_vector = self._get_doc_vector(np.array(lemmas))
             doc_vectors.append(doc_vector)
 
         yield np.array(doc_vectors)
