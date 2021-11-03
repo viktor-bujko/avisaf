@@ -268,6 +268,7 @@ class ASRSReportDataPreprocessor:
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
         self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        # self.vectorizer = vectorizers.FastTextAsrsReportVectorizer()
 
     def filter_texts_by_label(self, src_dict: dict, texts: np.ndarray, target_labels: list, target_label_filter: list = None, train: bool = False):
         """
@@ -411,7 +412,7 @@ class ASRSReportDataPreprocessor:
 
         least_present_labels = np.concatenate(np.argwhere(dist < most_even_distribution))
 
-        examples_to_have_per_minor_class = int(np.mean(distribution_counts[more_present_labels]) * 0.80)       # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
+        examples_to_have_per_minor_class = int(np.mean(distribution_counts[more_present_labels]) * 0.85)       # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
 
         for label in least_present_labels:
             to_add_per_class = examples_to_have_per_minor_class - distribution_counts[label]      # subtracting the number of examples we already have
@@ -471,14 +472,24 @@ class ASRSReportDataPreprocessor:
 
         texts_labels_arr = []
         for idx, key in enumerate(extracted_dict.keys()):
-            texts_labels_arr_1 = self.filter_texts_by_label(
-                extracted_dict,  # extracted_dict[narrative_label],
-                narratives,  # extracted_dict[labels_to_extract],
-                extracted_dict[key],  # labels_to_extract,
-                label_values_filter[idx],  # label_values_filter,
-                train=train
-            )
-            texts_labels_arr.append(texts_labels_arr_1)
+            if label_values_filter:
+                texts_labels_arr_1 = self.filter_texts_by_label(
+                    extracted_dict,             # extracted_dict[narrative_label],
+                    narratives,                 # extracted_dict[labels_to_extract],
+                    extracted_dict[key],        # labels_to_extract,
+                    label_values_filter[idx],   # label_values_filter,
+                    train=train
+                )
+                texts_labels_arr.append(texts_labels_arr_1)
+            else:
+                texts_labels_arr_1 = self.filter_texts_by_label(
+                    extracted_dict,
+                    narratives,
+                    extracted_dict[key],
+                    None,
+                    train=train
+                )
+                texts_labels_arr.append(texts_labels_arr_1)
 
         result_data, result_targets = [], []
         for texts, target_labels in texts_labels_arr:
