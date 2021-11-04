@@ -17,7 +17,7 @@ class JsonDataExtractor:
     pass
 
 
-def get_entities(entities_file_path: Path = None):
+def get_entities(entities_file_path: Path = None) -> dict:
     # Works with entities_labels.json file = only a simple json list
     # Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the list of user

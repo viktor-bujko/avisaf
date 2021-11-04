@@ -11,7 +11,6 @@ import spacy.displacy as displacy
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from colorama import Style, Fore
 # importing own modules
 from avisaf.training.new_entity_trainer import train_spacy_model
 from avisaf.training.training_data_creator import annotate_auto, annotate_man
@@ -87,75 +86,57 @@ def test(model='en_core_web_md',
             # if the text is passed as argument
             text = text_path
 
+    # create new nlp object
+    if model.startswith('en_core_web'):
+        print('Using a default english language model!', file=sys.stderr)
     try:
-        # create new nlp object
-        if model.startswith('en_core_web'):
-            print('Using a default english language model!', file=sys.stderr)
-        try:
-            # trying to load either the pre-trained spaCy model or a model in current directory
-            nlp = spacy.load(model)
-        except OSError:
-            model_path = str(Path(model).resolve())
-            nlp = spacy.load(model_path)
+        # trying to load either the pre-trained spaCy model or a model in current directory
+        nlp = spacy.load(model)
+    except OSError:
+        model_path = str(Path(model).resolve())
+        nlp = spacy.load(model_path)
 
-        if not nlp.has_pipe(u'ner'):
-            raise OSError
-
-    except OSError as ex:
-        print(ex)
+    if not nlp.has_pipe(u'ner'):
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
         return 1
 
     # create doc object nlp(text)
     document = nlp(text)
 
+    ents_colors_dict = get_entities()
     # identify entities
     if cli_result:
-        result_string = ""
-        for token in document:
-            if token.ent_type_ == "":
-                result_string += f"{token.text} "
+
+        def print_highlighted_entity(tkn):
+            if not tkn.ent_type_:
+                print(f"{tkn.text} ", end="")
             else:
-                colors = {
-                    "AIRPLANE": Fore.LIGHTGREEN_EX,
-                    "CREW": Fore.LIGHTYELLOW_EX,
-                    "AIRPORT_TERM": Fore.MAGENTA,
-                    "FLIGHT_PHASE": Fore.LIGHTRED_EX,
-                    "AVIATION_TERM": Fore.BLUE,
-                    "NAV_WAYPOINT": Fore.LIGHTWHITE_EX,
-                    "ALTITUDE": Fore.CYAN,
-                    "WEATHER": Fore.LIGHTCYAN_EX,
-                    "ABBREVIATION": Fore.RED
-                }
-                color = colors.get(token.ent_type_)
-                result_string += f"{color}[{token.text}: {token.ent_type_}]{Style.RESET_ALL} "
-        print(result_string)
+                color = ents_colors_dict.get(tkn.ent_type_)[1]
+                print(f"\x1b[{color}m[{tkn.text}: {tkn.ent_type_}]\033[0m ", end="")
+
+        for token in document:
+            print_highlighted_entity(token)
+        print()  # to end the text
 
     if html_result_file is not None or visualize:
-        colors = {
-            "AIRPLANE": "#ACECD5",
-            "CREW": "#FFF9AA",
-            "AIRPORT_TERM": "#FFD5B8",
-            "FLIGHT_PHASE": "#FFB9B3",
-            "AVIATION_TERM": "#A5C8E4",
-            "NAV_WAYPOINT": "#FF6961",
-            "ALTITUDE": "#988270",
-            "WEATHER": "#BE9B7B",
-            "ABBREVIATION": "#FFF4E6"
-        }
         options = {
-            "ents": get_entities(),
-            "colors": colors
+            "ents": list(ents_colors_dict.keys()),
+            "colors": dict(zip(
+                ents_colors_dict.keys(),
+                map(lambda color_list: color_list[0], ents_colors_dict.values())
+            ))
         }
-        if html_result_file is not None:
-            result_file_path = Path(html_result_file)
-            result_file_path.touch(exist_ok=True)
 
-            with result_file_path.open(mode='w') as file:
-                html = displacy.render(document, style='ent', options=options)
-                file.write(html)
-        else:
-            displacy.serve(document, style='ent', options=options)
+        if html_result_file is None:
+            displacy.serve(document, style='ent', options=options, port=5000, host="localhost")
+            return
+
+        result_file_path = Path(html_result_file)
+        result_file_path.touch(exist_ok=True)
+
+        with result_file_path.open(mode='w') as file:
+            html = displacy.render(document, style='ent', options=options)
+            file.write(html)
 
     return 0
 
