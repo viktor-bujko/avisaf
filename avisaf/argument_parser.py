@@ -10,7 +10,7 @@ def add_ner_trainer_parser(subparsers):
     parser = subparsers.add_parser('ner_train', help='Train a new NLP NER model.', description='Command for training new/updating entities.')
 
     parser.set_defaults(dest='train_ner')
-    parser.add_argument('-d', '--data', metavar='PATH', help='File path to the file with annotated training data.', default=Path('data_files', 'training_data', 'annotated_data_part_01.json'), required=True)
+    parser.add_argument('-d', '--data', metavar='PATH', help='File path to the file with annotated training data.', default=Path('data_files', 'ner', 'train_data', 'annotated_data_01.json'), required=True)
     parser.add_argument('-i', '--iterations', metavar='INT', type=int, default=20, help='The number of iterations to perform for entity training.')
     parser.add_argument('-m', '--model', metavar='PATH/NAME', help='File path to an existing spaCy model or existing spaCy model name to be trained.', default=None)
     parser.add_argument('-n', '--name', metavar='STRING', help='Name of the new model.', default=None)

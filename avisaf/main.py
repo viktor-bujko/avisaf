@@ -14,8 +14,8 @@ from argparse import Namespace
 from .argument_parser import parse_args
 from pathlib import Path
 # importing own modules
-from avisaf.training.new_entity_trainer import train_spacy_model
-from avisaf.training.training_data_creator import annotate_auto, annotate_man
+from avisaf.training.new_entity_trainer import train_spacy_ner
+from avisaf.training.training_data_creator import ner_auto_annotation, ner_man_annotation
 from avisaf.classification.classifier import launch_classification
 from avisaf.util.data_extractor import get_entities
 
@@ -38,12 +38,12 @@ sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ i
                " attributed with the safe termination of Flight XXXX!")
 
 
-def test(model='en_core_web_md',
-         text_path=None,
-         cli_result: bool = False,
-         visualize: bool = False,
-         html_result_file: Path = None,
-         port: int = 5000):
+def test_spacy_ner(model='en_core_web_md',
+                   text_path=None,
+                   cli_result: bool = False,
+                   visualize: bool = False,
+                   html_result_file: Path = None,
+                   port: int = 5000):
     """Function which executes entity extraction and processing. The function
     loads and creates spaCy Language model object responsible for Named Entity
     Recognition. The target text to have its entities recognized may be passed
@@ -152,23 +152,23 @@ def choose_action(args: Namespace):
     """
 
     functions = {
-        'train_ner': lambda: train_spacy_model(
+        'train_ner': lambda: train_spacy_ner(
             iter_number=args.iterations, model=args.model,
             new_model_name=args.name, tr_data_srcfile=Path(args.data),
             verbose=args.verbose
         ),
-        'test_ner': lambda: test(
+        'test_ner': lambda: test_spacy_ner(
             model=args.model, cli_result=args.print,
             visualize=args.render, text_path=args.text,
             html_result_file=args.save, port=args.port
         ),
-        'annotate_auto': lambda: annotate_auto(
+        'annotate_auto': lambda: ner_auto_annotation(
             Path(args.keys_file), args.label,
             model=args.model, training_src_file=args.data,
             extract_texts=args.extract, use_phrasematcher=args.p,
             save=args.save, verbose=args.verbose
         ),
-        'annotate_man': lambda: annotate_man(
+        'annotate_man': lambda: ner_man_annotation(
             labels_path=Path(args.labels), file_path=Path(args.texts_file),
             lines=args.lines, save=args.not_save,
             start_index=args.start_index

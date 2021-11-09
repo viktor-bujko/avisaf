@@ -14,11 +14,11 @@ from pathlib import Path
 from avisaf.util.data_extractor import get_entities, get_training_data
 
 
-def train_spacy_model(iter_number: int = 20,
-                      model=None,
-                      new_model_name: str = None,
-                      tr_data_srcfile: Path = Path('data_files', 'training_data', 'annotated_data_part_01.json').resolve(),
-                      verbose: bool = False):
+def train_spacy_ner(iter_number: int = 20,
+                    model=None,
+                    new_model_name: str = None,
+                    tr_data_srcfile: Path = None,
+                    verbose: bool = False):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
     entity prediction model.
