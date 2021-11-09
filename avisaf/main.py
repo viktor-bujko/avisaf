@@ -71,9 +71,6 @@ def test(model='en_core_web_md',
     :param port: The number of the port to be used for displaCy rendered
         visualization. Argument only used when visualize is true or html_result_file
         is defined.
-
-    :return: The exit code of the function.
-    :rtype: int
     """
 
     if text_path is None:
@@ -105,7 +102,7 @@ def test(model='en_core_web_md',
 
     if not nlp.has_pipe(u'ner'):
         print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
-        return 1
+        return
 
     # create doc object nlp(text)
     document = nlp(text)
@@ -145,8 +142,6 @@ def test(model='en_core_web_md',
             html = displacy.render(document, style='ent', options=options)
             file.write(html)
 
-    return 0
-
 
 def choose_action(args: Namespace):
     """Callback function which invokes the correct function with specified
@@ -154,9 +149,6 @@ def choose_action(args: Namespace):
 
     :type args: Namespace
     :param args: argparse command-line arguments wrapped in Namespace object.
-
-    :return: The exit code of called function.
-    :rtype: int
     """
 
     functions = {
@@ -195,35 +187,27 @@ def choose_action(args: Namespace):
             func()
         else:
             print('No action is to be invoked.', file=sys.stderr)
-            return 1
-        return 0
     except AttributeError as ex:
         logging.debug(ex.with_traceback(sys.exc_info()[0]))
-        return 1
     except OSError as e:
         logging.debug(e.with_traceback(sys.exc_info()[2]))
-        return 1
 
 
-def main() -> int:
+def main():
     """Main function of the program. This function parses command-line arguments
     using argparse module before performing appropriate callback which actually
     executes desired operation.
-
-    :return: The function returns the exit code of a sub-function. Any non-zero
-             exit code means that the operation did not end successfully.
-    :rtype: int
     """
     main_parser, avail_parsers = parse_args()
 
     if len(sys.argv) <= 1:
         main_parser.print_help()
-        return 0
+        return
 
     if len(sys.argv) == 2:
         subparser = avail_parsers.get(sys.argv[1])  # get correct subparser by its subcommand name
         subparser.print_help() if subparser else main_parser.print_help()
-        return 0
+        return
 
     args = main_parser.parse_args()
 
@@ -234,11 +218,9 @@ def main() -> int:
         ner_tester = avail_parsers.get('ner_test')
         if ner_tester:
             ner_tester.print_help()
-        return 1
-    exit_code = choose_action(args)
-    return exit_code
+
+    choose_action(args)
 
 
 if __name__ == '__main__':
-    retval = main()
-    sys.exit(retval)
+    main()
