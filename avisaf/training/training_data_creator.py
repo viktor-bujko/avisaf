@@ -33,10 +33,10 @@ if str(SOURCES_ROOT_PATH) not in sys.path:
     sys.path.append(str(SOURCES_ROOT_PATH))
 
 
-def annotate_auto(patterns_file_path: Path, label_text: str,
-                  training_src_file: [Path, str], model='en_core_web_md',
-                  extract_texts: bool = False, use_phrasematcher: bool = False,
-                  save: bool = False, verbose: bool = False):
+def ner_auto_annotation(patterns_file_path: Path, label_text: str,
+                        training_src_file: [Path, str], model='en_core_web_md',
+                        extract_texts: bool = False, use_phrasematcher: bool = False,
+                        save: bool = False, verbose: bool = False):
     """Automatic annotation tool. The function takes a file which has to contain a
     JSON list of rules to be matched. The rules are in the format compatible
     with spaCy Matcher or PhraseMatcher objects. Rule recognition is done by
@@ -151,9 +151,9 @@ def annotate_auto(patterns_file_path: Path, label_text: str,
     return training_data
 
 
-def annotate_man(file_path: Path, lines: int = -1,
-                 labels_path: Path = None, start_index: int = 0,
-                 save: bool = True):
+def ner_man_annotation(file_path: Path, lines: int = -1,
+                       labels_path: Path = None, start_index: int = 0,
+                       save: bool = True):
     """
     Manual text annotation tool. A set of texts from file_path parameter
     starting with start_index is progressively printed in order to be annotated
