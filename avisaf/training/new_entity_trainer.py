@@ -3,7 +3,7 @@
 and improving an existing Named Entity Recognition model. The module uses
 train_spaCy_model function which updates the model using spaCy.
 """
-
+import logging
 import sys
 import spacy
 import random
@@ -41,23 +41,26 @@ def train_spacy_ner(iter_number: int = 20,
     :return: Returns created NLP spaCy model.
     """
 
-    given_data_src = str(tr_data_srcfile)
-    tr_data_srcfile = Path(tr_data_srcfile) if tr_data_srcfile.is_absolute() else Path(tr_data_srcfile).resolve()
+    if not tr_data_srcfile:
+        print('Missing training data path argument', file=sys.stderr)
+        return
+
+    tr_data_srcfile = Path(tr_data_srcfile) if tr_data_srcfile.is_absolute() else tr_data_srcfile.resolve()
     if verbose:
         print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
     start_time = time.time()
     try:
         nlp = spacy.load(model)
-        print(f'An already existing spaCy model was successfully loaded: {model}.', flush=verbose)
+        logging.info(f'An already existing spaCy model was successfully loaded: {model}.')
     except OSError:
         # using a blank English language spaCy model
         nlp = spacy.blank('en')
-        print('A new blank model has been created.', flush=verbose)
+        logging.info('A new blank model has been created.')
 
-    print(f'Using training dataset: {given_data_src}', flush=verbose)
+    logging.info(f'Using training dataset: {tr_data_srcfile}')
 
     # getting a list of currently used entities from **default** location
-    entity_labels = get_entities()
+    entity_labels = list(get_entities().keys())
 
     if not nlp.has_pipe('ner'):
         ner = nlp.create_pipe('ner')
@@ -112,7 +115,7 @@ def train_spacy_ner(iter_number: int = 20,
                 except ValueError as e:
                     print(e)
                     print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}")
-                    print(f"for file: {given_data_src}.", file=sys.stderr)
+                    print(f"for file: {tr_data_srcfile}.", file=sys.stderr)
                     sys.exit(1)
 
         nlp.to_disk(model_path)
