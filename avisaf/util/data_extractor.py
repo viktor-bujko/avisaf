@@ -31,11 +31,11 @@ def get_entities(entities_file_path: Path = None) -> dict:
     """
     if entities_file_path is None:
         # entities_file_path = Path(Path().resolve(), 'avisaf_ner/entities_labels.json')
-        entities_file_path = find_file_by_path('entities_labels.json')
+        entities_file_path = find_file_by_path("entities_labels.json")
 
     entities_file_path = entities_file_path.resolve()
 
-    with entities_file_path.open(mode='r') as entities_file:
+    with entities_file_path.open(mode="r") as entities_file:
         return json.load(entities_file)
 
 
@@ -52,14 +52,14 @@ def get_training_data(training_data_file_path: Path):
     :return: Returns the JSON list of (text, annotations) tuples.
     """
     if not training_data_file_path:
-        msg = 'Training data file path cannot be None'
+        msg = "Training data file path cannot be None"
         logging.error(msg)
         raise TypeError(msg)
 
     if not training_data_file_path.is_absolute():
         training_data_file_path = training_data_file_path.resolve()
 
-    with training_data_file_path.open(mode='r') as tr_data_file:
+    with training_data_file_path.open(mode="r") as tr_data_file:
         return json.load(tr_data_file)
 
 
@@ -81,28 +81,25 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
     """
 
     if file_path is None:
-        msg = 'The file_path to have narratives extracted from cannot be None'
+        msg = "The file_path to have narratives extracted from cannot be None"
         logging.error(msg)
         raise TypeError(msg)
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
 
     report_df = pd.read_csv(
-        file_path,
-        skip_blank_lines=True,
-        index_col=0,
-        header=[0, 1]
+        file_path, skip_blank_lines=True, index_col=0, header=[0, 1]
     )
-    report_df.columns = report_df.columns.map('_'.join)
+    report_df.columns = report_df.columns.map("_".join)
 
     try:
-        narratives1 = report_df['Report 1_Narrative'].values.tolist()
-        calls1 = report_df['Report 1_Callback'].values.tolist()
-        narratives2 = report_df['Report 2_Narrative'].values.tolist()
-        calls2 = report_df['Report 2_Callback'].values.tolist()
+        narratives1 = report_df["Report 1_Narrative"].values.tolist()
+        calls1 = report_df["Report 1_Callback"].values.tolist()
+        narratives2 = report_df["Report 2_Narrative"].values.tolist()
+        calls2 = report_df["Report 2_Callback"].values.tolist()
 
     except KeyError:
-        print('No such key was found', file=sys.stderr)
+        print("No such key was found", file=sys.stderr)
         return None
 
     length = len(narratives1)
@@ -114,7 +111,9 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
     for index in range(start_index, length):
         if lines_count != -1 and index >= end_index:
             break
-        result.append(' '.join([str(lst[index]) for lst in lists if str(lst[index]) != 'nan']))
+        result.append(
+            " ".join([str(lst[index]) for lst in lists if str(lst[index]) != "nan"])
+        )
 
     return result
 
@@ -145,11 +144,16 @@ def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
 
 
 class DataExtractor:
-
     def __init__(self, file_paths: list):
         self._file_paths = file_paths
 
-    def extract_from_csv_columns(self, field_names: list, lines_count: int = -1, start_index: int = 0, file_paths: [list, str] = None):
+    def extract_from_csv_columns(
+        self,
+        field_names: list,
+        lines_count: int = -1,
+        start_index: int = 0,
+        file_paths: [list, str] = None,
+    ):
         """
 
         :param file_paths:
@@ -160,7 +164,11 @@ class DataExtractor:
         """
 
         # Overriding default instance file paths list by the passed parameter
-        file_paths = self._file_paths if file_paths is None else (file_paths if file_paths is list else [file_paths])
+        file_paths = (
+            self._file_paths
+            if file_paths is None
+            else (file_paths if file_paths is list else [file_paths])
+        )
         skipped_files = 0
 
         label_data_dict = {}
@@ -175,7 +183,10 @@ class DataExtractor:
 
                 requested_file = find_file_by_path(file_path)
                 if requested_file is None:
-                    print(f'The file given by "{file_path}" path was not found in the given range.', file=sys.stderr)
+                    print(
+                        f'The file given by "{file_path}" path was not found in the given range.',
+                        file=sys.stderr,
+                    )
                     # Ignoring the file with current file path
                     continue
                 with open(requested_file) as file:
@@ -184,22 +195,26 @@ class DataExtractor:
                         skip_blank_lines=True,
                         header=[0, 1],
                     )
-                logging.debug(f'File {requested_file} is closed: {file.closed}')
-                csv_dataframe.columns = csv_dataframe.columns.map('_'.join)
+                logging.debug(f"File {requested_file} is closed: {file.closed}")
+                csv_dataframe.columns = csv_dataframe.columns.map("_".join)
                 csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
                 try:
-                    extracted_values_collection = csv_dataframe[field_name].values.tolist()
+                    extracted_values_collection = csv_dataframe[
+                        field_name
+                    ].values.tolist()
                 except KeyError:
                     print(
                         f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"',
-                        file=sys.stderr
+                        file=sys.stderr,
                     )
                     continue
 
                 length = len(extracted_values_collection)
                 end_index = start_index + lines_count if lines_count != -1 else length
-                extracted_values += extracted_values_collection[start_index: end_index]  # Getting only the desired subset of extracted data
+                extracted_values += extracted_values_collection[
+                    start_index:end_index
+                ]  # Getting only the desired subset of extracted data
 
             label_data_dict[field_name] = np.array(extracted_values)
 

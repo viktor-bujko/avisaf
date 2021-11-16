@@ -14,6 +14,7 @@ import spacy
 import logging
 from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
+
 # importing own modules used in this module
 from avisaf.util.indexing import get_spans_indexes, entity_trimmer
 import avisaf.util.training_data_build as train
@@ -25,7 +26,7 @@ import numpy as np
 
 # looking for the project root
 path = Path(__file__)
-while not str(path.resolve()).endswith('avisaf'):
+while not str(path.resolve()).endswith("avisaf"):
     path = path.parent.resolve()
 
 SOURCES_ROOT_PATH = Path(path).resolve()
@@ -33,15 +34,21 @@ if str(SOURCES_ROOT_PATH) not in sys.path:
     sys.path.append(str(SOURCES_ROOT_PATH))
 
 
-def ner_auto_annotation(patterns_file_path: Path, label_text: str,
-                        training_src_file: [Path, str], model='en_core_web_md',
-                        extract_texts: bool = False, use_phrasematcher: bool = False,
-                        save: bool = False, verbose: bool = False):
+def ner_auto_annotation(
+    patterns_file_path: Path,
+    label_text: str,
+    training_src_file: [Path, str],
+    model="en_core_web_md",
+    extract_texts: bool = False,
+    use_phrasematcher: bool = False,
+    save: bool = False,
+    verbose: bool = False,
+):
     """Automatic annotation tool. The function takes a file which has to contain a
     JSON list of rules to be matched. The rules are in the format compatible
     with spaCy Matcher or PhraseMatcher objects. Rule recognition is done by
     spaCy pattern matching in the given text.
-    
+
     :type patterns_file_path: Path
     :param patterns_file_path: String representing a path to the file with
         words to be matched (glossary etc).
@@ -71,7 +78,7 @@ def ner_auto_annotation(patterns_file_path: Path, label_text: str,
     from avisaf.util.data_extractor import get_narratives
 
     if training_src_file is None:
-        msg = 'The training data src file path cannot be None'
+        msg = "The training data src file path cannot be None"
         logging.error(msg)
         raise TypeError(msg)
 
@@ -90,7 +97,7 @@ def ner_auto_annotation(patterns_file_path: Path, label_text: str,
         texts = list(get_narratives(training_src_file))
         entities = None
     else:
-        with training_src_file.open(mode='r') as tr_data_file:
+        with training_src_file.open(mode="r") as tr_data_file:
             # load the file containing the list of training ('text string', entity dict) tuples
             tr_data = json.load(tr_data_file)
             texts = [text for text, _ in tr_data]
@@ -98,7 +105,7 @@ def ner_auto_annotation(patterns_file_path: Path, label_text: str,
 
     # create NLP analyzer object of the model
     nlp = spacy.load(model)
-    with patterns_file_path.open(mode='r') as pttrns_file:
+    with patterns_file_path.open(mode="r") as pttrns_file:
         patterns = json.load(pttrns_file)  # phrase/patterns to be matched
 
     if use_phrasematcher:
@@ -113,15 +120,23 @@ def ner_auto_annotation(patterns_file_path: Path, label_text: str,
         matcher = Matcher(nlp.vocab, validate=True)
         matcher.add(label_text, patterns)
 
-    print(f'Using {matcher}', flush=verbose)
-    logging.info(f'Using {matcher}')
+    print(f"Using {matcher}", flush=verbose)
+    logging.info(f"Using {matcher}")
 
     for doc in nlp.pipe(texts, batch_size=100):
         matches = matcher(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
-        print(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}', flush=verbose)
-        logging.info(f'Doc index: {texts.index(doc.text)}', f'Matched spans: {matched_spans}')
-        new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
+        print(
+            f"Doc index: {texts.index(doc.text)}",
+            f"Matched spans: {matched_spans}",
+            flush=verbose,
+        )
+        logging.info(
+            f"Doc index: {texts.index(doc.text)}", f"Matched spans: {matched_spans}"
+        )
+        new_entities = [
+            (span.start_char, span.end_char, label_text) for span in matched_spans
+        ]
         # following line of code also resolves situation when the entities dictionary is None
         tr_example = (doc.text, {"entities": new_entities})
         if entities is not None:
@@ -139,21 +154,25 @@ def ner_auto_annotation(patterns_file_path: Path, label_text: str,
         training_data.append((text, {"entities": new_annotations}))
 
     if save and training_src_file is not None:
-        with training_src_file.open(mode='w') as file:
+        with training_src_file.open(mode="w") as file:
             json.dump(training_data, file)
 
         train.remove_overlaps_from_file(training_src_file)
         entity_trimmer(training_src_file)
         train.pretty_print_training_data(training_src_file)
     else:
-        print(*training_data, sep='\n')
+        print(*training_data, sep="\n")
 
     return training_data
 
 
-def ner_man_annotation(file_path: Path, lines: int = -1,
-                       labels_path: Path = None, start_index: int = 0,
-                       save: bool = True):
+def ner_man_annotation(
+    file_path: Path,
+    lines: int = -1,
+    labels_path: Path = None,
+    start_index: int = 0,
+    save: bool = True,
+):
     """
     Manual text annotation tool. A set of texts from file_path parameter
     starting with start_index is progressively printed in order to be annotated
@@ -183,14 +202,12 @@ def ner_man_annotation(file_path: Path, lines: int = -1,
 
     if file_path is not None:
         if file_path.exists():
-            if file_path.suffix == '.csv':
+            if file_path.suffix == ".csv":
                 texts = get_narratives(
-                    lines_count=lines,
-                    file_path=file_path,
-                    start_index=start_index
+                    lines_count=lines, file_path=file_path, start_index=start_index
                 )
             else:
-                with file_path.open(mode='r') as file:
+                with file_path.open(mode="r") as file:
                     texts = json.load(file)
         else:
             # use given argument as the text to be annotated
@@ -204,13 +221,13 @@ def ner_man_annotation(file_path: Path, lines: int = -1,
 
     # if we don't want to annotate all texts
     if lines != -1:
-        texts = texts[start_index:start_index + lines]
+        texts = texts[start_index : start_index + lines]
 
     for text in texts:
         ent_labels = []
-        print(text, "", sep='\n')
-        words = input('Write all words you want to annotate (separated by a comma): ')
-        spans = set([word.strip() for word in words.split(',') if word.strip()])
+        print(text, "", sep="\n")
+        words = input("Write all words you want to annotate (separated by a comma): ")
+        spans = set([word.strip() for word in words.split(",") if word.strip()])
 
         if not spans:
             new_entry = (text, {"entities": []})
@@ -221,12 +238,17 @@ def ner_man_annotation(file_path: Path, lines: int = -1,
             for occur_dict in found_occurs:
                 key = list(occur_dict.keys())[0]  # only the first key is desired
                 matches = occur_dict[key]
-                label = input(f"Label '{key}' with an item from: {list(enumerate(labels))} or type 'NONE' to skip: ")\
-                    .upper()
-                if label not in labels and not label.isdigit():  # when there is no suitable label in the list
+                label = input(
+                    f"Label '{key}' with an item from: {list(enumerate(labels))} or type 'NONE' to skip: "
+                ).upper()
+                if (
+                    label not in labels and not label.isdigit()
+                ):  # when there is no suitable label in the list
                     continue
                 if label.isdigit():
-                    ent_labels += [(start, end, labels[int(label)]) for start, end in matches]  # create the tuple
+                    ent_labels += [
+                        (start, end, labels[int(label)]) for start, end in matches
+                    ]  # create the tuple
                 else:
                     # same as above, but entity label text is directly taken
                     ent_labels += [(start, end, label) for start, end in matches]
@@ -238,22 +260,26 @@ def ner_man_annotation(file_path: Path, lines: int = -1,
         print()  # print an empty line
 
         if save:
-            train_data_file = Path('data_files', 'ner', 'train_data', 'annotated_' + file_path.name).resolve()
+            train_data_file = Path(
+                "data_files", "ner", "train_data", "annotated_" + file_path.name
+            ).resolve()
             logging.debug(train_data_file)
             train_data_file.touch(exist_ok=True)
 
             # if the file is not empty
             if len(train_data_file.read_bytes()) != 0:
                 # rewrite the current content of the file
-                with open(os.path.expanduser(train_data_file), mode='r') as file:
+                with open(os.path.expanduser(train_data_file), mode="r") as file:
                     old_content = json.load(file)
             else:
                 old_content = []
 
-            with open(os.path.expanduser(train_data_file), mode='w') as file:
+            with open(os.path.expanduser(train_data_file), mode="w") as file:
                 old_content.append(new_entry)
                 json.dump(old_content, file)
-                print(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                print(
+                    f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n"
+                )
 
             train.pretty_print_training_data(train_data_file)
 
@@ -261,16 +287,26 @@ def ner_man_annotation(file_path: Path, lines: int = -1,
 
 
 class ASRSReportDataPreprocessor:
-
     def __init__(self, vectorizer=None, encoders=None):
         self._label_encoders = [] if not encoders else encoders
         # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
+        self.vectorizer = (
+            vectorizers.Doc2VecAsrsReportVectorizer()
+            if vectorizer is None
+            else vectorizer
+        )
         # self.vectorizer = vectorizers.FastTextAsrsReportVectorizer()
 
-    def filter_texts_by_label(self, src_dict: dict, texts: np.ndarray, target_labels: list, target_label_filter: list = None, train: bool = False):
+    def filter_texts_by_label(
+        self,
+        src_dict: dict,
+        texts: np.ndarray,
+        target_labels: list,
+        target_label_filter: list = None,
+        train: bool = False,
+    ):
         """
         :param train:
         :param src_dict:
@@ -316,16 +352,25 @@ class ASRSReportDataPreprocessor:
         for text_idx, text in enumerate(texts):
             # Some reports may be annotated with multiple labels separated by ;
             # We want to use them all as possible outcomes
-            labels = target_labels[text_idx].split('; ')
+            labels = target_labels[text_idx].split("; ")
 
             for label in labels:
                 label = label.strip()
-                matched_label = label   # label which will be used as prediction label
+                matched_label = label  # label which will be used as prediction label
 
                 if target_label_filter is not None:
                     # apply label filtration and truncation
-                    matched_filter = list(filter(lambda x: str(label).startswith(x.strip()), target_label_filter)) + \
-                                     list(filter(lambda x: str(label).endswith(x.strip()), target_label_filter))
+                    matched_filter = list(
+                        filter(
+                            lambda x: str(label).startswith(x.strip()),
+                            target_label_filter,
+                        )
+                    ) + list(
+                        filter(
+                            lambda x: str(label).endswith(x.strip()),
+                            target_label_filter,
+                        )
+                    )
 
                     if len(matched_filter) != 1:
 
@@ -342,7 +387,10 @@ class ASRSReportDataPreprocessor:
         if target_label_filter:
             for label in target_label_filter:
                 if label not in new_labels:
-                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
+                    print(
+                        f'The label has not been found. Check whether "{label}" is correct category spelling.',
+                        file=sys.stderr,
+                    )
 
         """result = []
         for idx, text in enumerate(new_texts):
@@ -365,7 +413,9 @@ class ASRSReportDataPreprocessor:
         # return result
         return np.array(new_texts), new_labels
 
-    def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
+    def undersample_data_distribution(
+        self, text_data, target_labels, deviation_percentage: float
+    ):
         """
 
         :param deviation_percentage:
@@ -374,10 +424,15 @@ class ASRSReportDataPreprocessor:
         :return:
         """
 
-        more_present_idxs, distribution_counts = self.get_most_present_idxs(target_labels)
-        examples_to_remove = int(np.sum(
-            (distribution_counts[more_present_idxs] - np.min(distribution_counts)) * deviation_percentage
-        ))
+        more_present_idxs, distribution_counts = self.get_most_present_idxs(
+            target_labels
+        )
+        examples_to_remove = int(
+            np.sum(
+                (distribution_counts[more_present_idxs] - np.min(distribution_counts))
+                * deviation_percentage
+            )
+        )
 
         repeated_match = 0
         filtered_indices = set()
@@ -399,23 +454,35 @@ class ASRSReportDataPreprocessor:
 
             # Avoiding "infinite loop" caused by always matching already filtered examples
             # Giving up on filtering the exact number of examples -> The distribution will be less even
-            examples_to_remove = examples_to_remove - 1 if (repeated_match > 0 and repeated_match % 100 == 0) else examples_to_remove
+            examples_to_remove = (
+                examples_to_remove - 1
+                if (repeated_match > 0 and repeated_match % 100 == 0)
+                else examples_to_remove
+            )
 
         arr_filter = [idx not in filtered_indices for idx in range(text_data.shape[0])]
 
         return text_data[arr_filter], target_labels[arr_filter]
 
-    def oversample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
+    def oversample_data_distribution(
+        self, text_data, target_labels, deviation_percentage: float
+    ):
         distribution_counts, dist = self.get_data_distribution(target_labels)
         most_even_distribution = 1 / len(distribution_counts)
         more_present_labels = np.where(dist > most_even_distribution)
 
-        least_present_labels = np.concatenate(np.argwhere(dist < most_even_distribution))
+        least_present_labels = np.concatenate(
+            np.argwhere(dist < most_even_distribution)
+        )
 
-        examples_to_have_per_minor_class = int(np.mean(distribution_counts[more_present_labels]) * 0.85)       # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
+        examples_to_have_per_minor_class = int(
+            np.mean(distribution_counts[more_present_labels]) * 0.85
+        )  # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
 
         for label in least_present_labels:
-            to_add_per_class = examples_to_have_per_minor_class - distribution_counts[label]      # subtracting the number of examples we already have
+            to_add_per_class = (
+                examples_to_have_per_minor_class - distribution_counts[label]
+            )  # subtracting the number of examples we already have
             texts_filtered_by_label = text_data[target_labels == label]
             labels_filtered = target_labels[target_labels == label]
             # randomly choose less present data and its label
@@ -447,25 +514,38 @@ class ASRSReportDataPreprocessor:
     def normalize(self, text_data, target_labels, deviation_rate: float):
         old_data_counts = text_data.shape[0]
         # text_data, target_labels = self.undersample_data_distribution(text_data, target_labels, deviation_rate)
-        text_data, target_labels = self.oversample_data_distribution(text_data, target_labels, deviation_rate)
+        text_data, target_labels = self.oversample_data_distribution(
+            text_data, target_labels, deviation_rate
+        )
 
         new_data_counts = text_data.shape[0]
         logging.debug(self.get_data_distribution(target_labels)[1])
 
         if old_data_counts - new_data_counts > 0:
             logging.info(
-                f'Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples'
+                f"Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples"
             )
 
         return text_data, target_labels
 
-    def vectorize_texts(self, texts_paths: list, labels_to_extract: list, train: bool, label_values_filter: list, normalize: bool = False):
-        narrative_label = 'Report 1_Narrative'
+    def vectorize_texts(
+        self,
+        texts_paths: list,
+        labels_to_extract: list,
+        train: bool,
+        label_values_filter: list,
+        normalize: bool = False,
+    ):
+        narrative_label = "Report 1_Narrative"
 
         extractor = DataExtractor(texts_paths)
-        labels_to_extract = labels_to_extract if labels_to_extract is not None else [narrative_label]
+        labels_to_extract = (
+            labels_to_extract if labels_to_extract is not None else [narrative_label]
+        )
         extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
-        narratives = extractor.extract_from_csv_columns([narrative_label])[narrative_label]
+        narratives = extractor.extract_from_csv_columns([narrative_label])[
+            narrative_label
+        ]
 
         logging.debug(labels_to_extract)
         logging.debug(label_values_filter)
@@ -474,29 +554,23 @@ class ASRSReportDataPreprocessor:
         for idx, key in enumerate(extracted_dict.keys()):
             if label_values_filter:
                 texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict,             # extracted_dict[narrative_label],
-                    narratives,                 # extracted_dict[labels_to_extract],
-                    extracted_dict[key],        # labels_to_extract,
-                    label_values_filter[idx],   # label_values_filter,
-                    train=train
+                    extracted_dict,  # extracted_dict[narrative_label],
+                    narratives,  # extracted_dict[labels_to_extract],
+                    extracted_dict[key],  # labels_to_extract,
+                    label_values_filter[idx],  # label_values_filter,
+                    train=train,
                 )
                 texts_labels_arr.append(texts_labels_arr_1)
             else:
                 texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict,
-                    narratives,
-                    extracted_dict[key],
-                    None,
-                    train=train
+                    extracted_dict, narratives, extracted_dict[key], None, train=train
                 )
                 texts_labels_arr.append(texts_labels_arr_1)
 
         result_data, result_targets = [], []
         for texts, target_labels in texts_labels_arr:
             data = self.vectorizer.build_feature_vectors(
-                texts,
-                target_labels,  # .shape[0],
-                train=train
+                texts, target_labels, train=train  # .shape[0],
             )
 
             vectorizers.show_vector_space_3d(data, target_labels)
@@ -517,11 +591,10 @@ class ASRSReportDataPreprocessor:
         :return:
         """
 
-        distribution_counts = np.histogram(
-            target,
-            bins=np.unique(target).shape[0]
-        )[0]
-        dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
+        distribution_counts = np.histogram(target, bins=np.unique(target).shape[0])[0]
+        dist = distribution_counts / np.sum(
+            distribution_counts
+        )  # Gets percentage presence of each class in the data
 
         return distribution_counts, dist
 

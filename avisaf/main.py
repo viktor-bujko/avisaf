@@ -13,37 +13,45 @@ import sys
 from argparse import Namespace
 from .argument_parser import parse_args
 from pathlib import Path
+
 # importing own modules
 from avisaf.training.new_entity_trainer import train_spacy_ner
-from avisaf.training.training_data_creator import ner_auto_annotation, ner_man_annotation
+from avisaf.training.training_data_creator import (
+    ner_auto_annotation,
+    ner_man_annotation,
+)
 from avisaf.classification.classifier import launch_classification
 from avisaf.util.data_extractor import get_entities
 
-sample_text = ("Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
-               "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
-               "powered back for descent a loud bang came from the left side of the aircraft followed by significant "
-               "airframe vibration. No EICAS messages were observed at this time however a check of the engine synoptic"
-               " revealed high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but "
-               "the vibration continued and severe damage was determined. We ran the severe damage checklist and "
-               "secured the engine and then requested a slower speed from ATC to lessen the vibration and advised ATC. "
-               "The slower speed made the vibration acceptable and the flight continued to descend on the arrival via "
-               "ATC instructions. The FO was dispatched to the main deck to visually survey damage. He returned with "
-               "pictures of obvious catastrophic damage of the Number 2 Engine and confirmed no visible damage to the "
-               "leading edge or any other visible portion of the left side of the aircraft. The impending three engine "
-               "approach; landing and possible go-around were talked about and briefed as well as the possibilities of "
-               "leading and trailing edge flap malfunctions. A landing on Runway XXC followed and the aircraft was "
-               "inspected by personnel before proceeding to the gate. After block in; inspection of the Number 2 "
-               "revealed extensive damage.A mention of the exceptional level of competency and professionalism "
-               "exhibited by FO [Name1] and FO [Name] is in order; their calm demeanor and practical thinking should be"
-               " attributed with the safe termination of Flight XXXX!")
+sample_text = (
+    "Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
+    "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
+    "powered back for descent a loud bang came from the left side of the aircraft followed by significant "
+    "airframe vibration. No EICAS messages were observed at this time however a check of the engine synoptic"
+    " revealed high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but "
+    "the vibration continued and severe damage was determined. We ran the severe damage checklist and "
+    "secured the engine and then requested a slower speed from ATC to lessen the vibration and advised ATC. "
+    "The slower speed made the vibration acceptable and the flight continued to descend on the arrival via "
+    "ATC instructions. The FO was dispatched to the main deck to visually survey damage. He returned with "
+    "pictures of obvious catastrophic damage of the Number 2 Engine and confirmed no visible damage to the "
+    "leading edge or any other visible portion of the left side of the aircraft. The impending three engine "
+    "approach; landing and possible go-around were talked about and briefed as well as the possibilities of "
+    "leading and trailing edge flap malfunctions. A landing on Runway XXC followed and the aircraft was "
+    "inspected by personnel before proceeding to the gate. After block in; inspection of the Number 2 "
+    "revealed extensive damage.A mention of the exceptional level of competency and professionalism "
+    "exhibited by FO [Name1] and FO [Name] is in order; their calm demeanor and practical thinking should be"
+    " attributed with the safe termination of Flight XXXX!"
+)
 
 
-def test_spacy_ner(model='en_core_web_md',
-                   text_path=None,
-                   cli_result: bool = False,
-                   visualize: bool = False,
-                   html_result_file: Path = None,
-                   port: int = 5000):
+def test_spacy_ner(
+    model="en_core_web_md",
+    text_path=None,
+    cli_result: bool = False,
+    visualize: bool = False,
+    html_result_file: Path = None,
+    port: int = 5000,
+):
     """Function which executes entity extraction and processing. The function
     loads and creates spaCy Language model object responsible for Named Entity
     Recognition. The target text to have its entities recognized may be passed
@@ -82,7 +90,7 @@ def test_spacy_ner(model='en_core_web_md',
             text_path = Path(text_path).resolve()
             if text_path.exists():
                 # in case the argument is the path to the file containing the text
-                with text_path.open(mode='r') as file:
+                with text_path.open(mode="r") as file:
                     text = file.read()
             else:
                 raise OSError
@@ -91,8 +99,8 @@ def test_spacy_ner(model='en_core_web_md',
             text = text_path
 
     # create new nlp object
-    if model.startswith('en_core_web'):
-        print('Using a default english language model!', file=sys.stderr)
+    if model.startswith("en_core_web"):
+        print("Using a default english language model!", file=sys.stderr)
     try:
         # trying to load either the pre-trained spaCy model or a model in current directory
         nlp = spacy.load(model)
@@ -100,8 +108,11 @@ def test_spacy_ner(model='en_core_web_md',
         model_path = str(Path(model).resolve())
         nlp = spacy.load(model_path)
 
-    if not nlp.has_pipe(u'ner'):
-        print(f'The model \'{model}\' is not available or does not contain required components.', file=sys.stderr)
+    if not nlp.has_pipe("ner"):
+        print(
+            f"The model '{model}' is not available or does not contain required components.",
+            file=sys.stderr,
+        )
         return
 
     # create doc object nlp(text)
@@ -125,21 +136,25 @@ def test_spacy_ner(model='en_core_web_md',
     if html_result_file is not None or visualize:
         options = {
             "ents": list(ents_colors_dict.keys()),
-            "colors": dict(zip(
-                ents_colors_dict.keys(),
-                map(lambda color_list: color_list[0], ents_colors_dict.values())
-            ))
+            "colors": dict(
+                zip(
+                    ents_colors_dict.keys(),
+                    map(lambda color_list: color_list[0], ents_colors_dict.values()),
+                )
+            ),
         }
 
         if html_result_file is None:
-            displacy.serve(document, style='ent', options=options, port=port, host="localhost")
+            displacy.serve(
+                document, style="ent", options=options, port=port, host="localhost"
+            )
             return
 
         result_file_path = Path(html_result_file)
         result_file_path.touch(exist_ok=True)
 
-        with result_file_path.open(mode='w') as file:
-            html = displacy.render(document, style='ent', options=options)
+        with result_file_path.open(mode="w") as file:
+            html = displacy.render(document, style="ent", options=options)
             file.write(html)
 
 
@@ -152,33 +167,48 @@ def choose_action(args: Namespace):
     """
 
     functions = {
-        'train_ner': lambda: train_spacy_ner(
-            iter_number=args.iterations, model=args.model,
-            new_model_name=args.name, tr_data_srcfile=Path(args.data),
-            verbose=args.verbose
+        "train_ner": lambda: train_spacy_ner(
+            iter_number=args.iterations,
+            model=args.model,
+            new_model_name=args.name,
+            tr_data_srcfile=Path(args.data),
+            verbose=args.verbose,
         ),
-        'test_ner': lambda: test_spacy_ner(
-            model=args.model, cli_result=args.print,
-            visualize=args.render, text_path=args.text,
-            html_result_file=args.save, port=args.port
+        "test_ner": lambda: test_spacy_ner(
+            model=args.model,
+            cli_result=args.print,
+            visualize=args.render,
+            text_path=args.text,
+            html_result_file=args.save,
+            port=args.port,
         ),
-        'annotate_auto': lambda: ner_auto_annotation(
-            Path(args.keys_file), args.label,
-            model=args.model, training_src_file=args.data,
-            extract_texts=args.extract, use_phrasematcher=args.p,
-            save=args.save, verbose=args.verbose
+        "annotate_auto": lambda: ner_auto_annotation(
+            Path(args.keys_file),
+            args.label,
+            model=args.model,
+            training_src_file=args.data,
+            extract_texts=args.extract,
+            use_phrasematcher=args.p,
+            save=args.save,
+            verbose=args.verbose,
         ),
-        'annotate_man': lambda: ner_man_annotation(
-            labels_path=Path(args.labels), file_path=Path(args.texts_file),
-            lines=args.lines, save=args.not_save,
-            start_index=args.start_index
+        "annotate_man": lambda: ner_man_annotation(
+            labels_path=Path(args.labels),
+            file_path=Path(args.texts_file),
+            lines=args.lines,
+            save=args.not_save,
+            start_index=args.start_index,
         ),
-        'classifier': lambda: launch_classification(
-            label=args.label, texts_paths=args.paths,
-            label_filter=args.filter, algorithm=args.algorithm,
-            normalize=args.normalize, mode=args.mode,
-            models_dir_paths=args.model, plot=args.plot
-        )
+        "classifier": lambda: launch_classification(
+            label=args.label,
+            texts_paths=args.paths,
+            label_filter=args.filter,
+            algorithm=args.algorithm,
+            normalize=args.normalize,
+            mode=args.mode,
+            models_dir_paths=args.model,
+            plot=args.plot,
+        ),
     }
 
     try:
@@ -186,7 +216,7 @@ def choose_action(args: Namespace):
         if func:
             func()
         else:
-            print('No action is to be invoked.', file=sys.stderr)
+            print("No action is to be invoked.", file=sys.stderr)
     except AttributeError as ex:
         logging.debug(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
@@ -205,22 +235,29 @@ def main():
         return
 
     if len(sys.argv) == 2:
-        subparser = avail_parsers.get(sys.argv[1])  # get correct subparser by its subcommand name
+        subparser = avail_parsers.get(
+            sys.argv[1]
+        )  # get correct subparser by its subcommand name
         subparser.print_help() if subparser else main_parser.print_help()
         return
 
     args = main_parser.parse_args()
 
-    visualization_not_available = not args.print and not args.render and args.save is None
+    visualization_not_available = (
+        not args.print and not args.render and args.save is None
+    )
 
-    if args.dest == 'ner_test' and visualization_not_available:
-        print("The output will not be visible without one of --print, --render or --save argument.\n", file=sys.stderr)
-        ner_tester = avail_parsers.get('ner_test')
+    if args.dest == "ner_test" and visualization_not_available:
+        print(
+            "The output will not be visible without one of --print, --render or --save argument.\n",
+            file=sys.stderr,
+        )
+        ner_tester = avail_parsers.get("ner_test")
         if ner_tester:
             ner_tester.print_help()
 
     choose_action(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

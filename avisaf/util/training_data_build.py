@@ -30,14 +30,20 @@ def sort_annotations(file_path: Path):
     sorted_training_data = []
 
     for text, annotation in training_data:
-        annot_list = annotation["entities"]  # get entities list from "entities" key in the annotation dictionary
-        sorted_list = sorted(annot_list, key=lambda tple: (tple[0], tple[1], tple[2]))  # sort entities
-        sorted_training_data.append((text, {"entities": sorted_list}))  # recreate new, sorted dictionary
+        annot_list = annotation[
+            "entities"
+        ]  # get entities list from "entities" key in the annotation dictionary
+        sorted_list = sorted(
+            annot_list, key=lambda tple: (tple[0], tple[1], tple[2])
+        )  # sort entities
+        sorted_training_data.append(
+            (text, {"entities": sorted_list})
+        )  # recreate new, sorted dictionary
 
-    with file_path.open(mode='w') as file:     # write the result to the same file
+    with file_path.open(mode="w") as file:  # write the result to the same file
         json.dump(sorted_training_data, file)
 
-    pretty_print_training_data(file_path)       # pretty print the file
+    pretty_print_training_data(file_path)  # pretty print the file
 
     return sorted_training_data
 
@@ -54,7 +60,7 @@ def remove_overlaps_from_dict(annotations_dict: dict):
     """
 
     # get entities list from "entities" key in the annotation dictionary
-    entities_list = annotations_dict['entities']
+    entities_list = annotations_dict["entities"]
     remove_list = []
     index = 0
     while index < len(entities_list) - 1:
@@ -91,9 +97,11 @@ def remove_overlaps_from_file(file_path: Path):
 
     for text, annotations in training_data:
         new_annotations = remove_overlaps_from_dict(annotations)
-        result.append((text, {"entities": new_annotations}))  # recreate new (text, annotations) tuple
+        result.append(
+            (text, {"entities": new_annotations})
+        )  # recreate new (text, annotations) tuple
 
-    with file_path.open(mode='w') as file:  # update the file
+    with file_path.open(mode="w") as file:  # update the file
         json.dump(result, file)
 
     pretty_print_training_data(file_path)
@@ -140,18 +148,18 @@ def pretty_print_training_data(file_path: Path):
 
     file_path = file_path.resolve()
 
-    with file_path.open(mode='r') as file:
+    with file_path.open(mode="r") as file:
         content = json.load(file)
 
-    with file_path.open(mode='w') as file:
-        file.write('[')
+    with file_path.open(mode="w") as file:
+        file.write("[")
         for i, entry in enumerate(content):
             json.dump(entry, file)
             if i != len(content) - 1:
-                file.write(',\n')
+                file.write(",\n")
             else:
-                file.write('\n')
-        file.write(']')
+                file.write("\n")
+        file.write("]")
 
 
 def write_sentences():
@@ -163,12 +171,12 @@ def write_sentences():
     result = []
     sentence = input('Write a sentence or "None" to exit the loop: ')
 
-    while sentence != 'None':
+    while sentence != "None":
         result.append(sentence)
-        sentence = input('Write a sentence: ')
+        sentence = input("Write a sentence: ")
 
     return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     remove_overlaps_from_file(Path(sys.argv[1]))

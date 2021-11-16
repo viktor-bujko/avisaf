@@ -23,8 +23,12 @@ def get_span_indexes(text: str, span: str):
     """
 
     result = {}
-    positions = [pair for pair in find_indexes(text, span, start_offset=0) if pair != (-1, -1)]
-    if positions:               # if positions list contains something else apart (-1, -1) tuple -> a match was found
+    positions = [
+        pair for pair in find_indexes(text, span, start_offset=0) if pair != (-1, -1)
+    ]
+    if (
+        positions
+    ):  # if positions list contains something else apart (-1, -1) tuple -> a match was found
         result[span] = positions
     else:
         result[span] = []
@@ -46,9 +50,13 @@ def find_indexes(text: str, span: str, start_offset: int):
     """
     try:
         result = []
-        start_index = str(text).index(span, start_offset)   # find starting index of the span in the text
-        end_index = start_index + len(span)                 # get the end_index of the span
-        if not text[end_index].isalnum():                   # ensure, that the span is not the substring of another word
+        start_index = str(text).index(
+            span, start_offset
+        )  # find starting index of the span in the text
+        end_index = start_index + len(span)  # get the end_index of the span
+        if not text[
+            end_index
+        ].isalnum():  # ensure, that the span is not the substring of another word
             result.append((start_index, end_index))
             others = [pair for pair in find_indexes(text, span, end_index)]
             result += others
@@ -86,7 +94,9 @@ def print_matches(match_text: str, entities_dict: dict):
     :param entities_dict: The dictionary with 'entities key containing the list
         of (start_index, end_index, label) entities of the text.
     """
-    ent_list = entities_dict['entities']  # list of entities in the form of (start_index, end_index, label)
+    ent_list = entities_dict[
+        "entities"
+    ]  # list of entities in the form of (start_index, end_index, label)
     for (start, end, label) in ent_list:
         print(f"'{match_text[start:end]}'", f'"{label}"')
 
@@ -101,7 +111,7 @@ def get_training_data(path: Path):
     """
     path = path if path.is_absolute() else path.resolve()
 
-    with path.open(mode='r') as tr_data_file:
+    with path.open(mode="r") as tr_data_file:
         TR_DATA = json.loads(tr_data_file.read())
         return TR_DATA
 
@@ -116,36 +126,42 @@ def entity_trimmer(data_file_path: Path):
 
     :return: Returns the list without leading/trailing whitespaces.
     """
-    invalid_span_tokens = re.compile(r'\s')
+    invalid_span_tokens = re.compile(r"\s")
     clean_data = []
 
-    with data_file_path.open(mode='r') as data_file:
+    with data_file_path.open(mode="r") as data_file:
         data = json.load(data_file)
 
     for text, annotations in data:
-        entities = annotations['entities']  # get annotations list from dictionary
+        entities = annotations["entities"]  # get annotations list from dictionary
         correct_entities = []
         for ent_start, ent_end, ent_label in entities:
             correct_start = ent_start
             correct_end = ent_end
-            while correct_start < len(text) and invalid_span_tokens.match(text[correct_start]):
-                correct_start += 1  # if a leading whitespace is detected, start position increases
+            while correct_start < len(text) and invalid_span_tokens.match(
+                text[correct_start]
+            ):
+                correct_start += (
+                    1  # if a leading whitespace is detected, start position increases
+                )
             while correct_end > 1 and invalid_span_tokens.match(text[correct_end - 1]):
-                correct_end -= 1    # if a trailing whitespace is detected, end position decreases
+                correct_end -= (
+                    1  # if a trailing whitespace is detected, end position decreases
+                )
             correct_entities.append([correct_start, correct_end, ent_label])
 
         clean_data.append([text, {"entities": correct_entities}])
 
-    with data_file_path.open(mode='w') as data_file:
+    with data_file_path.open(mode="w") as data_file:
         json.dump(clean_data, data_file)
 
     return clean_data
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     path_str = sys.argv[1]
 
-    with open(os.path.expanduser(path_str), mode='r') as file:
+    with open(os.path.expanduser(path_str), mode="r") as file:
         json_list = json.load(file)
 
     for text_str, entities_out in json_list:

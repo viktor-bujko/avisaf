@@ -10,15 +10,18 @@ import random
 from datetime import datetime
 import time
 from pathlib import Path
+
 # importing own modules
 from avisaf.util.data_extractor import get_entities, get_training_data
 
 
-def train_spacy_ner(iter_number: int = 20,
-                    model=None,
-                    new_model_name: str = None,
-                    tr_data_srcfile: Path = None,
-                    verbose: bool = False):
+def train_spacy_ner(
+    iter_number: int = 20,
+    model=None,
+    new_model_name: str = None,
+    tr_data_srcfile: Path = None,
+    verbose: bool = False,
+):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
     entity prediction model.
@@ -42,33 +45,39 @@ def train_spacy_ner(iter_number: int = 20,
     """
 
     if not tr_data_srcfile:
-        print('Missing training data path argument', file=sys.stderr)
+        print("Missing training data path argument", file=sys.stderr)
         return
 
-    tr_data_srcfile = Path(tr_data_srcfile) if tr_data_srcfile.is_absolute() else tr_data_srcfile.resolve()
+    tr_data_srcfile = (
+        Path(tr_data_srcfile)
+        if tr_data_srcfile.is_absolute()
+        else tr_data_srcfile.resolve()
+    )
     if verbose:
         print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
     start_time = time.time()
     try:
         nlp = spacy.load(model)
-        logging.info(f'An already existing spaCy model was successfully loaded: {model}.')
+        logging.info(
+            f"An already existing spaCy model was successfully loaded: {model}."
+        )
     except OSError:
         # using a blank English language spaCy model
-        nlp = spacy.blank('en')
-        logging.info('A new blank model has been created.')
+        nlp = spacy.blank("en")
+        logging.info("A new blank model has been created.")
 
-    logging.info(f'Using training dataset: {tr_data_srcfile}')
+    logging.info(f"Using training dataset: {tr_data_srcfile}")
 
     # getting a list of currently used entities from **default** location
     entity_labels = list(get_entities().keys())
 
-    if not nlp.has_pipe('ner'):
-        ner = nlp.create_pipe('ner')
+    if not nlp.has_pipe("ner"):
+        ner = nlp.create_pipe("ner")
         nlp.add_pipe(ner, last=True)
     else:
-        ner = nlp.get_pipe('ner')
+        ner = nlp.get_pipe("ner")
 
-    other_pipe_names = [pipe for pipe in nlp.pipe_names if pipe != 'ner']
+    other_pipe_names = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
 
     for label in entity_labels:
         ner.add_label(label)
@@ -80,7 +89,7 @@ def train_spacy_ner(iter_number: int = 20,
 
     # Iterate iter_number times
     for itn in range(iter_number):
-        print(f'Iteration: {itn}.')
+        print(f"Iteration: {itn}.")
 
         random.shuffle(training_data)
         losses = {}
@@ -89,7 +98,7 @@ def train_spacy_ner(iter_number: int = 20,
         if new_model_name is None:
             new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-        model_path = str(Path('models', new_model_name).resolve())
+        model_path = str(Path("models", new_model_name).resolve())
 
         with nlp.disable_pipes(*other_pipe_names):
             for batch in spacy.util.minibatch(training_data, size=3):
@@ -100,12 +109,7 @@ def train_spacy_ner(iter_number: int = 20,
 
                 try:
                     # Update the current model
-                    nlp.update(
-                        texts,
-                        entity_offsets,
-                        sgd=optimizer,
-                        losses=losses
-                    )
+                    nlp.update(texts, entity_offsets, sgd=optimizer, losses=losses)
 
                     new_time = time.time()
                     if new_time - start > 60:
@@ -114,17 +118,19 @@ def train_spacy_ner(iter_number: int = 20,
 
                 except ValueError as e:
                     print(e)
-                    print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}")
+                    print(
+                        f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}"
+                    )
                     print(f"for file: {tr_data_srcfile}.", file=sys.stderr)
                     sys.exit(1)
 
         nlp.to_disk(model_path)
-        print(f'Model saved successfully to {model_path}')
-        print(f'Iteration {itn} losses: {losses}.', flush=verbose)
+        print(f"Model saved successfully to {model_path}")
+        print(f"Iteration {itn} losses: {losses}.", flush=verbose)
 
     if verbose:
-        print('Model saved')
-        print(f'Execution time: {time.time() - start_time}')
+        print("Model saved")
+        print(f"Execution time: {time.time() - start_time}")
         print(f'Finished at: {datetime.now().strftime("%H:%M:%S")}')
 
     return nlp
