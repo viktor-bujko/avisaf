@@ -32,3 +32,5 @@ stop_words.txt
 learning_curve.png
 report*.model
 doc2vec*.model
+spacy3_env/
+*.spacy
