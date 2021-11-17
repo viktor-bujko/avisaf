@@ -173,6 +173,7 @@ def choose_action(args: Namespace):
             new_model_name=args.name,
             tr_data_srcfile=Path(args.data),
             verbose=args.verbose,
+            batch_size=args.batch_size
         ),
         "test_ner": lambda: test_spacy_ner(
             model=args.model,
@@ -243,18 +244,16 @@ def main():
 
     args = main_parser.parse_args()
 
-    visualization_not_available = (
-        not args.print and not args.render and args.save is None
-    )
-
-    if args.dest == "ner_test" and visualization_not_available:
-        print(
-            "The output will not be visible without one of --print, --render or --save argument.\n",
-            file=sys.stderr,
-        )
-        ner_tester = avail_parsers.get("ner_test")
-        if ner_tester:
-            ner_tester.print_help()
+    if args.dest == "ner_test":
+        visualization_not_available = not args.print and not args.render and args.save is None
+        if visualization_not_available:
+            print(
+                "The output will not be visible without one of --print, --render or --save argument.\n",
+                file=sys.stderr,
+            )
+            ner_tester = avail_parsers.get("ner_test")
+            if ner_tester:
+                ner_tester.print_help()
 
     choose_action(args)
 

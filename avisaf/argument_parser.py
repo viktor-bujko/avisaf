@@ -44,6 +44,9 @@ def add_ner_trainer_parser(subparsers):
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Flag for verbose printing."
     )
+    parser.add_argument(
+        "--batch_size", type=int, default=256, help="Batch size."
+    )
 
     return parser
 

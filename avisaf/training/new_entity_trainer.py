@@ -10,6 +10,8 @@ import random
 from datetime import datetime
 import time
 from pathlib import Path
+from spacy.training import Example, offsets_to_biluo_tags
+
 
 # importing own modules
 from avisaf.util.data_extractor import get_entities, get_training_data
@@ -21,6 +23,7 @@ def train_spacy_ner(
     new_model_name: str = None,
     tr_data_srcfile: Path = None,
     verbose: bool = False,
+    batch_size: int = 256
 ):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
@@ -40,6 +43,8 @@ def train_spacy_ner(
     :param new_model_name: New spaCy NER model will be saved under this name.
         This parameter also makes part of the path where the model will be
         saved.
+    :type batch_size: int
+    :param batch_size: Batch size to be used.
 
     :return: Returns created NLP spaCy model.
     """
@@ -58,9 +63,7 @@ def train_spacy_ner(
     start_time = time.time()
     try:
         nlp = spacy.load(model)
-        logging.info(
-            f"An already existing spaCy model was successfully loaded: {model}."
-        )
+        logging.info(f"An already existing spaCy model has been loaded successfully: {model}.")
     except OSError:
         # using a blank English language spaCy model
         nlp = spacy.blank("en")
@@ -72,7 +75,7 @@ def train_spacy_ner(
     entity_labels = list(get_entities().keys())
 
     if not nlp.has_pipe("ner"):
-        ner = nlp.create_pipe("ner")
+        ner = nlp.add_pipe("ner")
         nlp.add_pipe(ner, last=True)
     else:
         ner = nlp.get_pipe("ner")
@@ -85,7 +88,7 @@ def train_spacy_ner(
     training_data = get_training_data(tr_data_srcfile)
 
     # Start the training
-    optimizer = nlp.begin_training() if model is None else nlp.resume_training()
+    optimizer = nlp.initialize() if model is None else nlp.resume_training()
 
     # Iterate iter_number times
     for itn in range(iter_number):
@@ -101,15 +104,23 @@ def train_spacy_ner(
         model_path = str(Path("models", new_model_name).resolve())
 
         with nlp.disable_pipes(*other_pipe_names):
-            for batch in spacy.util.minibatch(training_data, size=3):
+            for batch in spacy.util.minibatch(training_data, size=batch_size):
                 # Get all the texts from the batch
-                texts = [text for text, entities in batch]
                 # Get all entity annotations from the batch
-                entity_offsets = [entities for text, entities in batch]
+                examples = []
+                for text, ents in batch:
+                    doc = nlp.make_doc(text)
+                    example = Example.from_dict(doc, ents)
+                    examples.append(example)
 
                 try:
                     # Update the current model
-                    nlp.update(texts, entity_offsets, sgd=optimizer, losses=losses)
+                    nlp.update(
+                        examples,
+                        drop=0.3,
+                        sgd=optimizer,
+                        losses=losses
+                    )
 
                     new_time = time.time()
                     if new_time - start > 60:
@@ -118,9 +129,7 @@ def train_spacy_ner(
 
                 except ValueError as e:
                     print(e)
-                    print(
-                        f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}"
-                    )
+                    print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}")
                     print(f"for file: {tr_data_srcfile}.", file=sys.stderr)
                     sys.exit(1)
 
