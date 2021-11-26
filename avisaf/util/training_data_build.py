@@ -48,7 +48,7 @@ def sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps_from_dict(annotations_dict: dict):
+def remove_overlaps(annotations_dict: dict):
     """Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
@@ -78,7 +78,7 @@ def remove_overlaps_from_dict(annotations_dict: dict):
 
     return new_annotations
 
-
+# TODO: Method to be removed
 def remove_overlaps_from_file(file_path: Path):
     """The function removes overlapping annotations from all the
     (text, annotations) tuples in JSON file specified in the file_path argument.
@@ -96,7 +96,7 @@ def remove_overlaps_from_file(file_path: Path):
     result = []
 
     for text, annotations in training_data:
-        new_annotations = remove_overlaps_from_dict(annotations)
+        new_annotations = remove_overlaps(annotations)
         result.append(
             (text, {"entities": new_annotations})
         )  # recreate new (text, annotations) tuple

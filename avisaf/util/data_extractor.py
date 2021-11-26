@@ -9,6 +9,7 @@ import json
 import logging
 from pathlib import Path
 import numpy as np
+from typing import Union
 
 
 class JsonDataExtractor:
@@ -17,13 +18,13 @@ class JsonDataExtractor:
     pass
 
 
-def get_entities(entities_file_path: Path = None) -> dict:
+def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     # Works with entities_labels.json file = only a simple json list
     # Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
-    :type entities_file_path: Path
+    :type entities_file_path: str, Path
     :param entities_file_path: The path to the JSON file containing the list
         of entity labels.
 
@@ -33,7 +34,7 @@ def get_entities(entities_file_path: Path = None) -> dict:
         # entities_file_path = Path(Path().resolve(), 'avisaf_ner/entities_labels.json')
         entities_file_path = find_file_by_path("entities_labels.json")
 
-    entities_file_path = entities_file_path.resolve()
+    entities_file_path = Path(entities_file_path).resolve()
 
     with entities_file_path.open(mode="r") as entities_file:
         return json.load(entities_file)

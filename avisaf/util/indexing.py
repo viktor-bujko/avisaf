@@ -112,6 +112,7 @@ def get_training_data(path: Path):
     path = path if path.is_absolute() else path.resolve()
 
     with path.open(mode="r") as tr_data_file:
+        # TODO: Refactor to lowercase
         TR_DATA = json.loads(tr_data_file.read())
         return TR_DATA
 

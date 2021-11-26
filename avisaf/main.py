@@ -16,10 +16,7 @@ from pathlib import Path
 
 # importing own modules
 from avisaf.training.new_entity_trainer import train_spacy_ner
-from avisaf.training.training_data_creator import (
-    ner_auto_annotation,
-    ner_man_annotation,
-)
+from avisaf.training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
 from avisaf.classification.classifier import launch_classification
 from avisaf.util.data_extractor import get_entities
 
@@ -171,7 +168,7 @@ def choose_action(args: Namespace):
             iter_number=args.iterations,
             model=args.model,
             new_model_name=args.name,
-            tr_data_srcfile=Path(args.data),
+            tr_data_srcfile=args.data,
             verbose=args.verbose,
             batch_size=args.batch_size
         ),
@@ -183,19 +180,20 @@ def choose_action(args: Namespace):
             html_result_file=args.save,
             port=args.port,
         ),
-        "annotate_auto": lambda: ner_auto_annotation(
-            Path(args.keys_file),
+        "annotate_auto": lambda: ner_auto_annotation_handler(
+            args.keys_file,
             args.label,
             model=args.model,
             training_src_file=args.data,
             extract_texts=args.extract,
             use_phrasematcher=args.p,
             save=args.save,
-            verbose=args.verbose,
+            save_to=args.save_to,
+            verbose=args.verbose
         ),
-        "annotate_man": lambda: ner_man_annotation(
-            labels_path=Path(args.labels),
-            file_path=Path(args.texts_file),
+        "annotate_man": lambda: ner_man_annotation_handler(
+            labels_path=args.labels,
+            file_path=args.texts_file,
             lines=args.lines,
             save=args.not_save,
             start_index=args.start_index,

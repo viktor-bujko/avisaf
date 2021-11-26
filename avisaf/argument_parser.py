@@ -124,7 +124,7 @@ def add_auto_annotator_parser(subparsers):
         "-e",
         "--extract",
         action="store_true",
-        help="Flag indicating that text extraction should take place.",
+        help="Flag indicating that text extraction should take place. Otherwise, JSON file containing list of ('report string', entities dictionary) tuples is required.",
     )
     parser.add_argument(
         "-m",
@@ -145,8 +145,11 @@ def add_auto_annotator_parser(subparsers):
         help="Flag indicating that the result should be saved. Requires the -d/--data argument.",
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Flag indicating verbose printing."
+        "--save_to",
+        default=None,
+        help="String representing the path where the result should be saved. If None (default), -d/--data argument value will be used. Ignored if -s/--save is not used."
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Flag indicating verbose printing.")
 
     return parser
 
