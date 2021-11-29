@@ -42,7 +42,7 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
 
 def get_training_data(training_data_file_path: Path):
     # Works with (text, annotations) list JSON file
-    # Probably will be moved to JsonDataExtractor
+    # TODO: Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the training data.
     The training data are supposed to be a list of (text, annotations) tuples.
 

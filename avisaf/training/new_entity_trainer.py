@@ -10,11 +10,33 @@ import random
 from datetime import datetime
 import time
 from pathlib import Path
-from spacy.training import Example, offsets_to_biluo_tags
-
+from spacy.training import Example
+from spacy.tokens import Doc
+from spacy.pipeline import EntityRecognizer
 
 # importing own modules
 from avisaf.util.data_extractor import get_entities, get_training_data
+
+
+@spacy.Language.component("aviation_ner")
+def aviation_ner_component(doc: Doc) -> Doc:
+    pass
+
+
+def load_spacy_model(model: str = "en_core_web_md") -> spacy.Language:
+
+    if model is None:
+        return spacy.load("en_core_web_md")
+
+    try:
+        nlp = spacy.load(model)
+        logging.info(f"An already existing spaCy model has been loaded successfully: {model}.")
+    except OSError:
+        # using a blank English language spaCy model
+        nlp = spacy.blank("en")
+        logging.info("A new blank model has been created.")
+
+    return nlp
 
 
 def train_spacy_ner(
@@ -49,48 +71,37 @@ def train_spacy_ner(
     :return: Returns created NLP spaCy model.
     """
 
-    if not tr_data_srcfile:
-        print("Missing training data path argument", file=sys.stderr)
-        return
-
-    tr_data_srcfile = (
-        Path(tr_data_srcfile)
-        if tr_data_srcfile.is_absolute()
-        else tr_data_srcfile.resolve()
-    )
-    if verbose:
-        print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
-    start_time = time.time()
-    try:
-        nlp = spacy.load(model)
-        logging.info(f"An already existing spaCy model has been loaded successfully: {model}.")
-    except OSError:
-        # using a blank English language spaCy model
-        nlp = spacy.blank("en")
-        logging.info("A new blank model has been created.")
-
-    logging.info(f"Using training dataset: {tr_data_srcfile}")
+    nlp = load_spacy_model(model)
+    ner_pipe_name = "ner"
+    if not nlp.has_pipe(ner_pipe_name):
+        ner = nlp.add_pipe(ner_pipe_name, last=True)
+        # nlp.add_pipe(ner, last=True)
+    else:
+        ner = nlp.get_pipe(ner_pipe_name)
 
     # getting a list of currently used entities from **default** location
-    entity_labels = list(get_entities().keys())
-
-    if not nlp.has_pipe("ner"):
-        ner = nlp.add_pipe("ner")
-        nlp.add_pipe(ner, last=True)
-    else:
-        ner = nlp.get_pipe("ner")
-
-    other_pipe_names = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-
-    for label in entity_labels:
+    for label in list(get_entities().keys()):
         ner.add_label(label)
-
-    training_data = get_training_data(tr_data_srcfile)
 
     # Start the training
     optimizer = nlp.initialize() if model is None else nlp.resume_training()
 
+    if verbose:
+        print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
+    start_time = time.time()
+
+    if not tr_data_srcfile:
+        print("Missing training data path argument", file=sys.stderr)
+        return
+
+    tr_data_srcfile = Path(tr_data_srcfile)
+    tr_data_srcfile = tr_data_srcfile if tr_data_srcfile.is_absolute() else tr_data_srcfile.resolve()
+
+    logging.info(f"Using training dataset: {tr_data_srcfile}")
+    training_data = get_training_data(tr_data_srcfile)
+
     # Iterate iter_number times
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
     for itn in range(iter_number):
         print(f"Iteration: {itn}.")
 
@@ -103,7 +114,7 @@ def train_spacy_ner(
 
         model_path = str(Path("models", new_model_name).resolve())
 
-        with nlp.disable_pipes(*other_pipe_names):
+        with nlp.disable_pipes(*other_pipes):
             for batch in spacy.util.minibatch(training_data, size=batch_size):
                 # Get all the texts from the batch
                 # Get all entity annotations from the batch
