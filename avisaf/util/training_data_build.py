@@ -9,6 +9,7 @@ import json
 import sys
 from pathlib import Path
 from avisaf.util.data_extractor import get_training_data
+from typing import Callable
 
 
 def sort_annotations(file_path: Path):
@@ -48,13 +49,15 @@ def sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps(annotations_dict: dict):
+def remove_overlaps(annotations_dict: dict, remove_next_criterion: Callable[[tuple], bool]):
     """Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
     :type annotations_dict: dict
     :param annotations_dict: The dictionary containing the annotations list
         under 'entities' key.
+    :type remove_next_criterion: bool
+    :param remove_next_criterion:
 
     :return: The list of new annotations without overlaps.
     """
@@ -69,7 +72,7 @@ def remove_overlaps(annotations_dict: dict):
         if entity_triplet == next_triplet:
             entities_list.remove(next_triplet)
             continue
-        triplet_to_remove = overlap_between(entity_triplet, next_triplet)
+        triplet_to_remove = overlap_between(entity_triplet, next_triplet, remove_next_criterion)
         if triplet_to_remove is not None:  # an overlap detected and resolved
             remove_list.append(triplet_to_remove)
         index += 1
@@ -77,6 +80,7 @@ def remove_overlaps(annotations_dict: dict):
     new_annotations = [entity for entity in entities_list if entity not in remove_list]
 
     return new_annotations
+
 
 # TODO: Method to be removed
 def remove_overlaps_from_file(file_path: Path):
@@ -96,7 +100,7 @@ def remove_overlaps_from_file(file_path: Path):
     result = []
 
     for text, annotations in training_data:
-        new_annotations = remove_overlaps(annotations)
+        new_annotations = remove_overlaps(annotations, lambda x: False)
         result.append(
             (text, {"entities": new_annotations})
         )  # recreate new (text, annotations) tuple
@@ -109,7 +113,7 @@ def remove_overlaps_from_file(file_path: Path):
     return result
 
 
-def overlap_between(entity_triplet, next_triplet):
+def overlap_between(entity_triplet, next_triplet, remove_next_criterion: Callable[[tuple], bool]):
     """Detects whether there is an overlap between two triplets in the given text.
     If the two entities have the same label, shorter triplet is removed.
 
@@ -117,6 +121,8 @@ def overlap_between(entity_triplet, next_triplet):
     :param entity_triplet: First  (start_index, end_index, label) entity descriptor.
     :type next_triplet: tuple
     :param next_triplet: Second (start_index, end_index, label) entity descriptor.
+    :type remove_next_criterion: Callable[[Tuple], bool]
+    :param remove_next_criterion:
 
     :return: Returns the triplet to be removed - the one which represents a
         shorter part of the text.
@@ -130,7 +136,7 @@ def overlap_between(entity_triplet, next_triplet):
     # if an overlap is detected between two tuples.
     if x.intersection(y):
         # return shorter of the triplets - usually the one which is less correct
-        if (entity_end - entity_start) >= (next_end - next_start):
+        if ((entity_end - entity_start) >= (next_end - next_start)) or remove_next_criterion(next_triplet):
             return next_triplet
         else:
             return entity_triplet

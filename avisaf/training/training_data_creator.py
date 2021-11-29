@@ -127,7 +127,7 @@ def ner_auto_annotation_handler(
     with save_to_file.open(mode="w") as f:
         json.dump(final_train_data, f)
 
-    # train.remove_overlaps_from_file(training_src_file)
+    train.remove_overlaps_from_file(training_src_file)
     entity_trimmer(save_to_file)
     train.pretty_print_training_data(save_to_file)
 
@@ -360,7 +360,7 @@ def launch_man_annotation(texts: list, labels: list):
                     # same as above, but entity label text is directly taken
                     ent_labels += [(start, end, label) for start, end in matches]
 
-            ents_no_overlaps = train.remove_overlaps({"entities": ent_labels})
+            ents_no_overlaps = train.remove_overlaps({"entities": ent_labels}, lambda x: False)
 
             new_entry = (text, {"entities": ents_no_overlaps})
             # result.append(new_entry)
