@@ -168,7 +168,7 @@ def choose_action(args: Namespace):
             iter_number=args.iterations,
             model=args.model,
             new_model_name=args.name,
-            tr_data_srcfile=args.data,
+            train_data_srcfiles=args.data,
             verbose=args.verbose,
             batch_size=args.batch_size
         ),

@@ -15,6 +15,8 @@ from spacy.tokens import Doc
 from spacy.pipeline import EntityRecognizer
 
 # importing own modules
+from typing import List
+
 from avisaf.util.data_extractor import get_entities, get_training_data
 
 
@@ -43,7 +45,7 @@ def train_spacy_ner(
     iter_number: int = 20,
     model=None,
     new_model_name: str = None,
-    tr_data_srcfile: Path = None,
+    train_data_srcfiles: List[Path] = None,
     verbose: bool = False,
     batch_size: int = 256
 ):
@@ -53,8 +55,8 @@ def train_spacy_ner(
 
     :type verbose: bool
     :param verbose: A flag indicating verbose stdout printing.
-    :type tr_data_srcfile: Path
-    :param tr_data_srcfile: A path to the file containing training data based
+    :type train_data_srcfiles: List[Union[Path, str]]
+    :param train_data_srcfiles: A path to the files containing training data based
         based on which the spaCy model will be updated.
     :type iter_number: int
     :param iter_number: Number of iterations for NER model updating.
@@ -90,63 +92,62 @@ def train_spacy_ner(
         print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
     start_time = time.time()
 
-    if not tr_data_srcfile:
+    if not train_data_srcfiles:
         print("Missing training data path argument", file=sys.stderr)
         return
 
-    tr_data_srcfile = Path(tr_data_srcfile)
-    tr_data_srcfile = tr_data_srcfile if tr_data_srcfile.is_absolute() else tr_data_srcfile.resolve()
-
-    logging.info(f"Using training dataset: {tr_data_srcfile}")
-    training_data = get_training_data(tr_data_srcfile)
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
+    model_path = str(Path("models", new_model_name).resolve())
 
     # Iterate iter_number times
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
     for itn in range(iter_number):
         print(f"Iteration: {itn}.")
 
-        random.shuffle(training_data)
-        losses = {}
-        start = time.time()
+        for train_data_file in train_data_srcfiles:
+            train_data_file = train_data_file if Path(train_data_file).is_absolute() else train_data_file.resolve()
 
-        if new_model_name is None:
-            new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
+            logging.info(f"Using training dataset: {train_data_file}")
+            training_data = get_training_data(train_data_file)
 
-        model_path = str(Path("models", new_model_name).resolve())
+            random.shuffle(training_data)
+            losses = {}
+            start = time.time()
 
-        with nlp.disable_pipes(*other_pipes):
-            for batch in spacy.util.minibatch(training_data, size=batch_size):
-                # Get all the texts from the batch
-                # Get all entity annotations from the batch
-                examples = []
-                for text, ents in batch:
-                    doc = nlp.make_doc(text)
-                    example = Example.from_dict(doc, ents)
-                    examples.append(example)
+            if new_model_name is None:
+                new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
-                try:
-                    # Update the current model
-                    nlp.update(
-                        examples,
-                        drop=0.3,
-                        sgd=optimizer,
-                        losses=losses
-                    )
+            with nlp.disable_pipes(*other_pipes):
+                for batch in spacy.util.minibatch(training_data, size=batch_size):
+                    # Get all the texts from the batch
+                    # Get all entity annotations from the batch
+                    examples = []
+                    for text, ents in batch:
+                        doc = nlp.make_doc(text)
+                        example = Example.from_dict(doc, ents)
+                        examples.append(example)
 
-                    new_time = time.time()
-                    if new_time - start > 60:
-                        print(datetime.now().strftime("%H:%M:%S"), flush=verbose)
-                        start = new_time
+                    try:
+                        # Update the current model
+                        nlp.update(
+                            examples,
+                            drop=0.3,
+                            sgd=optimizer,
+                            losses=losses
+                        )
+                        new_time = time.time()
+                        if new_time - start > 60:
+                            print(datetime.now().strftime("%H:%M:%S"), flush=verbose)
+                            start = new_time
 
-                except ValueError as e:
-                    print(e)
-                    print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}")
-                    print(f"for file: {tr_data_srcfile}.", file=sys.stderr)
-                    sys.exit(1)
+                    except ValueError as e:
+                        print(e)
+                        print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}",
+                              f"for file: {train_data_srcfiles}.", file=sys.stderr)
+                        sys.exit(1)
 
-        nlp.to_disk(model_path)
-        print(f"Model saved successfully to {model_path}")
-        print(f"Iteration {itn} losses: {losses}.", flush=verbose)
+            nlp.to_disk(model_path)
+            print(f"Model saved successfully to {model_path}")
+            print(f"Iteration {itn} losses: {losses}.", flush=verbose)
 
     if verbose:
         print("Model saved")

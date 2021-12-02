@@ -360,7 +360,7 @@ def launch_man_annotation(texts: list, labels: list):
                     # same as above, but entity label text is directly taken
                     ent_labels += [(start, end, label) for start, end in matches]
 
-            ents_no_overlaps = train.remove_overlaps({"entities": ent_labels}, lambda x: False)
+            ents_no_overlaps = train.remove_overlaps({"entities": ent_labels})
 
             new_entry = (text, {"entities": ents_no_overlaps})
             # result.append(new_entry)

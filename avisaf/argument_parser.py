@@ -19,8 +19,9 @@ def add_ner_trainer_parser(subparsers):
         "-d",
         "--data",
         metavar="PATH",
-        help="File path to the file with annotated training data.",
-        default=Path("data_files", "ner", "train_data", "annotated_data_01.json"),
+        nargs="+",
+        help="File path(s) to the file with annotated training data.",
+        default=[Path("data_files", "ner", "train_data", "annotated_data_01.json")],
         required=True,
     )
     parser.add_argument(
@@ -268,11 +269,16 @@ def parse_args() -> tuple:
     )
     subparser = main_parser.add_subparsers(help="Possible operations to perform.")
 
-    parsers_list.append(add_ner_trainer_parser(subparser))
-    parsers_list.append(add_ner_tester_parser(subparser))
-    parsers_list.append(add_auto_annotator_parser(subparser))
-    parsers_list.append(add_manual_annotator_parser(subparser))
-    parsers_list.append(add_classification_train_parser(subparser))
+    for parser_func in [
+        add_ner_trainer_parser,
+        add_ner_tester_parser,
+        add_auto_annotator_parser,
+        add_manual_annotator_parser,
+        add_classification_train_parser
+    ]:
+        parsers_list.append(
+            parser_func(subparser)
+        )
 
     available_parsers = dict(
         map(lambda parser: (parser.prog.split()[1], parser), parsers_list)

@@ -6,13 +6,13 @@ overlaps from entity annotations as well as file content formatting.
 """
 
 import json
+import logging
 import sys
 from pathlib import Path
 from avisaf.util.data_extractor import get_training_data
-from typing import Callable
 
 
-def sort_annotations(file_path: Path):
+def fetch_and_sort_annotations(file_path: Path):
     """
     Function that sorts the (start_index, end_index, label) tuples based by
     their position in the given text. Sorting is done for every line of a JSON
@@ -49,37 +49,56 @@ def sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps(annotations_dict: dict, remove_next_criterion: Callable[[tuple], bool]):
+def remove_overlaps(annotations_dict: dict):
     """Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
     :type annotations_dict: dict
     :param annotations_dict: The dictionary containing the annotations list
         under 'entities' key.
-    :type remove_next_criterion: bool
-    :param remove_next_criterion:
 
     :return: The list of new annotations without overlaps.
     """
 
     # get entities list from "entities" key in the annotation dictionary
     entities_list = annotations_dict["entities"]
-    remove_list = []
+    if not entities_list:
+        return []
     index = 0
-    while index < len(entities_list) - 1:
-        entity_triplet = entities_list[index]
-        next_triplet = entities_list[index + 1]
-        if entity_triplet == next_triplet:
-            entities_list.remove(next_triplet)
+    current_triplet = entities_list[index]
+    keep_list = set()
+    lookahead = 1
+
+    while 0 <= index < len(entities_list) - 1:
+        if (index + lookahead) >= len(entities_list):
+            break
+
+        next_triplet = entities_list[index + lookahead]
+        if current_triplet == next_triplet:
+            # possible duplicates don't matter when adding to set
+            keep_list.add(current_triplet)
+            lookahead += 1
             continue
-        triplet_to_remove = overlap_between(entity_triplet, next_triplet, remove_next_criterion)
-        if triplet_to_remove is not None:  # an overlap detected and resolved
-            remove_list.append(triplet_to_remove)
-        index += 1
 
-    new_annotations = [entity for entity in entities_list if entity not in remove_list]
+        triplets_to_keep = decide_overlap_between(current_triplet, next_triplet)
+        current_triplet = (*current_triplet,)  # remapping from [a, b, c] to tuple (a, b, c)
+        if triplets_to_keep == [next_triplet] and current_triplet in keep_list:  # modifying a list to a tuple
+            keep_list.remove(current_triplet)
+            lookahead = 0
 
-    return new_annotations
+        current_triplet = triplets_to_keep[-1]
+        index = entities_list.index(current_triplet)  # moving the index forward
+
+        for to_keep in triplets_to_keep:
+            # possible duplicates don't matter when adding to set
+            keep_list.add((*to_keep,))
+        # Only the first triplet is kept -> we skip the next one by increasing the lookahead
+        # Otherwise; default lookahead of 1 is used
+        lookahead = lookahead + 1 if triplets_to_keep == [current_triplet] else 1
+
+    print(len(keep_list))
+
+    return list(keep_list)
 
 
 # TODO: Method to be removed
@@ -96,11 +115,11 @@ def remove_overlaps_from_file(file_path: Path):
     """
 
     # sorting annotations list for simpler overlap detection
-    training_data = sort_annotations(file_path)
+    training_data = fetch_and_sort_annotations(file_path)
     result = []
 
     for text, annotations in training_data:
-        new_annotations = remove_overlaps(annotations, lambda x: False)
+        new_annotations = remove_overlaps(annotations)
         result.append(
             (text, {"entities": new_annotations})
         )  # recreate new (text, annotations) tuple
@@ -113,7 +132,7 @@ def remove_overlaps_from_file(file_path: Path):
     return result
 
 
-def overlap_between(entity_triplet, next_triplet, remove_next_criterion: Callable[[tuple], bool]):
+def decide_overlap_between(entity_triplet, next_triplet):
     """Detects whether there is an overlap between two triplets in the given text.
     If the two entities have the same label, shorter triplet is removed.
 
@@ -121,8 +140,6 @@ def overlap_between(entity_triplet, next_triplet, remove_next_criterion: Callabl
     :param entity_triplet: First  (start_index, end_index, label) entity descriptor.
     :type next_triplet: tuple
     :param next_triplet: Second (start_index, end_index, label) entity descriptor.
-    :type remove_next_criterion: Callable[[Tuple], bool]
-    :param remove_next_criterion:
 
     :return: Returns the triplet to be removed - the one which represents a
         shorter part of the text.
@@ -134,14 +151,38 @@ def overlap_between(entity_triplet, next_triplet, remove_next_criterion: Callabl
     y = range(next_start, next_end)
 
     # if an overlap is detected between two tuples.
-    if x.intersection(y):
-        # return shorter of the triplets - usually the one which is less correct
-        if ((entity_end - entity_start) >= (next_end - next_start)) or remove_next_criterion(next_triplet):
-            return next_triplet
-        else:
-            return entity_triplet
+    if not x.intersection(y):
+        # keeping both entity triplets and skipping one next triplet (e.g. next_triplet)
+        return [entity_triplet, next_triplet]
+
+    # Entities overlap below
+    # we keep longer of the triplets - usually the one which is "more" correct
+    if (entity_end - entity_start) > (next_end - next_start):
+        return [entity_triplet]
+    elif (entity_end - entity_start) != (next_end - next_start):
+        # entity is strictly shorter
+        return [next_triplet]
     else:
-        return None
+        # both entities have equal lengths -> decide by rules
+        rules = {
+            ("ABBREVIATION", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "ABBREVIATION"): next_triplet,
+            #
+            ("AIRPLANE", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "AIRPLANE"): next_triplet,
+            #
+            ("CREW", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "CREW"): next_triplet,
+            #
+            ("WEATHER", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "WEATHER"): next_triplet,
+            #
+        }
+        entity_to_keep = rules.get((entity_label, next_label))
+        if entity_to_keep is None:
+            return [next_triplet]
+        else:
+            return [entity_to_keep]
 
 
 def pretty_print_training_data(file_path: Path):
