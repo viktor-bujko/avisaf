@@ -127,7 +127,7 @@ def ner_auto_annotation_handler(
     with save_to_file.open(mode="w") as f:
         json.dump(final_train_data, f)
 
-    train.remove_overlaps_from_file(training_src_file)
+    # train.remove_overlaps_from_file(training_src_file)
     entity_trimmer(save_to_file)
     train.pretty_print_training_data(save_to_file)
 
@@ -196,29 +196,9 @@ def launch_auto_annotation(
     for doc in nlp.pipe(texts, batch_size=256):
         matches = matcher(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
-        if not matched_spans and False:
-            _, ents = ner_man_annotation_handler(doc.text, [label_text], lines=1, save=False)[0]  # Taking the only (text, entities) tuple of the list
-            matched_spans = ents["entities"]
-            result = []
-            for start, end, _ in matched_spans:
-                token_start, token_end = 0, 0
-                length = 0
-                for token in doc:
-                    if length < start:
-                        token_start += 1
-                        token_end = token_start
-                        length += len(token.text_with_ws)
-                    elif length < end:
-                        token_end += 1
-                        length += len(token.text)
-                    else:
-                        start = token_start
-                        end = token_end
-                        result.append(doc[start: end])
-                        break
-            matched_spans = result
 
-        logging.info(f"Doc index: {texts.index(doc.text)}, Matched spans: {matched_spans}")
+        if matched_spans:
+            logging.info(f"Doc index: {texts.index(doc.text)}, Matched spans {len(matched_spans)}: {matched_spans}")
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
         # following line of code also resolves situation when the entities dictionary is None
         train_example = (doc.text, {"entities": new_entities})

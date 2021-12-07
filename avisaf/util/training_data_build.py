@@ -35,7 +35,7 @@ def fetch_and_sort_annotations(file_path: Path):
             "entities"
         ]  # get entities list from "entities" key in the annotation dictionary
         sorted_list = sorted(
-            annot_list, key=lambda tple: (tple[0], tple[1], tple[2])
+            annot_list  # , key=lambda tple: (tple[0], tple[1], tple[2])
         )  # sort entities
         sorted_training_data.append(
             (text, {"entities": sorted_list})

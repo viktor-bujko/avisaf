@@ -33,6 +33,8 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     if entities_file_path is None:
         # entities_file_path = Path(Path().resolve(), 'avisaf_ner/entities_labels.json')
         entities_file_path = find_file_by_path("entities_labels.json")
+        if entities_file_path is None:
+            raise FileNotFoundError()
 
     entities_file_path = Path(entities_file_path).resolve()
 
