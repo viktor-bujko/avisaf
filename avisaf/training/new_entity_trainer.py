@@ -97,14 +97,20 @@ def train_spacy_ner(
         return
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
-    model_path = str(Path("models", new_model_name).resolve())
+    if new_model_name is None:
+        model_path = Path("models", f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}")
+    else:
+        model_path = Path("models", new_model_name).resolve()
+
 
     # Iterate iter_number times
     for itn in range(iter_number):
         print(f"Iteration: {itn}.")
+        print(f"Model will be saved to the {model_path}_itn_{itn}")
 
         for train_data_file in train_data_srcfiles:
-            train_data_file = train_data_file if Path(train_data_file).is_absolute() else train_data_file.resolve()
+            train_data_file = Path(train_data_file)
+            train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
 
             logging.info(f"Using training dataset: {train_data_file}")
             training_data = get_training_data(train_data_file)
@@ -112,9 +118,6 @@ def train_spacy_ner(
             random.shuffle(training_data)
             losses = {}
             start = time.time()
-
-            if new_model_name is None:
-                new_model_name = f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}"
 
             with nlp.disable_pipes(*other_pipes):
                 for batch in spacy.util.minibatch(training_data, size=batch_size):
@@ -145,9 +148,9 @@ def train_spacy_ner(
                               f"for file: {train_data_srcfiles}.", file=sys.stderr)
                         sys.exit(1)
 
-            nlp.to_disk(model_path)
-            print(f"Model saved successfully to {model_path}")
-            print(f"Iteration {itn} losses: {losses}.", flush=verbose)
+            nlp.to_disk(f"{model_path}_itn_{itn}")
+            print(f"    Model saved successfully to {model_path}_itn_{itn}")
+            print(f"    Losses for current train data file in iteration {itn}: {losses}.", flush=verbose)
 
     if verbose:
         print("Model saved")
