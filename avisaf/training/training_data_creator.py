@@ -109,7 +109,7 @@ def ner_auto_annotation_handler(
     for text, annotations in train_data_with_overlaps:
         new_annotations = train.remove_overlaps(annotations)
         final_train_data.append(
-            (text, {"entities": new_annotations})
+            (text, {"entities": sorted(new_annotations)})
         )
 
     # training_src_file is checked above to be not None

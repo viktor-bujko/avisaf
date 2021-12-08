@@ -96,8 +96,6 @@ def remove_overlaps(annotations_dict: dict):
         # Otherwise; default lookahead of 1 is used
         lookahead = lookahead + 1 if triplets_to_keep == [current_triplet] else 1
 
-    print(len(keep_list))
-
     return list(keep_list)
 
 
@@ -177,6 +175,14 @@ def decide_overlap_between(entity_triplet, next_triplet):
             ("WEATHER", "NAV_WAYPOINT"): entity_triplet,
             ("NAV_WAYPOINT", "WEATHER"): next_triplet,
             #
+            ("AVIATION_TERM", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "AVIATION_TERM"): next_triplet,
+            #
+            ("AIRPORT_TERM", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "AIRPORT_TERM"): next_triplet,
+            #
+            ("FLIGHT_PHASE", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "FLIGHT_PHASE"): next_triplet
         }
         entity_to_keep = rules.get((entity_label, next_label))
         if entity_to_keep is None:
