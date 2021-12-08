@@ -92,6 +92,9 @@ def ner_auto_annotation_handler(
     training_src_file = Path(training_src_file)
     patterns_file_path = Path(patterns_file_path)
 
+    logging.debug(f"Taking data from: {training_src_file}")
+    logging.debug(f"Taking patterns from: {patterns_file_path}")
+
     assert isinstance(training_src_file, Path) and training_src_file is not None, f"{training_src_file} is not Path instance or is None"
     assert isinstance(patterns_file_path, Path) and patterns_file_path is not None, f"{patterns_file_path} is not Path instance or is None"
 
@@ -109,7 +112,7 @@ def ner_auto_annotation_handler(
     for text, annotations in train_data_with_overlaps:
         new_annotations = train.remove_overlaps(annotations)
         final_train_data.append(
-            (text, {"entities": sorted(new_annotations)})
+            (text, new_annotations)  # Saving modified sorted annotations without overlaps
         )
 
     # training_src_file is checked above to be not None
@@ -342,7 +345,7 @@ def launch_man_annotation(texts: list, labels: list):
 
             ents_no_overlaps = train.remove_overlaps({"entities": ent_labels})
 
-            new_entry = (text, {"entities": ents_no_overlaps})
+            new_entry = (text, ents_no_overlaps)
             # result.append(new_entry)
             yield new_entry
         # print()  # print an empty line

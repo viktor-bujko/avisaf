@@ -59,44 +59,47 @@ def remove_overlaps(annotations_dict: dict):
 
     :return: The list of new annotations without overlaps.
     """
+    for _ in range(2):
 
-    # get entities list from "entities" key in the annotation dictionary
-    entities_list = annotations_dict["entities"]
-    if not entities_list:
-        return []
-    index = 0
-    current_triplet = entities_list[index]
-    keep_list = set()
-    lookahead = 1
+        # get entities list from "entities" key in the annotation dictionary
+        entities_list = annotations_dict["entities"]
+        if not entities_list:
+            return []
+        index = 0
+        current_triplet = entities_list[index]
+        keep_list = set()
+        lookahead = 1
 
-    while 0 <= index < len(entities_list) - 1:
-        if (index + lookahead) >= len(entities_list):
-            break
+        while 0 <= index < len(entities_list) - 1:
+            if (index + lookahead) >= len(entities_list):
+                break
 
-        next_triplet = entities_list[index + lookahead]
-        if current_triplet == next_triplet:
-            # possible duplicates don't matter when adding to set
-            keep_list.add(current_triplet)
-            lookahead += 1
-            continue
+            next_triplet = entities_list[index + lookahead]
+            if current_triplet == next_triplet:
+                # possible duplicates don't matter when adding to set
+                keep_list.add(current_triplet)
+                lookahead += 1
+                continue
 
-        triplets_to_keep = decide_overlap_between(current_triplet, next_triplet)
-        current_triplet = (*current_triplet,)  # remapping from [a, b, c] to tuple (a, b, c)
-        if triplets_to_keep == [next_triplet] and current_triplet in keep_list:  # modifying a list to a tuple
-            keep_list.remove(current_triplet)
-            lookahead = 0
+            triplets_to_keep = decide_overlap_between(current_triplet, next_triplet)
+            current_triplet = (*current_triplet,)  # remapping from [a, b, c] to tuple (a, b, c)
+            if triplets_to_keep == [next_triplet] and current_triplet in keep_list:  # modifying a list to a tuple
+                keep_list.remove(current_triplet)
+                lookahead = 0
 
-        current_triplet = triplets_to_keep[-1]
-        index = entities_list.index(current_triplet)  # moving the index forward
+            current_triplet = triplets_to_keep[-1]
+            index = entities_list.index(current_triplet)  # moving the index forward
 
-        for to_keep in triplets_to_keep:
-            # possible duplicates don't matter when adding to set
-            keep_list.add((*to_keep,))
-        # Only the first triplet is kept -> we skip the next one by increasing the lookahead
-        # Otherwise; default lookahead of 1 is used
-        lookahead = lookahead + 1 if triplets_to_keep == [current_triplet] else 1
+            for to_keep in triplets_to_keep:
+                # possible duplicates don't matter when adding to set
+                keep_list.add((*to_keep,))
+            # Only the first triplet is kept -> we skip the next one by increasing the lookahead
+            # Otherwise; default lookahead of 1 is used
+            lookahead = lookahead + 1 if triplets_to_keep == [current_triplet] else 1
+        
+        annotations_dict = {"entities": sorted(list(keep_list))}
 
-    return list(keep_list)
+    return annotations_dict
 
 
 # TODO: Method to be removed
@@ -119,7 +122,7 @@ def remove_overlaps_from_file(file_path: Path):
     for text, annotations in training_data:
         new_annotations = remove_overlaps(annotations)
         result.append(
-            (text, {"entities": new_annotations})
+            (text, new_annotations)
         )  # recreate new (text, annotations) tuple
 
     with file_path.open(mode="w") as file:  # update the file
@@ -182,7 +185,10 @@ def decide_overlap_between(entity_triplet, next_triplet):
             ("NAV_WAYPOINT", "AIRPORT_TERM"): next_triplet,
             #
             ("FLIGHT_PHASE", "NAV_WAYPOINT"): entity_triplet,
-            ("NAV_WAYPOINT", "FLIGHT_PHASE"): next_triplet
+            ("NAV_WAYPOINT", "FLIGHT_PHASE"): next_triplet,
+            #
+            ("AIRPLANE", "ABBREVIATION"): entity_triplet,
+            ("ABBREVIATION", "AIRPLANE"): next_triplet
         }
         entity_to_keep = rules.get((entity_label, next_label))
         if entity_to_keep is None:
