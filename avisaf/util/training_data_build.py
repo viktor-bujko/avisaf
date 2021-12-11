@@ -49,7 +49,7 @@ def fetch_and_sort_annotations(file_path: Path):
     return sorted_training_data
 
 
-def remove_overlaps(annotations_dict: dict):
+def remove_overlaps(annotations_dict: dict) -> dict:
     """Removes overlapping annotations from the annotations_dict['entities'] list
     of (start_index, end_index, label) tuples.
 
@@ -64,7 +64,7 @@ def remove_overlaps(annotations_dict: dict):
         # get entities list from "entities" key in the annotation dictionary
         entities_list = annotations_dict["entities"]
         if not entities_list:
-            return []
+            return {"entities": []}
         index = 0
         current_triplet = entities_list[index]
         keep_list = set()
@@ -187,6 +187,9 @@ def decide_overlap_between(entity_triplet, next_triplet):
             ("FLIGHT_PHASE", "NAV_WAYPOINT"): entity_triplet,
             ("NAV_WAYPOINT", "FLIGHT_PHASE"): next_triplet,
             #
+            ("ALTITUDE", "NAV_WAYPOINT"): entity_triplet,
+            ("NAV_WAYPOINT", "ALTITUDE"): next_triplet,
+            #
             ("AIRPLANE", "ABBREVIATION"): entity_triplet,
             ("ABBREVIATION", "AIRPLANE"): next_triplet
         }
@@ -235,7 +238,3 @@ def write_sentences():
         sentence = input("Write a sentence: ")
 
     return result
-
-
-if __name__ == "__main__":
-    remove_overlaps_from_file(Path(sys.argv[1]))
