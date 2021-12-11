@@ -102,13 +102,14 @@ def train_spacy_ner(
     else:
         model_path = Path("models", new_model_name).resolve()
 
-
+    losses = {}
     # Iterate iter_number times
     for itn in range(iter_number):
-        print(f"Iteration: {itn}.")
-        print(f"Model will be saved to the {model_path}_itn_{itn}")
 
         for train_data_file in train_data_srcfiles:
+            print(f"Iteration: {itn}.")
+            print(f"Model will be saved to the {model_path}_itn_{itn}")
+
             train_data_file = Path(train_data_file)
             train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
 
@@ -116,7 +117,6 @@ def train_spacy_ner(
             training_data = get_training_data(train_data_file)
 
             random.shuffle(training_data)
-            losses = {}
             start = time.time()
 
             with nlp.disable_pipes(*other_pipes):
@@ -131,7 +131,7 @@ def train_spacy_ner(
 
                     try:
                         # Update the current model
-                        nlp.update(
+                        losses = nlp.update(
                             examples,
                             drop=0.3,
                             sgd=optimizer,

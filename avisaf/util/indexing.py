@@ -23,12 +23,8 @@ def get_span_indexes(text: str, span: str):
     """
 
     result = {}
-    positions = [
-        pair for pair in find_indexes(text, span, start_offset=0) if pair != (-1, -1)
-    ]
-    if (
-        positions
-    ):  # if positions list contains something else apart (-1, -1) tuple -> a match was found
+    positions = [pair for pair in find_indexes(text, span, start_offset=0) if pair != (-1, -1)]
+    if positions:  # if positions list contains something else apart (-1, -1) tuple -> a match was found
         result[span] = positions
     else:
         result[span] = []
@@ -77,13 +73,14 @@ def get_spans_indexes(sentence: str, spans: list):
 
     :return: List of (start_index, end_index) pairs.
     """
-    RESULT = []
+    result = []
     for span in spans:
         res = get_span_indexes(sentence, span)
-        RESULT.append(res)
-    return RESULT
+        result.append(res)
+    return result
 
 
+# TODO: To remove
 def print_matches(match_text: str, entities_dict: dict):
     """Function which takes a text, its annotated entities and prints the
     annotated text along with its labeled entity.
@@ -94,9 +91,7 @@ def print_matches(match_text: str, entities_dict: dict):
     :param entities_dict: The dictionary with 'entities key containing the list
         of (start_index, end_index, label) entities of the text.
     """
-    ent_list = entities_dict[
-        "entities"
-    ]  # list of entities in the form of (start_index, end_index, label)
+    ent_list = entities_dict["entities"]  # list of entities in the form of (start_index, end_index, label)
     for (start, end, label) in ent_list:
         print(f"'{match_text[start:end]}'", f'"{label}"')
 
@@ -112,9 +107,8 @@ def get_training_data(path: Path):
     path = path if path.is_absolute() else path.resolve()
 
     with path.open(mode="r") as tr_data_file:
-        # TODO: Refactor to lowercase
-        TR_DATA = json.loads(tr_data_file.read())
-        return TR_DATA
+        tr_data = json.loads(tr_data_file.read())
+        return tr_data
 
 
 def entity_trimmer(data_file_path: Path):
