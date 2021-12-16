@@ -168,6 +168,34 @@ class StrictEvaluator(Evaluator):
                 continue
             text_stats["total"] += 1
 
+        """token_start = token.idx  # token start_char
+                    token_end = token_start + len(token.text)  # token end_char
+
+                    # query into dictionary instead of searching the arrays
+                    predicted_ent = predicted_dict.get((token_start, token_end))
+                    gold_ent = gold_dict.get((token_start, token_end))
+
+
+                    if not predicted_ent and not gold_ent:
+                        # both model and gold did not predict the token to be a named entity
+                        text_stats["tn"] += 1
+                        continue
+                    # At least one model has predicted an entity below
+                    if predicted_ent == gold_ent:
+                        # The entity label has been assigned correctly
+                        text_stats["tp"] += 1
+                        continue
+                    if predicted_ent:
+                        # label is false positive no matter the gold_ent
+                        #   if gold_ent is defined, the two labels differ (otherwise would have been caught in the condition above)
+                        #        and prediction is considered incorrect -> false positive
+                        #   if gold_ent is not defined, neither should be the predicted_ent -> false positive
+                        text_stats["fp"] += 1
+                    else:
+                        # label has NOT been predicted by the model but should have been -> false negative case
+                        assert gold_ent, f"Case where predicted_ent: {predicted_ent} and gold_ent: {gold_ent} are None should have been caught earlier"
+                        text_stats["fn"] += 1"""
+
         false_negatives, false_positives, true_positives = self._get_confusion_matrix_items(gold_dict, predicted_dict)
         confusion_matrix = {
             "fn": false_negatives,
