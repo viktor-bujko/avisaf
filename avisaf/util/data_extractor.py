@@ -102,7 +102,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
         calls2 = report_df["Report 2_Callback"].values.tolist()
 
     except KeyError:
-        print("No such key was found", file=sys.stderr)
+        logging.error("No such key was found")
         return None
 
     length = len(narratives1)
@@ -121,7 +121,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
     return result
 
 
-def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
+def find_file_by_path(file_path: Union[Path, str], max_iterations: int = 5):
     # Static utility function not tied to any object
     """
 
@@ -132,7 +132,7 @@ def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
 
     current_dir = Path().resolve()
 
-    for iteration in range(max_iterations):  # Searching at most max_iterations times.
+    for _ in range(max_iterations):  # Searching at most max_iterations times.
         if current_dir.parent is None or current_dir.parent == current_dir:
             break
 
@@ -140,8 +140,8 @@ def find_file_by_path(file_path: [Path, str], max_iterations: int = 5):
 
         if requested_file.exists():
             return requested_file
-        else:
-            current_dir = current_dir.parent
+
+        current_dir = current_dir.parent
 
     return None
 
@@ -186,10 +186,7 @@ class DataExtractor:
 
                 requested_file = find_file_by_path(file_path)
                 if requested_file is None:
-                    print(
-                        f'The file given by "{file_path}" path was not found in the given range.',
-                        file=sys.stderr,
-                    )
+                    logging.error(f"The file given by \"{file_path}\" path was not found in the given range.")
                     # Ignoring the file with current file path
                     continue
                 with open(requested_file) as file:
@@ -207,9 +204,8 @@ class DataExtractor:
                         field_name
                     ].values.tolist()
                 except KeyError:
-                    print(
-                        f'"{field_name} is not a correct field name. Please make sure the column name is in format "FirstLineTitle_SecondLineTitle"',
-                        file=sys.stderr,
+                    logging.error(
+                        f"\"{field_name}\" is not a correct field name. Please make sure the column name is in format \"FirstLineTitle_SecondLineTitle\""
                     )
                     continue
 

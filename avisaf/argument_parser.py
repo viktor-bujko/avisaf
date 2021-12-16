@@ -40,13 +40,15 @@ def add_ner_trainer_parser(subparsers):
         default=None,
     )
     parser.add_argument(
-        "-n", "--name", metavar="STRING", help="Name of the new model.", default=None
+        "-n", "--name",
+        metavar="STRING",
+        help="Name of the new model.", default=None
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Flag for verbose printing."
-    )
-    parser.add_argument(
-        "--batch_size", type=int, default=256, help="Batch size."
+        "--batch_size",
+        type=int,
+        default=256,
+        help="Batch size."
     )
 
     return parser
@@ -105,6 +107,35 @@ def add_ner_tester_parser(subparsers):
     return parser
 
 
+def add_ner_evaluator_parser(subparsers):
+    parser = subparsers.add_parser(
+        "ner_eval",
+        help="Evaluate a selected model.",
+        description="Command used for evaluation performance of the entity recognition model on given set of texts.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.set_defaults(dest="eval_ner")
+    parser.add_argument(
+        "-m",
+        "--model",
+        metavar="PATH TO MODEL",
+        default=None,
+        required=True,
+        help="File path to an existing spaCy model or existing spaCy model name for NER.",
+    )
+    parser.add_argument(
+        "-t",
+        "--texts",
+        metavar="PATH TO JSON TEST FILES",
+        default=None,
+        required=True,
+        help="File path to the texts JSON file which will be considered as gold dataset.",
+    )
+
+    return parser
+
+
 def add_auto_annotator_parser(subparsers):
     """Method responsible for parsing auto-annotation tool and its arguments."""
 
@@ -150,7 +181,6 @@ def add_auto_annotator_parser(subparsers):
         default=None,
         help="String representing the path where the result should be saved. If None (default), -d/--data argument value will be used. Ignored if -s/--save is not used."
     )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Flag indicating verbose printing.")
 
     return parser
 
@@ -267,11 +297,19 @@ def parse_args() -> tuple:
         prog="avisaf",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    main_parser.set_defaults(verbose=0)
+    main_parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=0,
+        help="Verbosity level setting. More -v occurrences increase the number of printed messages."
+    )
     subparser = main_parser.add_subparsers(help="Possible operations to perform.")
 
     for parser_func in [
         add_ner_trainer_parser,
         add_ner_tester_parser,
+        add_ner_evaluator_parser,
         add_auto_annotator_parser,
         add_manual_annotator_parser,
         add_classification_train_parser

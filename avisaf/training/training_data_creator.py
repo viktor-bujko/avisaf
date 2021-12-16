@@ -61,11 +61,9 @@ def ner_auto_annotation_handler(
         use_phrasematcher: bool = False,
         save: bool = False,
         save_to: str = None,
-        verbose: bool = False
 ):
     """
 
-    :param verbose:
     :param patterns_file_path:
     :param label_text:
     :param training_src_file:
@@ -78,9 +76,6 @@ def ner_auto_annotation_handler(
     :param save_to:
     :return: List containing automatically annotated generated training data.
     """
-
-    if not verbose:
-        logging.getLogger().setLevel(logging.WARNING)
 
     if training_src_file is None:
         logging.error("The training data src file path cannot be None")
@@ -292,7 +287,7 @@ def ner_man_annotation_handler(
             with open(os.path.expanduser(train_data_file), mode="w") as file:
                 old_content.append(train_data)
                 json.dump(old_content, file)
-                print(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                logging.info(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
 
             train.pretty_print_training_data(train_data_file)
 

@@ -46,15 +46,12 @@ def train_spacy_ner(
     model=None,
     new_model_name: str = None,
     train_data_srcfiles: List[Path] = None,
-    verbose: bool = False,
     batch_size: int = 256
 ):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
     entity prediction model.
 
-    :type verbose: bool
-    :param verbose: A flag indicating verbose stdout printing.
     :type train_data_srcfiles: List[Union[Path, str]]
     :param train_data_srcfiles: A path to the files containing training data based
         based on which the spaCy model will be updated.
@@ -88,12 +85,11 @@ def train_spacy_ner(
     # Start the training
     optimizer = nlp.initialize() if model is None else nlp.resume_training()
 
-    if verbose:
-        print(f'Start time: {datetime.now().strftime("%H:%M:%S")}')
+    logging.debug(f'Starting')
     start_time = time.time()
 
     if not train_data_srcfiles:
-        print("Missing training data path argument", file=sys.stderr)
+        logging.error("Missing training data path argument")
         return
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
@@ -102,13 +98,12 @@ def train_spacy_ner(
     else:
         model_path = Path("models", new_model_name).resolve()
 
-    losses = {}
     # Iterate iter_number times
     for itn in range(iter_number):
 
         for train_data_file in train_data_srcfiles:
-            print(f"Iteration: {itn}.")
-            print(f"Model will be saved to the {model_path}_itn_{itn}")
+            logging.info(f"Iteration: {itn}.")
+            logging.info(f"Model will be saved to the {model_path}_itn_{itn}")
 
             train_data_file = Path(train_data_file)
             train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
@@ -118,6 +113,7 @@ def train_spacy_ner(
 
             random.shuffle(training_data)
             start = time.time()
+            losses = {}
 
             with nlp.disable_pipes(*other_pipes):
                 for batch in spacy.util.minibatch(training_data, size=batch_size):
@@ -131,7 +127,7 @@ def train_spacy_ner(
 
                     try:
                         # Update the current model
-                        losses = nlp.update(
+                        nlp.update(
                             examples,
                             drop=0.3,
                             sgd=optimizer,
@@ -139,22 +135,20 @@ def train_spacy_ner(
                         )
                         new_time = time.time()
                         if new_time - start > 60:
-                            print(datetime.now().strftime("%H:%M:%S"), flush=verbose)
+                            logging.info("Time information update")
                             start = new_time
 
                     except ValueError as e:
-                        print(e)
-                        print(f"Exception occurred at: {datetime.now().strftime('%H:%M:%S')}",
-                              f"for file: {train_data_srcfiles}.", file=sys.stderr)
+                        logging.error(e)
+                        logging.error(f"Exception occurred while processing file: {train_data_srcfiles}.")
                         sys.exit(1)
 
             nlp.to_disk(f"{model_path}_itn_{itn}")
-            print(f"    Model saved successfully to {model_path}_itn_{itn}")
-            print(f"    Losses for current train data file in iteration {itn}: {losses}.", flush=verbose)
+            logging.info(f"    Model saved successfully to {model_path}_itn_{itn}")
+            logging.info(f"    Losses for current train data file in iteration {itn}: {losses}.")
 
-    if verbose:
-        print("Model saved")
-        print(f"Execution time: {time.time() - start_time}")
-        print(f'Finished at: {datetime.now().strftime("%H:%M:%S")}')
+    logging.info("Model saved")
+    logging.info(f"Execution time: {time.time() - start_time}")
+    logging.info(f'Finished training.')
 
     return nlp

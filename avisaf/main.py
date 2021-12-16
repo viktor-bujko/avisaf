@@ -18,6 +18,7 @@ from pathlib import Path
 from avisaf.training.new_entity_trainer import train_spacy_ner
 from avisaf.training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
 from avisaf.classification.classifier import launch_classification
+from avisaf.evaluation.ner_evaluator import evaluate_spacy_ner
 from avisaf.util.data_extractor import get_entities
 
 sample_text = (
@@ -97,7 +98,7 @@ def test_spacy_ner(
 
     # create new nlp object
     if model.startswith("en_core_web"):
-        print("Using a default english language model!", file=sys.stderr)
+        print("Using a default english language model!")
     try:
         # trying to load either the pre-trained spaCy model or a model in current directory
         nlp = spacy.load(model)
@@ -106,10 +107,7 @@ def test_spacy_ner(
         nlp = spacy.load(model_path)
 
     if not nlp.has_pipe("ner"):
-        print(
-            f"The model '{model}' is not available or does not contain required components.",
-            file=sys.stderr,
-        )
+        print(f"The model '{model}' is not available or does not contain required components.", file=sys.stderr)
         return
 
     # create doc object nlp(text)
@@ -142,9 +140,7 @@ def test_spacy_ner(
         }
 
         if html_result_file is None:
-            displacy.serve(
-                document, style="ent", options=options, port=port, host="localhost"
-            )
+            displacy.serve(document, style="ent", options=options, port=port, host="localhost")
             return
 
         result_file_path = Path(html_result_file)
@@ -169,7 +165,6 @@ def choose_action(args: Namespace):
             model=args.model,
             new_model_name=args.name,
             train_data_srcfiles=args.data,
-            verbose=args.verbose,
             batch_size=args.batch_size
         ),
         "test_ner": lambda: test_spacy_ner(
@@ -180,6 +175,10 @@ def choose_action(args: Namespace):
             html_result_file=args.save,
             port=args.port,
         ),
+        "eval_ner": lambda: evaluate_spacy_ner(
+            model=args.model,
+            texts_file=args.texts
+        ),
         "annotate_auto": lambda: ner_auto_annotation_handler(
             args.keys_file,
             args.label,
@@ -188,8 +187,7 @@ def choose_action(args: Namespace):
             extract_texts=args.extract,
             use_phrasematcher=args.p,
             save=args.save,
-            save_to=args.save_to,
-            verbose=args.verbose
+            save_to=args.save_to
         ),
         "annotate_man": lambda: ner_man_annotation_handler(
             labels_path=args.labels,
@@ -215,7 +213,7 @@ def choose_action(args: Namespace):
         if func:
             func()
         else:
-            print("No action is to be invoked.", file=sys.stderr)
+            logging.error("No action is to be invoked.")
     except AttributeError as ex:
         logging.debug(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
@@ -234,21 +232,23 @@ def main():
         return
 
     if len(sys.argv) == 2:
-        subparser = avail_parsers.get(
-            sys.argv[1]
-        )  # get correct subparser by its subcommand name
+        subparser = avail_parsers.get(sys.argv[1])  # get correct subparser by its subcommand name
         subparser.print_help() if subparser else main_parser.print_help()
         return
 
     args = main_parser.parse_args()
 
+    if not args.verbose or args.verbose == 0:
+        logging.getLogger().setLevel(logging.WARNING)
+    elif args.verbose == 1:
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     if args.dest == "ner_test":
         visualization_not_available = not args.print and not args.render and args.save is None
         if visualization_not_available:
-            print(
-                "The output will not be visible without one of --print, --render or --save argument.\n",
-                file=sys.stderr,
-            )
+            print("The output will not be visible without one of --print, --render or --save argument.\n")
             ner_tester = avail_parsers.get("ner_test")
             if ner_tester:
                 ner_tester.print_help()
