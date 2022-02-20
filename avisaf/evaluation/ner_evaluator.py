@@ -21,7 +21,8 @@ def evaluate_spacy_ner(model: str, texts_file: str):
     model = Path(model)
     texts_file = Path(texts_file)
 
-    StrictEvaluator(model).evaluate_texts_file(texts_file)
+    StrictEvaluator(model).evaluate_texts_from_file(texts_file)
+    # IntersectionEvaluator(model).evaluate_texts_from_file(texts_file)
 
 
 class Evaluator:
@@ -30,16 +31,49 @@ class Evaluator:
         self._nlp = spacy.load(model_to_evaluate)
         self._available_entities = get_entities().keys()
         self._annotated_count = 0  # number of annotated texts
+        self._used_metrics = {
+            "Precision": 0.0,
+            "Recall": 0.0,
+            "Accuracy": 0.0,
+            "F1 Score": 0.0
+        }
+
+    def _initialize_stats_dicts(self) -> dict:
+        """
+        Creates a structure for each entity label as well as for the entire text.
+        Each structure holds scores for (in)correct predictions for given entity.
+
+        :return: The dictionary with available entity labels as keys and created
+                stats-holding structures as their values.
+        """
+
+        entity_stats = {}
+        stats = {
+            "tp": 0.0,  # entity matches exactly, label is correct
+            "fp": 0.0,  # entity has been found, but is not in the gold list -> false positive / spurious
+            "tn": 0.0,  # entity has correctly not been found = total - (tp + fp + fn)
+            "fn": 0.0,  # entity should have been found, but is not -> false negative
+            "predicted": 0,
+            "gold": 0,
+            "tp_partial": 0.0,  # entity range match is partial, label is correct
+            "incorrect": 0.0,  # entity ranges match, label is incorrect
+            "total": 0  # all considered document tokens
+        }
+
+        entity_stats["TEXT"] = stats.copy()
+        for entity in self._available_entities:
+            entity_stats[entity] = stats.copy()
+
+        return entity_stats
 
     @staticmethod
-    def build_entity_dict(entity_tuples: list):
+    def entities_list_to_dict(entity_tuples: list) -> dict:
         """
-        Method which converts the list of (start_char, end_char, label) entities into the
-        dictionary for faster search.
+        Method which converts the list of (start_char, end_char, label) entities into a
+        dictionary.
 
-        :param entity_tuples: The list containing the tuples (start_char, end_char, label)
+        :param entity_tuples: The list containing (start_char, end_char, label) tuples
                               which represents an entity.
-
         :return: Entity tuples list converted to the dictionary with (start_char, end_char)
                               tuple as key for each entity and label as its value.
         """
@@ -51,6 +85,15 @@ class Evaluator:
 
     @staticmethod
     def spans_to_ent_tuples(entity_spans) -> list:
+        """
+        Method which converts spaCy's entity span objects into (start_char, end_char, label)
+        tuples which are then compared with the given target / gold tuples.
+
+        :param entity_spans: spaCy Span object which represents an entity (see: https://spacy.io/api/span)
+                             for more information.
+
+        :return: List of recognized entities in (start_char, end_char, label) tuple format.
+        """
         entity_tuples = []
         for ent_span in entity_spans:
             # doc.ents contains list of all entities, each entity has .start_char a .end_char attribute
@@ -60,16 +103,94 @@ class Evaluator:
 
         return entity_tuples
 
-    def _get_scores(self, stats):
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+        """
+        Compute the scores based on the given the prediction statistics for each
+        entity label or entire text.
+
+        :param stats: Dictionary structure containing the statistics for score computation.
+        :param include_accuracy: Boolean flag to indicate whether accuracy should be included.
+                                 Note that accuracy computation needs the number of "true negatives",
+                                 which is not supported for individual entities.
+                                 Therefore, individual entities don't have their accuracy computed.
+
+        :return: A numpy array containing the scores.
+        """
+        pass
+
+    def _collect_stats(self, predicted_list: list, gold_list: list) -> tuple:
+        """
+        Method which is used for collection of statistics about individual predicted entities
+        as well as the entire text.
+
+        :param predicted_list: List of predicted entities in (start_char, end_char, label) format.
+        :param gold_list: List of target / gold entities in (start_char, end_char, label) format.
+
+        :return: 2-tuple of dictionaries; 1st dictionary contains available entity labels as keys and
+                statistics for given entity label as value. 2nd dictionary contains the statistics for
+                entire text (see _initialize_stats_dicts() method for more details about stats-holding
+                structure).
+        """
         pass
 
     def _evaluate(self, document, gold_list: list) -> tuple:
-        pass
+        """
+        Evaluate named entity recognition model on given text.
+
+        :param document: spaCy Document object - model-processed representation of given text
+        :param gold_list: The list of target / gold named entities.
+        :return: Scores for the entire text as well as per-named entity scores.
+        """
+        predicted_list = self.spans_to_ent_tuples(document.ents)
+        entity_stats, text_stats = self._collect_stats(predicted_list, gold_list)
+
+        for token in document:
+            if not token.is_punct:
+                text_stats["total"] += 1
+
+        text_stats["tn"] = np.max([
+            text_stats["total"] - (text_stats["tp"] + text_stats["fp"] + text_stats["fn"]),
+            0
+        ])
+
+        for stat_key, stat_value in text_stats.items():
+            assert stat_value >= 0, f"The value for \"{stat_key}\" is {stat_value}"
+
+        per_entity_scores = np.array(
+            [self._compute_scores(entity_stats[entity], include_accuracy=False) for entity in entity_stats.keys()]
+        )
+        text_scores = self._compute_scores(text_stats)
+
+        return text_scores, per_entity_scores
 
     def _aggregate_and_print_results(self, text_metrics: np.array, entity_class_metrics: np.array):
-        pass
+        metrics_aggregation = np.nanmean(text_metrics, axis=0)
+        for idx, metric in enumerate(self._used_metrics):
+            logging.debug(f"Setting \"{metric}\"")
+            self._used_metrics[metric] = metrics_aggregation[idx]
 
-    def evaluate_texts_file(self, texts_file: Path):
+        means_per_entity = np.nanmean(entity_class_metrics, axis=0)
+        print(f"Average performance per {self._annotated_count} texts:")
+        for metric in self._used_metrics:
+            print("\t{}: {:.3f}".format(metric, self._used_metrics[metric]))
+        for idx, ent_type in enumerate(self._available_entities):
+            print(
+                f"\t{ent_type}",
+                "\t\tPrecision: {:.3f}".format(means_per_entity[idx, 0]),
+                "\t\tRecall: {:.3f}".format(means_per_entity[idx, 0]),
+                "\t\tF1 Score: {:.3f}".format(means_per_entity[idx, 0]),
+                sep="\n"
+            )
+
+    def evaluate_texts_from_file(self, texts_file: Path):
+        """
+        Wrapper around evaluation starter method which accepts a JSON file containing an
+        array in (text, annotations) format, where 'text' represents the text
+        have its named entities recognized and 'annotations' represent the array of
+        target named entity annotations in (start_char, end_char, label) format.
+
+        :param texts_file: Path to the file containing texts in the format described above.
+        """
         file = find_file_by_path(texts_file)
 
         if not file:
@@ -86,6 +207,11 @@ class Evaluator:
         self.evaluate_texts(texts_to_evaluate)
 
     def evaluate_texts(self, texts_to_evaluate: list):
+        """
+        Evaluates named entity recognition of given list of (text, annotations) texts.
+
+        :param texts_to_evaluate: List of (text, gold annotations) tuples.
+        """
         metrics = []
         entity_class_metrics = []
 
@@ -108,41 +234,22 @@ class StrictEvaluator(Evaluator):
 
     def __init__(self, model_to_evaluate: Path):
         super().__init__(model_to_evaluate)
-        self._used_metrics = {
-            "Precision": 0.0,
-            "Recall": 0.0,
-            "Accuracy": 0.0,
-            "F1 Score": 0.0
-        }
-
-    def _initialize_stats_dicts(self):
-        entity_stats = {}
-        text_stats = {
-            "tp": 0,
-            "tn": 0,
-            "fp": 0,
-            "fn": 0,
-            "predicted": 0,   # number of predicted entities
-            "gold": 0,  # number of golden entities
-            "total": 0
-        }
-
-        for entity in self._available_entities:
-            entity_stats[entity] = {
-                "tp": 0,  # entity matches exactly, label is correct
-                # "tp_partial": 0,  # entity range match is partial, label is correct
-                # "incorrect": 0,  # entity ranges match, label is incorrect
-                "fp": 0,  # entity has been found, but is not in the gold list -> false positive / spurious
-                "fn": 0,  # entity should have been found, but is not -> false negative
-                "predicted": 0,
-                "gold": 0
-            }
-
-        return entity_stats, text_stats
 
     @staticmethod
     def _get_confusion_matrix_items(gold: dict, predicted: dict):
+        """
+        Given gold / target and actually predicted named entity annotations,
+        compute the number of true and false positives as well as false negatives.
+        This method uses exact label and position match to determine whether an
+        entity has been recognized correctly.
 
+        :param gold: Dictionary which contains (start_char, end_char) target tuples as
+                     named entity occurence keys and label as value.
+        :param predicted: Dictionary which contains (start_char, end_char) tuples as keys
+                          of actual predicted named entities and labels as values.
+        :return: Tuples in ((start_char, end_char), label) format for false negatives,
+                 false positives and true positives.
+        """
         gold_set = set(gold.items())
         predicted_set = set(predicted.items())
         # entities which should have been predicted, but are not -> false negatives
@@ -154,47 +261,14 @@ class StrictEvaluator(Evaluator):
 
         return false_negatives, false_positives, true_positives
 
-    def _evaluate(self, document, gold_list: list):
+    def _collect_stats(self, predicted_list: list, gold_list: list):
+        """See base class docstring."""
+        entity_stats = self._initialize_stats_dicts()
+        text_stats = entity_stats.pop("TEXT")  # extracting overall text stats dict
 
-        predicted_list = self.spans_to_ent_tuples(document.ents)
-        # "hashing" entities into "(start_char, end_char): label" dictionaries
-        predicted_dict = self.build_entity_dict(predicted_list)
-        gold_dict = self.build_entity_dict(gold_list)
-
-        entity_stats, text_stats = self._initialize_stats_dicts()
-
-        for token in document:
-            if not token.is_punct:
-                continue
-            text_stats["total"] += 1
-
-        """token_start = token.idx  # token start_char
-                    token_end = token_start + len(token.text)  # token end_char
-
-                    # query into dictionary instead of searching the arrays
-                    predicted_ent = predicted_dict.get((token_start, token_end))
-                    gold_ent = gold_dict.get((token_start, token_end))
-
-
-                    if not predicted_ent and not gold_ent:
-                        # both model and gold did not predict the token to be a named entity
-                        text_stats["tn"] += 1
-                        continue
-                    # At least one model has predicted an entity below
-                    if predicted_ent == gold_ent:
-                        # The entity label has been assigned correctly
-                        text_stats["tp"] += 1
-                        continue
-                    if predicted_ent:
-                        # label is false positive no matter the gold_ent
-                        #   if gold_ent is defined, the two labels differ (otherwise would have been caught in the condition above)
-                        #        and prediction is considered incorrect -> false positive
-                        #   if gold_ent is not defined, neither should be the predicted_ent -> false positive
-                        text_stats["fp"] += 1
-                    else:
-                        # label has NOT been predicted by the model but should have been -> false negative case
-                        assert gold_ent, f"Case where predicted_ent: {predicted_ent} and gold_ent: {gold_ent} are None should have been caught earlier"
-                        text_stats["fn"] += 1"""
+        # "hashing" entities into "(start_char, end_char): label" dictionaries below
+        predicted_dict = self.entities_list_to_dict(predicted_list)
+        gold_dict = self.entities_list_to_dict(gold_list)
 
         false_negatives, false_positives, true_positives = self._get_confusion_matrix_items(gold_dict, predicted_dict)
         confusion_matrix = {
@@ -207,24 +281,21 @@ class StrictEvaluator(Evaluator):
 
         self._set_stats_per_entity(entity_stats, confusion_matrix)
         for item_name, item in confusion_matrix.items():
-            text_stats[item_name] = len(item)
+            text_stats[item_name] = len(item)  # the number of tp items, fp items etc ..
+
+        # completion of overall statistics by computing the number of true negatives
         text_stats["tn"] = np.max([
             text_stats["total"] - (text_stats["tp"] + text_stats["fp"] + text_stats["fn"]),
             0
         ])
 
-        for stat_key, stat_value in text_stats.items():
-            assert stat_value >= 0, f"The value for \"{stat_key}\" is {stat_value}"
-
-        text_overall_scores = self._get_scores(text_stats)
-        per_entity_scores = np.array(
-            [self._get_scores(entity_stats[entity], include_accuracy=False) for entity in entity_stats.keys()]
-        )
-
-        return text_overall_scores, per_entity_scores
+        return entity_stats, text_stats
 
     @staticmethod
     def _set_stats_per_entity(entity_stats: dict, confusion_matrix: dict):
+        # confusion matrix entry example:
+        # key: "fp" - item_name
+        # value: set of (start_char, end_char, label) tuples which were predicted as false positives
         for item_name, items in confusion_matrix.items():
             # items is a set of false/true_positives / false_negatives
             for ent_range, ent_label in items:
@@ -232,15 +303,18 @@ class StrictEvaluator(Evaluator):
 
         return entity_stats
 
-    def _get_scores(self, stats: dict, include_accuracy=True) -> np.array:
-        if stats["tp"] + stats["fp"] != 0:
-            precision = stats["tp"] / (stats["tp"] + stats["fp"])
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+        """See base class docstring."""
+
+        if stats["predicted"] != 0:
+            # Model has found at least one entity
+            precision = stats["tp"] / stats["predicted"]
         else:
-            # Model has found 0 entities -> case is correct only if the model should not have found any annotations
+            # Model has found 0 entities -> this case is correct only if the model should not have found any annotations
             precision = 1.0 if stats["gold"] == 0 else 0.0
 
-        if stats["tp"] + stats["fn"] != 0:
-            recall = stats["tp"] / (stats["tp"] + stats["fn"])
+        if stats["gold"] != 0:
+            recall = stats["tp"] / stats["gold"]
         else:
             # gold entities list contains 0 entities -> 0 should be found
             recall = 1.0 if stats["predicted"] == 0 else 0.0
@@ -249,7 +323,7 @@ class StrictEvaluator(Evaluator):
 
         if include_accuracy:
             if stats["total"] != 0:
-                acc = (stats["tp"] + stats["tn"]) / (stats["tp"] + stats["fp"] + stats["tn"] + stats["fn"])
+                acc = (stats["tp"] + stats["tn"]) / (stats["total"])
             else:
                 # Token contains 0 non-punctuation tokens.
                 acc = np.nan
@@ -267,54 +341,24 @@ class StrictEvaluator(Evaluator):
 
         return np.array(result_scores)
 
-    def _aggregate_and_print_results(self, metrics: np.array, entity_metrics: np.array):
-        metrics_aggregation = np.nanmean(metrics, axis=0)
-        for idx, metric in enumerate(self._used_metrics):
-            logging.debug(f"Setting \"{metric}\"")
-            self._used_metrics[metric] = metrics_aggregation[idx]
-
-        means_per_entity = np.nanmean(entity_metrics, axis=0)
-        print(f"Average performance per {self._annotated_count} texts:")
-        for metric in self._used_metrics:
-            print("\t{}: {:.3f}".format(metric, self._used_metrics[metric]))
-        for idx, ent_type in enumerate(self._available_entities):
-            print(
-                f"\t{ent_type}",
-                "\t\tPrecision: {:.3f}".format(means_per_entity[idx, 0]),
-                "\t\tRecall: {:.3f}".format(means_per_entity[idx, 0]),
-                "\t\tF1 Score: {:.3f}".format(means_per_entity[idx, 0]),
-                sep="\n"
-            )
-
-    """def evaluate_texts(self, texts_to_evaluate: list):
-        metrics = []
-        entity_class_metrics = []
-
-        txt_idx = 0
-        all_texts, all_gold_entities = zip(*texts_to_evaluate)
-        # processing the given batch of texts to get the predictions
-        for txt_idx, doc in enumerate(self._nlp.pipe(all_texts, batch_size=512)):
-            if txt_idx % 100 == 0:
-                # reducing the number of output messages
-                print(f"Evaluating text {txt_idx + 1} / {len(texts_to_evaluate)}")
-            text_metrics, per_entity_metrics = self._evaluate(doc, all_gold_entities[txt_idx]["entities"])
-            metrics.append(text_metrics)
-            entity_class_metrics.append(per_entity_metrics)
-
-        self._annotated_count = txt_idx + 1
-        self._aggregate_and_print_results(np.array(metrics), np.array(entity_class_metrics))
-    """
-
 
 class IntersectionEvaluator(Evaluator):
 
     def __init__(self, model_to_evaluate: Path):
         super().__init__(model_to_evaluate)
 
-    def _get_scores(self, stats):
-        super()._get_scores(stats)
+    @staticmethod
+    def _intersection_over_union(prediction_range: set, gold_range: set) -> float:
+        """
+        Computes intersection over union metric. Intersection is represented by the
+        range of characters present in both predicted and gold named entity
+        representation. Union is represented by the range of characters present in
+        at least one (predicted or gold or both) entity representations.
 
-    def _intersection_over_union(self, prediction_range: set, gold_range: set) -> float:
+        :param prediction_range: Range of characters which represent predicted named entity.
+        :param gold_range: Range of characters which represeent target named entity.
+        :return: Intersection over union ratio.
+        """
         ent_intersection = prediction_range.intersection(gold_range)
         ent_union = prediction_range.union(gold_range)
 
@@ -322,65 +366,117 @@ class IntersectionEvaluator(Evaluator):
         assert 0 <= iou <= 1, f"IOU equals {iou}"
         return iou
 
-    def _find_entity_match_score(self, prediction: tuple, gold_list: list):
+    def _set_entity_match_score(self, prediction: tuple, gold_list: list, text_ent_stats: dict):
+        """
+        Compute the match score for a predicted named entity by comparing it to the
+        target / gold list of named entities and update text_ent_stats accordingly.
+
+        :param prediction: A single representation of named entity predicted by a model.
+        :param gold_list:  The list of target / gold named entities.
+        :param text_ent_stats: See Evaluator._initialize_stats_dicts() method for
+                               detailed description of statistics holding structure.
+        :return:
+        """
         pred_start, pred_end, pred_label = prediction
         prediction_range = set(range(pred_start, pred_end))
         matching_gold = None
         entity_iou = 0.0
         for gold_start, gold_end, gold_label in gold_list:
-            # if gold_end < pred_start:
-            #    continue
-            # if gold_start > pred_end:
-            #    break
-
+            # searching the list of gold entities for a match
             gold_range = set(range(gold_start, gold_end))
             entity_iou = self._intersection_over_union(prediction_range, gold_range)
-            if entity_iou > 0:
+            if entity_iou > 0.0:
+                # found overlapping entity
                 matching_gold = (gold_start, gold_end, gold_label)
-                break
+                break  # only first corresponding overlap is considered, because only one entity can include given span
         if matching_gold is None:
             # no matching gold entity has been found -> false positive prediction
-            self._entity_stats[pred_label]["fp"] += 1
-            return entity_iou   # 0.0
+            text_ent_stats[pred_label]["fp"] += 1
+            text_ent_stats[pred_label]["predicted"] += 1
+            return
+            # return 0.0  # entity_iou = 0.0
 
         match_start, match_end, match_label = matching_gold
         assert entity_iou > 0.0, f"Non overlapping"
+        text_ent_stats[pred_label]["predicted"] += 1  # prediction has been made
+        text_ent_stats[pred_label]["gold"] += 1  # gold entity overlap exists
         if pred_label == match_label:
-            if entity_iou == 1.0:
-                self._entity_stats[pred_label]["tp"] += 1
-            else:
-                self._entity_stats[pred_label]["tp_partial"] += entity_iou
+            text_ent_stats[pred_label]["tp"] += entity_iou
         else:
-            if entity_iou == 1.0:
-                # predicted label is not correct, but at least the range corresponds
-                # self._entity_stats[pred_label]["incorrect"] += 1
-                self._entity_stats[pred_label]["tp"] += 0.4
-            else:
-                self._entity_stats[pred_label]["incorrect"] += 1
+            text_ent_stats[pred_label]["incorrect"] += entity_iou
 
-        return entity_iou
+        # return entity_iou
 
-    def _find_entities_intersections(self, document, gold_list: list) -> np.array:
-        entity_ious = []
-        predicted_list = self.spans_to_ent_tuples(document.ents)
+    def _collect_stats(self, predicted_list: list, gold_list: list):
+        """See base class docstring."""
+        predicted_dict = self.entities_list_to_dict(predicted_list)
+        gold_dict = self.entities_list_to_dict(gold_list)
+
+        entity_stats = self._initialize_stats_dicts()
+        text_stats = entity_stats.pop("TEXT")
+
         for prediction in predicted_list:
-            match_iou = self._find_entity_match_score(prediction, gold_list)
-            entity_ious.append(match_iou)
+            # update text entity stats by each prediction
+            self._set_entity_match_score(prediction, gold_list, entity_stats)
 
-        false_negatives = set(gold_list).difference(predicted_list)
-        for fn_start, fn_end, fn_label in false_negatives:
-            self._entity_stats[fn_label]["fn"] += 1
-        return np.array(entity_ious)
+        false_negatives = set(gold_dict.items()).difference(set(predicted_dict.items()))
+        # (start, end, label) tuples which are in gold list but not predicted
+        for _, fn_label in false_negatives:
+            entity_stats[fn_label]["fn"] += 1
+            entity_stats[fn_label]["gold"] += 1
 
-    def evaluate_texts(self, texts_to_evaluate: list):
-        metrics = []
-        entity_metrics = []
+        text_stats = self._get_overall_text_stats(entity_stats, text_stats)
+        return entity_stats, text_stats
 
-        txt_idx = 0
-        all_texts, all_gold_entities = zip(*texts_to_evaluate)
-        for txt_idx, doc in enumerate(self._nlp.pipe(all_texts, batch_size=512)):
-            if txt_idx % 100 == 0:
-                print(f"Evaluating text {txt_idx + 1} / {len(texts_to_evaluate)}")
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+        """See base class docstring."""
 
-            text_metrics = self._find_entities_intersections(doc, all_gold_entities[txt_idx]["entities"])
-            metrics.append(text_metrics)
+        if stats["predicted"] != 0:
+            # Model has found at least one entity
+            relevant_entity_ranges = stats["tp"] + stats["tp_partial"] - stats["incorrect"]
+            precision = 0.0 if relevant_entity_ranges < 0 else (relevant_entity_ranges / stats["predicted"])
+        else:
+            # Model has found 0 entities -> this case is correct only if the model should not have found any annotations
+            precision = 1.0 if stats["gold"] == 0 else 0.0
+
+        if stats["gold"] != 0:
+            relevant_entity_ranges = stats["tp"] + stats["tp_partial"] + stats["incorrect"]
+            # incorrect entity is still relevant - it has been found even though it has incorrect label
+            recall = relevant_entity_ranges / stats["gold"]
+        else:
+            # gold entities list contains 0 entities -> 0 should be found
+            recall = 1.0 if stats["predicted"] == 0 else 0.0
+
+        f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0.0
+
+        if include_accuracy:
+            if stats["total"] != 0:
+                acc = (stats["tp"] + stats["tn"]) / (stats["total"])
+            else:
+                # Token contains 0 non-punctuation tokens.
+                acc = np.nan
+        else:
+            acc = np.nan
+
+        if include_accuracy:
+            logging.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
+        else:
+            logging.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
+
+        result_scores = [precision, recall, acc, f1_score] if include_accuracy else [precision, recall, f1_score]
+        for score in result_scores:
+            assert 0.0 <= score <= 1.0, f"The \"{score}\" is unbound."
+
+        return np.array(result_scores)
+
+    @staticmethod
+    def _get_overall_text_stats(entity_stats: dict, txt_stats: dict):
+        """
+        Aggregate per-named entity statistics.
+        :return: Modified values of text_stats structure.
+        """
+        for ent_label, ent_stats in entity_stats.items():
+            for ent_stat, stat_value in ent_stats.items():
+                txt_stats[ent_stat] += stat_value
+
+        return txt_stats
