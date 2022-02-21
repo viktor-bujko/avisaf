@@ -9,7 +9,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from avisaf.util.data_extractor import get_training_data
+from util.data_extractor import get_training_data
 
 
 def fetch_and_sort_annotations(file_path: Path):

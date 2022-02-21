@@ -22,7 +22,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from sklearn.svm import LinearSVC
 
-from avisaf.training.training_data_creator import ASRSReportDataPreprocessor
+from training.training_data_creator import ASRSReportDataPreprocessor
 
 logger = logging.getLogger(str(__file__))
 

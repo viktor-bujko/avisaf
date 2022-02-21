@@ -153,6 +153,7 @@ def entity_trimmer(data_file_path: Path):
     return clean_data
 
 
+"""
 if __name__ == "__main__":
     path_str = sys.argv[1]
 
@@ -161,3 +162,4 @@ if __name__ == "__main__":
 
     for text_str, entities_out in json_list:
         print_matches(text_str, entities_out)
+"""

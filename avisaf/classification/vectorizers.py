@@ -474,6 +474,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         return np.mean(lemmas * (len(lemmas) / 500), axis=0)
 
 
+"""
 if __name__ == "__main__":
     x = Word2VecAsrsReportVectorizer()
     # x = GoogleNewsWord2VecAsrsReportVectorizer()
@@ -491,3 +492,4 @@ if __name__ == "__main__":
     )
 
     print(result)
+"""

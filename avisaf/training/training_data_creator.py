@@ -16,10 +16,10 @@ from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 
 # importing own modules used in this module
-from avisaf.util.indexing import get_spans_indexes, entity_trimmer
-import avisaf.util.training_data_build as train
-from avisaf.util.data_extractor import DataExtractor, get_narratives, get_entities
-import avisaf.classification.vectorizers as vectorizers
+from util.indexing import get_spans_indexes, entity_trimmer
+import util.training_data_build as train
+from util.data_extractor import DataExtractor, get_narratives, get_entities
+import classification.vectorizers as vectorizers
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 

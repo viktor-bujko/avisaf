@@ -11,18 +11,11 @@ from datetime import datetime
 import time
 from pathlib import Path
 from spacy.training import Example
-from spacy.tokens import Doc
-from spacy.pipeline import EntityRecognizer
 
 # importing own modules
 from typing import List
 
-from avisaf.util.data_extractor import get_entities, get_training_data
-
-
-@spacy.Language.component("aviation_ner")
-def aviation_ner_component(doc: Doc) -> Doc:
-    pass
+from util.data_extractor import get_entities, get_training_data
 
 
 def load_spacy_model(model: str = "en_core_web_md") -> spacy.Language:

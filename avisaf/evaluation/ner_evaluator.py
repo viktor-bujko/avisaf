@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from pathlib import Path
 import spacy
-from avisaf.util.data_extractor import find_file_by_path, get_entities
+from util.data_extractor import find_file_by_path, get_entities
 
 
 def evaluate_spacy_ner(model: str, texts_file: str):

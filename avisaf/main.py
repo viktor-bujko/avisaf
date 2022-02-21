@@ -11,15 +11,15 @@ import spacy
 import spacy.displacy as displacy
 import sys
 from argparse import Namespace
-from .argument_parser import parse_args
+from argument_parser import parse_args
 from pathlib import Path
 
 # importing own modules
-from avisaf.training.new_entity_trainer import train_spacy_ner
-from avisaf.training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from avisaf.classification.classifier import launch_classification
-from avisaf.evaluation.ner_evaluator import evaluate_spacy_ner
-from avisaf.util.data_extractor import get_entities
+from training.new_entity_trainer import train_spacy_ner
+from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
+from classification.classifier import launch_classification
+from evaluation.ner_evaluator import evaluate_spacy_ner
+from util.data_extractor import get_entities
 
 sample_text = (
     "Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
