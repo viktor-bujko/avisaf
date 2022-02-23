@@ -17,10 +17,11 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import launch_classification
+from classification.classifier import launch_classification, train_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
+# TODO: replace string with file loading
 sample_text = (
     "Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
     "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
@@ -159,6 +160,19 @@ def choose_action(args: Namespace):
     :param args: argparse command-line arguments wrapped in Namespace object.
     """
 
+    """
+            "classifier_train": lambda: launch_classification(
+                label=args.label,
+                texts_paths=args.paths,
+                label_filter=args.filter,
+                algorithm=args.algorithm,
+                normalize=args.normalize,
+                mode=args.mode,
+                models_dir_paths=args.model,
+                plot=args.plot,
+            ),
+            """
+
     functions = {
         "train_ner": lambda: train_spacy_ner(
             iter_number=args.iterations,
@@ -196,16 +210,15 @@ def choose_action(args: Namespace):
             save=args.not_save,
             start_index=args.start_index,
         ),
-        "classifier": lambda: launch_classification(
-            label=args.label,
+        "classifier_train": lambda: train_classification(
+            models_paths=args.model,
             texts_paths=args.paths,
-            label_filter=args.filter,
+            label=args.label,
+            label_values=args.filter,
             algorithm=args.algorithm,
-            normalize=args.normalize,
-            mode=args.mode,
-            models_dir_paths=args.model,
-            plot=args.plot,
+            normalization=args.normalize
         ),
+        "classifier_test": lambda: None
     }
 
     try:

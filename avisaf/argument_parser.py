@@ -230,12 +230,12 @@ def add_classification_train_parser(subparsers):
     """Method responsible for parsing classification training command and its arguments."""
 
     parser = subparsers.add_parser(
-        "classifier",
+        "classifier_train",
         help="Train an ASRS reports classification model.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.set_defaults(dest="classifier")
+    parser.set_defaults(dest="classifier_train")
     parser.add_argument(
         "--paths",
         nargs="+",
@@ -268,10 +268,11 @@ def add_classification_train_parser(subparsers):
         help="The algorithm used for classification training.",
         choices={"knn", "svm", "mlp", "forest", "gauss", "mnb", "regression"},
     )
-    # TODO: Enable --oversample / --undersample arguments instead
     parser.add_argument(
         "--normalize",
-        action="store_true",
+        "-n",
+        choices={"undersample", "oversample"},
+        default=None,
         help="Normalize the distribution of classes in training data",
     )
     parser.add_argument(
@@ -280,9 +281,27 @@ def add_classification_train_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        default=None,
+        default=[],  # TODO: Add default model relative path
         nargs="+",
         help="Trained model(s) to use (at least one is required)",
+    )
+    return parser
+
+
+def add_classification_test_parser(subparsers):
+
+    parser = subparsers.add_parser(
+        "classifier_test",
+        help="Train an ASRS reports classification model.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.set_defaults(dest="classifier")
+    parser.add_argument(
+        "--paths",
+        nargs="+",
+        help="Strings representing the paths to training data texts",
+        default=[],
     )
 
     return parser
@@ -312,7 +331,8 @@ def parse_args() -> tuple:
         add_ner_evaluator_parser,
         add_auto_annotator_parser,
         add_manual_annotator_parser,
-        add_classification_train_parser
+        add_classification_train_parser,
+        add_classification_test_parser
     ]:
         parsers_list.append(
             parser_func(subparser)
