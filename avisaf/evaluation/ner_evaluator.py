@@ -156,29 +156,22 @@ class Evaluator:
         for stat_key, stat_value in text_stats.items():
             assert stat_value >= 0, f"The value for \"{stat_key}\" is {stat_value}"
 
-        per_entity_scores = np.array(
-            [self._compute_scores(entity_stats[entity], include_accuracy=False) for entity in entity_stats.keys()]
-        )
-        text_scores = self._compute_scores(text_stats)
-
-        return text_scores, per_entity_scores
+        return text_stats, entity_stats
 
     def _aggregate_and_print_results(self, text_metrics: np.array, entity_class_metrics: np.array):
-        metrics_aggregation = np.nanmean(text_metrics, axis=0)
         for idx, metric in enumerate(self._used_metrics):
             logging.debug(f"Setting \"{metric}\"")
-            self._used_metrics[metric] = metrics_aggregation[idx]
+            self._used_metrics[metric] = text_metrics[idx]
 
-        means_per_entity = np.nanmean(entity_class_metrics, axis=0)
         print(f"Average performance per {self._annotated_count} texts:")
         for metric in self._used_metrics:
             print("\t{}: {:.3f}".format(metric, self._used_metrics[metric]))
         for idx, ent_type in enumerate(self._available_entities):
             print(
                 f"\t{ent_type}",
-                "\t\tPrecision: {:.3f}".format(means_per_entity[idx, 0]),
-                "\t\tRecall: {:.3f}".format(means_per_entity[idx, 0]),
-                "\t\tF1 Score: {:.3f}".format(means_per_entity[idx, 0]),
+                "\t\tPrecision: {:.3f}".format(entity_class_metrics[idx, 0]),
+                "\t\tRecall: {:.3f}".format(entity_class_metrics[idx, 1]),
+                "\t\tF1 Score: {:.3f}".format(entity_class_metrics[idx, 2]),
                 sep="\n"
             )
 
@@ -212,8 +205,8 @@ class Evaluator:
 
         :param texts_to_evaluate: List of (text, gold annotations) tuples.
         """
-        metrics = []
-        entity_class_metrics = []
+        total_entity_stats = self._initialize_stats_dicts()
+        total_text_stats = total_entity_stats.pop("TEXT")
 
         txt_idx = 0
         all_texts, all_gold_entities = zip(*texts_to_evaluate)
@@ -222,9 +215,17 @@ class Evaluator:
             if txt_idx % 100 == 0:
                 # reducing the number of output messages
                 print(f"Evaluating text {txt_idx + 1} / {len(texts_to_evaluate)}")
-            text_metrics, per_entity_metrics = self._evaluate(doc, all_gold_entities[txt_idx]["entities"])
-            metrics.append(text_metrics)
-            entity_class_metrics.append(per_entity_metrics)
+            text_stats, per_entity_stats = self._evaluate(doc, all_gold_entities[txt_idx]["entities"])
+            for stat, value in text_stats.items():
+                total_text_stats[stat] += value
+            for entity_label, entity_stats in per_entity_stats.items():
+                for stat, value in entity_stats.items():
+                    total_entity_stats[entity_label][stat] += value
+
+        metrics = self._compute_scores(total_text_stats)
+        entity_class_metrics = []
+        for entity_label, entity_stats in total_entity_stats.items():
+            entity_class_metrics.append(self._compute_scores(entity_stats, include_accuracy=False))
 
         self._annotated_count = txt_idx + 1
         self._aggregate_and_print_results(np.array(metrics), np.array(entity_class_metrics))
@@ -244,7 +245,7 @@ class StrictEvaluator(Evaluator):
         entity has been recognized correctly.
 
         :param gold: Dictionary which contains (start_char, end_char) target tuples as
-                     named entity occurence keys and label as value.
+                     named entity occurrence keys and label as value.
         :param predicted: Dictionary which contains (start_char, end_char) tuples as keys
                           of actual predicted named entities and labels as values.
         :return: Tuples in ((start_char, end_char), label) format for false negatives,
@@ -356,7 +357,7 @@ class IntersectionEvaluator(Evaluator):
         at least one (predicted or gold or both) entity representations.
 
         :param prediction_range: Range of characters which represent predicted named entity.
-        :param gold_range: Range of characters which represeent target named entity.
+        :param gold_range: Range of characters which represent target named entity.
         :return: Intersection over union ratio.
         """
         ent_intersection = prediction_range.intersection(gold_range)
