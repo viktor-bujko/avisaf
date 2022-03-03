@@ -243,12 +243,6 @@ def add_classification_train_parser(subparsers):
         default=[],
     )
     parser.add_argument(
-        "--mode",
-        choices={"train", "dev", "test"},
-        default="test",
-        help="Choose classifier operating mode (default test)",
-    )
-    parser.add_argument(
         "-l",
         "--label",
         help="The label of the column to be extracted from the documents (in format FirstLineLabel_SecondLineLabel)",
@@ -296,12 +290,31 @@ def add_classification_test_parser(subparsers):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.set_defaults(dest="classifier")
+    parser.set_defaults(dest="classifier_test")
     parser.add_argument(
         "--paths",
         nargs="+",
         help="Strings representing the paths to training data texts",
         default=[],
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        default=None,  # TODO: Add default model relative path
+        help="Path of a trained model to be tested."
+    )
+    parser.add_argument(
+        "-d",
+        "--decode",
+        action="store_true",
+        help="Decode predicted labels",
+        default=False
+    )
+    parser.add_argument(
+        "--show_curves",
+        action="store_true",
+        default=False,
+        help="Show ROC and Precision-Recall curves for evaluated model."
     )
 
     return parser

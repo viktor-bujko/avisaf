@@ -18,7 +18,7 @@ from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
-from util.data_extractor import DataExtractor, get_narratives, get_entities
+from util.data_extractor import get_narratives, get_entities
 import classification.vectorizers as vectorizers
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -352,30 +352,22 @@ class ASRSReportDataPreprocessor:
         # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        self.vectorizer = (
-            vectorizers.Doc2VecAsrsReportVectorizer()
-            if vectorizer is None
-            else vectorizer
-        )
+        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.FastTextAsrsReportVectorizer()
 
     def filter_texts_by_label(
         self,
-        src_dict: dict,
         texts: np.ndarray,
         target_labels: list,
-        target_label_filter: list = None,
-        train: bool = False,
+        target_label_filter: list = None
     ):
         """
-        :param train:
-        :param src_dict:
         :param target_label_filter:
         :param texts:
         :param target_labels:
         :return:
         """
-
+        # TODO: clean method code
         new_texts, new_labels = [], []
         """target_labels = np.array(list(src_dict.values()))
 
@@ -447,10 +439,7 @@ class ASRSReportDataPreprocessor:
         if target_label_filter:
             for label in target_label_filter:
                 if label not in new_labels:
-                    print(
-                        f'The label has not been found. Check whether "{label}" is correct category spelling.',
-                        file=sys.stderr,
-                    )
+                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
 
         """result = []
         for idx, text in enumerate(new_texts):
@@ -473,9 +462,7 @@ class ASRSReportDataPreprocessor:
         # return result
         return np.array(new_texts), new_labels
 
-    def undersample_data_distribution(
-        self, text_data, target_labels, deviation_percentage: float
-    ):
+    def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         """
 
         :param deviation_percentage:
@@ -524,9 +511,7 @@ class ASRSReportDataPreprocessor:
 
         return text_data[arr_filter], target_labels[arr_filter]
 
-    def oversample_data_distribution(
-        self, text_data, target_labels, deviation_percentage: float
-    ):
+    def oversample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         distribution_counts, dist = self.get_data_distribution(target_labels)
         most_even_distribution = 1 / len(distribution_counts)
         more_present_labels = np.where(dist > most_even_distribution)
@@ -574,68 +559,38 @@ class ASRSReportDataPreprocessor:
     def normalize(self, text_data, target_labels, deviation_rate: float):
         old_data_counts = text_data.shape[0]
         # text_data, target_labels = self.undersample_data_distribution(text_data, target_labels, deviation_rate)
-        text_data, target_labels = self.oversample_data_distribution(
-            text_data, target_labels, deviation_rate
-        )
+        text_data, target_labels = self.oversample_data_distribution(text_data, target_labels, deviation_rate)
 
         new_data_counts = text_data.shape[0]
         logging.debug(self.get_data_distribution(target_labels)[1])
 
         if old_data_counts - new_data_counts > 0:
-            logging.info(
-                f"Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples"
-            )
+            logging.info(f"Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples")
 
         return text_data, target_labels
 
-    def vectorize_texts(
-        self,
-        texts_paths: list,
-        labels_to_extract: list,
-        train: bool,
-        label_values_filter: list,
-        normalize: bool = False,
-    ):
+    def extract_labeled_data(self, extractor, labels_to_extract: list, label_values_filter: list = None, normalize: str = None):
         narrative_label = "Report 1_Narrative"
 
-        extractor = DataExtractor(texts_paths)
-        labels_to_extract = (
-            labels_to_extract if labels_to_extract is not None else [narrative_label]
-        )
-        extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
-        narratives = extractor.extract_from_csv_columns([narrative_label])[
-            narrative_label
-        ]
+        labels_to_extract = labels_to_extract if labels_to_extract is not None else [narrative_label]  # at least narrative texts are always extracted
+        extracted_dict = extractor.extract_data(labels_to_extract)
+        narratives = extractor.extract_data([narrative_label])[narrative_label]
 
         logging.debug(labels_to_extract)
         logging.debug(label_values_filter)
 
-        texts_labels_arr = []
+        texts_labels_pairs = []
         for idx, key in enumerate(extracted_dict.keys()):
-            if label_values_filter:
-                texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict,  # extracted_dict[narrative_label],
-                    narratives,  # extracted_dict[labels_to_extract],
-                    extracted_dict[key],  # labels_to_extract,
-                    label_values_filter[idx],  # label_values_filter,
-                    train=train,
-                )
-                texts_labels_arr.append(texts_labels_arr_1)
-            else:
-                texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict, narratives, extracted_dict[key], None, train=train
-                )
-                texts_labels_arr.append(texts_labels_arr_1)
+            fltr = label_values_filter[idx] if label_values_filter else None
+            texts_labels_arr_1 = self.filter_texts_by_label(narratives, extracted_dict[key], fltr)
+            texts_labels_pairs.append(texts_labels_arr_1)
 
         result_data, result_targets = [], []
-        for texts, target_labels in texts_labels_arr:
-            data = self.vectorizer.build_feature_vectors(
-                texts, target_labels, train=train  # .shape[0],
-            )
-
-            vectorizers.show_vector_space_3d(data, target_labels)
-
-            if normalize:
+        for texts, target_labels in texts_labels_pairs:
+            data = self.vectorizer.build_feature_vectors(texts)
+            # vectorizers.show_vector_space_3d(data, target_labels)
+            if normalize == "oversample/undersample":
+                # TODO: change to appropriate normalization method call
                 data, target_labels = self.normalize(data, target_labels, 0.1)
 
             result_data.append(data)
@@ -652,9 +607,7 @@ class ASRSReportDataPreprocessor:
         """
 
         distribution_counts = np.histogram(target, bins=np.unique(target).shape[0])[0]
-        dist = distribution_counts / np.sum(
-            distribution_counts
-        )  # Gets percentage presence of each class in the data
+        dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
 
         return distribution_counts, dist
 

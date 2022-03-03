@@ -312,12 +312,14 @@ class StrictEvaluator(Evaluator):
             precision = stats["tp"] / stats["predicted"]
         else:
             # Model has found 0 entities -> this case is correct only if the model should not have found any annotations
+            logging.warning("Undefined Metric!")
             precision = 1.0 if stats["gold"] == 0 else 0.0
 
         if stats["gold"] != 0:
             recall = stats["tp"] / stats["gold"]
         else:
             # gold entities list contains 0 entities -> 0 should be found
+            logging.warning("Undefined Metric!")
             recall = 1.0 if stats["predicted"] == 0 else 0.0
 
         f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0.0

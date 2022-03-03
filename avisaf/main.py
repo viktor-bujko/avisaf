@@ -6,7 +6,6 @@ new models using existing examples but also build new and improve existing
 entity recognition models.
 """
 import logging
-
 import spacy
 import spacy.displacy as displacy
 import sys
@@ -17,9 +16,12 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import launch_classification, train_classification
+from classification.classifier import train_classification, test_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
+
+logging.getLogger()
+logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
 # TODO: replace string with file loading
 sample_text = (
@@ -218,7 +220,12 @@ def choose_action(args: Namespace):
             algorithm=args.algorithm,
             normalization=args.normalize
         ),
-        "classifier_test": lambda: None
+        "classifier_test": lambda: test_classification(
+            model_path=args.model,
+            text_paths=args.paths,
+            decode=args.decode,
+            show_curves=args.show_curves
+        )
     }
 
     try:
@@ -228,9 +235,9 @@ def choose_action(args: Namespace):
         else:
             logging.error("No action is to be invoked.")
     except AttributeError as ex:
-        logging.debug(ex.with_traceback(sys.exc_info()[0]))
+        logging.error(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
-        logging.debug(e.with_traceback(sys.exc_info()[2]))
+        logging.error(e.with_traceback(sys.exc_info()[2]))
 
 
 def main():
