@@ -23,27 +23,6 @@ from util.data_extractor import get_entities
 logging.getLogger()
 logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
-# TODO: replace string with file loading
-sample_text = (
-    "Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
-    "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
-    "powered back for descent a loud bang came from the left side of the aircraft followed by significant "
-    "airframe vibration. No EICAS messages were observed at this time however a check of the engine synoptic"
-    " revealed high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but "
-    "the vibration continued and severe damage was determined. We ran the severe damage checklist and "
-    "secured the engine and then requested a slower speed from ATC to lessen the vibration and advised ATC. "
-    "The slower speed made the vibration acceptable and the flight continued to descend on the arrival via "
-    "ATC instructions. The FO was dispatched to the main deck to visually survey damage. He returned with "
-    "pictures of obvious catastrophic damage of the Number 2 Engine and confirmed no visible damage to the "
-    "leading edge or any other visible portion of the left side of the aircraft. The impending three engine "
-    "approach; landing and possible go-around were talked about and briefed as well as the possibilities of "
-    "leading and trailing edge flap malfunctions. A landing on Runway XXC followed and the aircraft was "
-    "inspected by personnel before proceeding to the gate. After block in; inspection of the Number 2 "
-    "revealed extensive damage.A mention of the exceptional level of competency and professionalism "
-    "exhibited by FO [Name1] and FO [Name] is in order; their calm demeanor and practical thinking should be"
-    " attributed with the safe termination of Flight XXXX!"
-)
-
 
 def test_spacy_ner(
     model="en_core_web_md",
@@ -84,7 +63,8 @@ def test_spacy_ner(
 
     if text_path is None:
         # use sample text
-        text = sample_text
+        with open("sample_text.txt", mode="r") as sample_text_file:
+            text = sample_text_file.read()
     else:
         # extract the text
         try:
