@@ -7,6 +7,7 @@ the texts to the user and then letting him choose the words to be annotated
 as well as the entity labels used for the chosen phrases.
 """
 
+import re
 import sys
 import os
 import json
@@ -357,110 +358,117 @@ class ASRSReportDataPreprocessor:
 
     def filter_texts_by_label(
         self,
-        texts: np.ndarray,
-        target_labels: list,
-        target_label_filter: list = None
+        target_labels: np.ndarray,
+        target_label_filters: list = None
     ):
         """
-        :param target_label_filter:
-        :param texts:
+        :param target_label_filters:
         :param target_labels:
         :return:
         """
-        # TODO: clean method code
-        new_texts, new_labels = [], []
-        """target_labels = np.array(list(src_dict.values()))
 
-        for idx in range(len(src_dict.keys())):
-            matching_texts_mask, matching_texts_labels = [], []
-            for filter_pttrn in target_label_filter[idx]:
-                pattern_mask = []
+        result_arrays = [[] for _ in range(target_labels.shape[0])]  # creating an empty array for each investigated topic
+        encoders = [LabelEncoder() for _ in range(target_labels.shape[0])]
 
-                def matches_filter(sample_target):
-                    return sample_target.startswith(filter_pttrn) or sample_target.endswith(filter_pttrn)
-                # iterating through all values to filter - this also preserves labels composition
-                for i, sample_targets in enumerate(map(lambda lbl: lbl.split('; '), target_labels[idx])):         # Takes different values in the given column
-                    if any(map(matches_filter, sample_targets)):
-                        pattern_mask.append(i)
-                matching_texts_mask.append(texts[np.array(pattern_mask)])
-                matching_texts_labels.append(np.full(shape=len(pattern_mask), fill_value=filter_pttrn))
-            new_texts.append(
-                # concatenates all the texts and labels into (n_texts, 2) where n_texts corresponds to
-                # all texts with corresponding filtered labels
+        for text_idx in range(target_labels.shape[1]):
+            text_labels_sets = target_labels[:, text_idx]
 
-                # will be used for simpler shuffling
-                np.concatenate([
-                    np.reshape(np.concatenate(matching_texts_mask), (-1, 1)),
-                    np.reshape(np.concatenate(matching_texts_labels), (-1, 1))
-                ], axis=1)
-            )
+            for idx, label_set in enumerate(text_labels_sets):  # iterating through different topics target classes
+                class_filter_regexes = [re.compile(class_regex) for class_regex in target_label_filters[idx]]
+                # Some reports may be correspond to multiple target classes separated by ";"
+                # We want to use them all as possible outcomes
+                labels = label_set.split(";")
+                for label in labels:
+                    label = label.strip()
+                    if not class_filter_regexes:
+                        result_arrays[idx].append(np.array([text_idx, label]))  # adding each label - not applying any filter
+                        continue
 
-        state = np.random.get_state()
-        for text_data in new_texts:
-            np.random.shuffle(text_data)
-            np.random.set_state(state)
-            np.random.shuffle(target_labels)"""
-
-        for text_idx, text in enumerate(texts):
-            # Some reports may be annotated with multiple labels separated by ;
-            # We want to use them all as possible outcomes
-            labels = target_labels[text_idx].split("; ")
-
-            for label in labels:
-                label = label.strip()
-                matched_label = label  # label which will be used as prediction label
-
-                if target_label_filter is not None:
-                    # apply label filtration and truncation
-                    matched_filter = list(
-                        filter(
-                            lambda x: str(label).startswith(x.strip()),
-                            target_label_filter,
-                        )
-                    ) + list(
-                        filter(
-                            lambda x: str(label).endswith(x.strip()),
-                            target_label_filter,
-                        )
-                    )
-
-                    if len(matched_filter) != 1:
-
-                        if label in matched_filter:
-                            matched_label = label
-                        else:
-                            # The label is not unambiguous
+                    matched_classes = []  # matched_classes contains all regexes that fit target classes
+                    for class_regex in class_filter_regexes:
+                        matched_regex = re.findall(class_regex, label)
+                        if not matched_regex:
                             continue
+                        matched_classes.append(class_regex.pattern)  # expecting only 1-item matched_regex list
+                    if not matched_classes:
+                        # target class did not match any desired filter item -> text will not be used for classification
+                        continue
+                    matched_class = max(matched_classes, key=len)  # taking longest matching pattern as target class
+                    result_arrays[idx].append(np.array([text_idx, matched_class]))
+
+        result_arrays = np.array([np.array(res_array) for res_array in result_arrays])
+
+        for idx, (result_array, encoder) in enumerate(zip(result_arrays, encoders)):
+            target_classes = result_array[:, 1]
+            encoded_classes = np.reshape(encoder.fit_transform(target_classes), (-1, 1))
+            result_array = np.concatenate((result_array, encoded_classes), axis=1)
+            np.insert()
+            result_arrays[idx] = result_array
+
+        self._label_encoders = encoders
+
+        """
+                for text_idx in range(target_labels.shape[1]):
+
+                    labels = target_labels[text_idx].split("; ")
+
+                    for label in labels:
+                        label = label.strip()
+                        matched_label = label  # label which will be used as prediction label
+
+                        if target_label_filters is not None:
+                            # apply label filtration and truncation
+                            matched_filter = list(
+                                filter(
+                                    lambda x: str(label).startswith(x.strip()),
+                                    target_label_filters,
+                                )
+                            ) + list(
+                                filter(
+                                    lambda x: str(label).endswith(x.strip()),
+                                    target_label_filters,
+                                )
+                            )
+
+                            if len(matched_filter) != 1:
+
+                                if label in matched_filter:
+                                    matched_label = label
+                                else:
+                                    # The label is not unambiguous
+                                    continue
+                            else:
+                                matched_label = matched_filter[0]
+                        new_texts.append(text_idx)
+                        new_labels.append(matched_label)
+
+                if target_label_filters:
+                    for label in target_label_filters:
+                        if label not in new_labels:
+                            print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
+
+                ""result = []
+                for idx, text in enumerate(new_texts):
+                    texts, labels = text[:, 0], text[:, 1]
+                    if train:
+                        encoder = LabelEncoder()
+                        labels = encoder.fit_transform(labels)
+                        self._label_encoders.append(encoder)
                     else:
-                        matched_label = matched_filter[0]
-                new_texts.append(text)
-                new_labels.append(matched_label)
+                        encoder = self._label_encoders[idx]
+                        labels = encoder.transform(labels)
+                    _, counts = np.unique(labels, return_counts=True)
+                    logging.info(dict(zip(encoder.classes_, counts)))
+                    result.append((texts, labels))""
 
-        if target_label_filter:
-            for label in target_label_filter:
-                if label not in new_labels:
-                    print(f'The label has not been found. Check whether "{label}" is correct category spelling.', file=sys.stderr)
-
-        """result = []
-        for idx, text in enumerate(new_texts):
-            texts, labels = text[:, 0], text[:, 1]
-            if train:
                 encoder = LabelEncoder()
-                labels = encoder.fit_transform(labels)
+                new_labels = encoder.fit_transform(new_labels)
                 self._label_encoders.append(encoder)
-            else:
-                encoder = self._label_encoders[idx]
-                labels = encoder.transform(labels)
-            _, counts = np.unique(labels, return_counts=True)
-            logging.info(dict(zip(encoder.classes_, counts)))
-            result.append((texts, labels))"""
 
-        encoder = LabelEncoder()
-        new_labels = encoder.fit_transform(new_labels)
-        self._label_encoders.append(encoder)
-
-        # return result
-        return np.array(new_texts), new_labels
+                # return result
+                return np.array(new_texts), new_labels
+            """
+        return result_arrays
 
     def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
         """
@@ -569,34 +577,51 @@ class ASRSReportDataPreprocessor:
 
         return text_data, target_labels
 
-    def extract_labeled_data(self, extractor, labels_to_extract: list, label_values_filter: list = None, normalize: str = None):
+    def vectorize_texts(self, extractor, return_vectors: bool = True):
         narrative_label = "Report 1_Narrative"
 
-        labels_to_extract = labels_to_extract if labels_to_extract is not None else [narrative_label]  # at least narrative texts are always extracted
-        extracted_dict = extractor.extract_data(labels_to_extract)
         narratives = extractor.extract_data([narrative_label])[narrative_label]
 
+        if return_vectors:
+            return self.vectorizer.build_feature_vectors(narratives)
+        else:
+            return narratives
+
+    def extract_labeled_data(self, extractor, labels_to_extract: list, label_classes_filter: list = None, normalize: str = None):
+
+        data = self.vectorize_texts(extractor)
+
+        labels_to_extract = labels_to_extract if labels_to_extract is not None else []
+        extracted_dict = extractor.extract_data(labels_to_extract)
+
         logging.debug(labels_to_extract)
-        logging.debug(label_values_filter)
+        logging.debug(label_classes_filter)
 
-        texts_labels_pairs = []
-        for idx, key in enumerate(extracted_dict.keys()):
-            fltr = label_values_filter[idx] if label_values_filter else None
-            texts_labels_arr_1 = self.filter_texts_by_label(narratives, extracted_dict[key], fltr)
-            texts_labels_pairs.append(texts_labels_arr_1)
+        # texts_labels_pairs = []
+        filtered_arrays = self.filter_texts_by_label(np.array(list(extracted_dict.values())), label_classes_filter)
 
-        result_data, result_targets = [], []
-        for texts, target_labels in texts_labels_pairs:
-            data = self.vectorizer.build_feature_vectors(texts)
+        for filtered_array in filtered_arrays:
+            # TODO: ndarray with (text_index, text_label, text_encoded_label) items
+            pass
+
+        # for idx, topic_label in enumerate(extracted_dict.keys()):
+        #    fltr = label_classes_filter[idx] if label_classes_filter else None
+        #    texts_labels_arr_1 = self.filter_texts_by_label(extracted_dict[topic_label], fltr)
+        #    texts_labels_arr_1 = self.filter_texts_by_label(np.array(list(extracted_dict.values())), fltr)
+        #    texts_labels_pairs.append(texts_labels_arr_1)
+
+        # result_data, result_targets = [], []
+        # for texts, target_labels in texts_labels_pairs:
+            # data = self.vectorizer.build_feature_vectors(texts)
             # vectorizers.show_vector_space_3d(data, target_labels)
-            if normalize == "oversample/undersample":
-                # TODO: change to appropriate normalization method call
-                data, target_labels = self.normalize(data, target_labels, 0.1)
+            #if normalize == "oversample/undersample":
+            # TODO: change to appropriate normalization method call
+            #data, target_labels = self.normalize(data, target_labels, 0.1)
 
-            result_data.append(data)
-            result_targets.append(target_labels)
+            #result_data.append(data)
+            #result_targets.append(target_labels)
 
-        return np.array(result_data), np.array(result_targets)
+        # return np.array(result_data), np.array(result_targets)
 
     @staticmethod
     def get_data_distribution(target: list):

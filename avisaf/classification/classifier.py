@@ -57,7 +57,7 @@ class ASRSReportClassificationPredictor:
         data, targets = self._preprocessor.extract_labeled_data(
             asrs_extractor,
             labels_to_extract=list(trained_labels.keys()),
-            label_values_filter=list(trained_labels.values())
+            label_classes_filter=list(trained_labels.values())
         )
 
         all_predictions = []
@@ -274,7 +274,7 @@ class ASRSReportClassificationTrainer:
         data, target = self._preprocessor.extract_labeled_data(
             extractor,
             labels_to_train,
-            label_values_filter=labels_values,
+            label_classes_filter=labels_values,
             normalize=self._normalize_method,
         )
 
