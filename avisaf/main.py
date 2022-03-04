@@ -16,7 +16,7 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import train_classification, test_classification
+from classification.classifier import train_classification, launch_classification, evaluate_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
@@ -162,19 +162,6 @@ def choose_action(args: Namespace):
     :param args: argparse command-line arguments wrapped in Namespace object.
     """
 
-    """
-            "classifier_train": lambda: launch_classification(
-                label=args.label,
-                texts_paths=args.paths,
-                label_filter=args.filter,
-                algorithm=args.algorithm,
-                normalize=args.normalize,
-                mode=args.mode,
-                models_dir_paths=args.model,
-                plot=args.plot,
-            ),
-            """
-
     functions = {
         "train_ner": lambda: train_spacy_ner(
             iter_number=args.iterations,
@@ -220,11 +207,15 @@ def choose_action(args: Namespace):
             algorithm=args.algorithm,
             normalization=args.normalize
         ),
-        "classifier_test": lambda: test_classification(
+        "classifier_process": lambda: launch_classification(
+            model_path=args.model,
+            text_paths=args.paths
+        ),
+        "classifier_eval": lambda: evaluate_classification(
             model_path=args.model,
             text_paths=args.paths,
-            decode=args.decode,
-            show_curves=args.show_curves
+            compare_baseline=args.compare_baseline,
+            show_curves=args.show_curves,
         )
     }
 

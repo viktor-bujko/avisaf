@@ -16,8 +16,8 @@ class Visualizer:
             if isinstance(value, float):
                 print(f"\t{metric_name}: %0.2f" % (value * 100))
             elif isinstance(value, list) or isinstance(value, np.ndarray):
-                # TODO: expected float values format to 2 decimal digits
-                print(f"\t{metric_name}: {' '.join(value)}")
+                formatted_floats_list = [("%0.2f" % fl_number) for fl_number in value]
+                print(f"\t{metric_name}: {' '.join(formatted_floats_list)}")
             else:
                 print(f"\t{metric_name}: {value}")
 

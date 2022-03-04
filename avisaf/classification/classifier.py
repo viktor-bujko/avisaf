@@ -410,7 +410,7 @@ def train_classification(
         _, _ = classifier.train_report_classification(texts_paths, label, label_values)
 
 
-def evaluate_classification(model_path: str, text_paths: list, show_curves: bool):
+def evaluate_classification(model_path: str, text_paths: list, show_curves: bool, compare_baseline: bool):
 
     if not model_path or not text_paths:
         logger.error("Both model_path and text_path arguments must be specified")
@@ -430,11 +430,12 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets, show_curves=show_curves)
         Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
-        evaluator.evaluate_dummy_baseline(targets)
-        evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
+        if compare_baseline:
+            evaluator.evaluate_dummy_baseline(targets)
+            evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
 
 
-def test_classification(model_path: str, text_paths: list):
+def launch_classification(model_path: str, text_paths: list):
     """
     :param model_path:
     :param text_paths:
