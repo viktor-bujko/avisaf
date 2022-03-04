@@ -334,9 +334,8 @@ class ASRSReportClassificationTrainer:
             ).replace(" ", "_", -1),
         )[:100]
 
-        if self._normalize_method == "oversample/undersample":
-            # TODO: change to correct values
-            model_dir_name += ",norm"
+        if self._normalize_method in self._preprocessor.normalization_methods:
+            model_dir_name += self._normalize_method
 
         classifiers_dir = Path("models", "classifiers")
         classifiers_dir.mkdir(exist_ok=True)

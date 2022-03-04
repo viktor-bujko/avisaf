@@ -587,5 +587,9 @@ class ASRSReportDataPreprocessor:
         return self._label_encoders.get(encoder_name)
 
     @property
+    def normalization_methods(self):
+        return list(self._normalization_methods.keys())
+
+    @property
     def encoders(self):
         return list(self._label_encoders.values())
