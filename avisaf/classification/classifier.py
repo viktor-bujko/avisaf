@@ -96,7 +96,11 @@ class ASRSReportClassificationPredictor:
             predictions = prediction_model.predict_proba(data_vectors)
         else:
             predictions = prediction_model.predict(data_vectors)
-            # TODO: convert predictions into one-hot representation
+            one_hot_predictions = np.zeros((predictions.shape[0], np.unique(predictions).shape[0]))  # we expect to predict each desired class at least once
+            for idx, pred in enumerate(predictions):
+                # arbitrarily chosen confidence value of 100 % = 1
+                one_hot_predictions[idx, pred] = 1
+            predictions = one_hot_predictions
 
         return predictions
 
