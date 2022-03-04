@@ -200,9 +200,8 @@ class ASRSReportClassificationTrainer:
 
         return labels_to_train, labels_values
 
-    def _update_model_encoding(self, idx: int, lbl):
+    def _update_model_encoding(self, lbl):
         """
-        :param idx: Integer index of an encoder for idx-th classifier model.
         :param lbl: The label which has its encodings updated.
         """
         encoding = {}
@@ -304,7 +303,7 @@ class ASRSReportClassificationTrainer:
                 setattr(classifier, "learning_rate_init", 0.0005)
 
             # encoding is available only after texts vectorization
-            self._update_model_encoding(i, lbl)
+            self._update_model_encoding(lbl)
             self._params = {
                 "algorithm": self._params.get("algorithm"),
                 "encodings": self._encodings,
