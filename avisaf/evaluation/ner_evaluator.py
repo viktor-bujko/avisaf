@@ -7,15 +7,17 @@ from pathlib import Path
 import spacy
 from util.data_extractor import find_file_by_path, get_entities
 
+logger = logging.getLogger("avisaf_logger")
+
 
 def evaluate_spacy_ner(model: str, texts_file: str):
 
     if not model:
-        logging.error("Model has to be defined")
+        logger.error("Model has to be defined")
         return
 
     if not texts_file:
-        logging.error("Texts file has to be defined")
+        logger.error("Texts file has to be defined")
         return
 
     model = Path(model)
@@ -160,7 +162,7 @@ class Evaluator:
 
     def _aggregate_and_print_results(self, text_metrics: np.array, entity_class_metrics: np.array):
         for idx, metric in enumerate(self._used_metrics):
-            logging.debug(f"Setting \"{metric}\"")
+            logger.debug(f"Setting \"{metric}\"")
             self._used_metrics[metric] = text_metrics[idx]
 
         print(f"Average performance per {self._annotated_count} texts:")
@@ -187,14 +189,14 @@ class Evaluator:
         file = find_file_by_path(texts_file)
 
         if not file:
-            logging.error(f"File {texts_file} has not been found.")
+            logger.error(f"File {texts_file} has not been found.")
             return
 
         with file.open(mode="r") as f:
             texts_to_evaluate = json.load(f)
 
         if not texts_to_evaluate or not isinstance(texts_to_evaluate, list):
-            logging.warning("No suitable texts to be evaluated have been found.")
+            logger.warning("No suitable texts to be evaluated have been found.")
             return
 
         self.evaluate_texts(texts_to_evaluate)
@@ -312,14 +314,14 @@ class StrictEvaluator(Evaluator):
             precision = stats["tp"] / stats["predicted"]
         else:
             # Model has found 0 entities -> this case is correct only if the model should not have found any annotations
-            logging.warning("Undefined Metric!")
+            logger.warning("Undefined Metric!")
             precision = 1.0 if stats["gold"] == 0 else 0.0
 
         if stats["gold"] != 0:
             recall = stats["tp"] / stats["gold"]
         else:
             # gold entities list contains 0 entities -> 0 should be found
-            logging.warning("Undefined Metric!")
+            logger.warning("Undefined Metric!")
             recall = 1.0 if stats["predicted"] == 0 else 0.0
 
         f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0.0
@@ -334,9 +336,9 @@ class StrictEvaluator(Evaluator):
             acc = np.nan
 
         if include_accuracy:
-            logging.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
+            logger.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
         else:
-            logging.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
+            logger.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
 
         result_scores = [precision, recall, acc, f1_score] if include_accuracy else [precision, recall, f1_score]
         for score in result_scores:
@@ -462,9 +464,9 @@ class IntersectionEvaluator(Evaluator):
             acc = np.nan
 
         if include_accuracy:
-            logging.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
+            logger.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
         else:
-            logging.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
+            logger.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
 
         result_scores = [precision, recall, acc, f1_score] if include_accuracy else [precision, recall, f1_score]
         for score in result_scores:

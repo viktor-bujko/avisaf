@@ -25,7 +25,7 @@ from evaluation.tc_evaluator import ASRSReportClassificationEvaluator
 from evaluation.visualizer import Visualizer
 from util.data_extractor import CsvAsrsDataExtractor
 
-logger = logging.getLogger()
+logger = logging.getLogger("avisaf_logger")
 
 logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
@@ -53,16 +53,18 @@ class ASRSReportClassificationPredictor:
 
     def get_evaluation_predictions(self, prediction_models: dict, trained_labels: dict) -> list:
 
-        asrs_extractor = CsvAsrsDataExtractor(self._data_extractor.file_paths)  # only asrs csv files are supported
+        # only asrs csv files are currently supported
+        asrs_extractor = CsvAsrsDataExtractor(self._data_extractor.file_paths)
         data, targets = self._preprocessor.extract_labeled_data(
             asrs_extractor,
             labels_to_extract=list(trained_labels.keys()),
-            label_classes_filter=list(trained_labels.values())
+            label_classes_filter=list(trained_labels.values()),
+            normalize=None  # do NOT change data distribution in prediction mode
         )
 
         all_predictions = []
         for model, test_data, target in zip(prediction_models.values(), data, targets):
-            logging.info(self._preprocessor.get_data_distribution(target)[1])
+            logger.info(self._preprocessor.get_data_distribution(target)[1])
             predictions = self.get_model_predictions(model, test_data)  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
             all_predictions.append((predictions, target))
 
@@ -76,10 +78,8 @@ class ASRSReportClassificationPredictor:
                 (number_of_texts, number_of_classes_for_topic) shape.
         """
 
-        narratives = self._data_extractor.extract_data(["Report 1_Narrative"]).get("Report 1_Narrative")
-        data = self._preprocessor.vectorizer.build_feature_vectors(narratives)
-
         all_predictions = []
+        data = self._preprocessor.vectorize_texts(self._data_extractor)
         for predictor in prediction_models.values():
             predictions = self.get_model_predictions(predictor, data)
             all_predictions.append(predictions)
@@ -91,7 +91,7 @@ class ASRSReportClassificationPredictor:
         if prediction_model is None:
             raise ValueError("A model needs to be trained or loaded first to perform predictions.")
 
-        logging.info(f"Probability predictions made using model: {prediction_model}")
+        logger.info(f"Probability predictions made using model: {prediction_model}")
         if getattr(prediction_model, "predict_proba", None) is not None:
             predictions = prediction_model.predict_proba(data_vectors)
         else:
@@ -152,7 +152,7 @@ class ASRSReportClassificationTrainer:
             try:
                 setattr(self._classifier, param, value)
             except AttributeError:
-                logging.warning(f"Trying to set a non-existing attribute {param} with value {value}")
+                logger.warning(f"Trying to set a non-existing attribute {param} with value {value}")
 
     def _set_classifiers_to_train(self, label_to_train: str = None, label_filter: list = None):
         """
@@ -202,7 +202,7 @@ class ASRSReportClassificationTrainer:
         :param lbl: The label which has its encodings updated.
         """
         encoding = {}
-        for label_idx, label in enumerate(self._preprocessor.encoder(idx).classes_):
+        for label_idx, label in enumerate(self._preprocessor.encoder(lbl).classes_):
             encoding.update({label_idx: label})
 
         self._encodings.update({lbl: encoding})
@@ -271,7 +271,7 @@ class ASRSReportClassificationTrainer:
         labels_predictions, labels_targets = [], []
 
         extractor = CsvAsrsDataExtractor(texts_paths)
-        data, target = self._preprocessor.extract_labeled_data(
+        data, targets = self._preprocessor.extract_labeled_data(
             extractor,
             labels_to_train,
             label_classes_filter=labels_values,
@@ -285,17 +285,16 @@ class ASRSReportClassificationTrainer:
 
         for i, zipped in enumerate(zip(labels_to_train, labels_values)):
             # iterating through both lists
-
             lbl, fltr = zipped
 
-            logging.debug(f"training data shape: {data[i].shape}")
-            logging.debug(self._preprocessor.get_data_distribution(target[i])[1])
+            logger.debug(f"training data shape: {data[i].shape}")
+            logger.debug(self._preprocessor.get_data_distribution(targets[i])[1])
 
             if self._models.get(lbl) is None:
                 classifier = clone(self._classifier)
             else:
                 # extracted classification model for given topic label "lbl"
-                logging.debug("Found previously trained model")
+                logger.debug("Found previously trained model")
                 classifier = self._models.get(lbl)
                 setattr(classifier, "warm_start", True)
                 setattr(classifier, "learning_rate_init", 0.0005)
@@ -311,15 +310,15 @@ class ASRSReportClassificationTrainer:
                 "vectorizer_params": self._preprocessor.vectorizer.get_params(),
             }
 
-            logging.info(f"MODEL: {classifier}")
-            classifier.fit(data[i], target[i])
+            logger.info(f"MODEL: {classifier}")
+            classifier.fit(data[i], targets[i])
             self._models.update({lbl: classifier})
 
             get_train_predictions = True
             if get_train_predictions:
                 predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, data[i])
                 evaluator = ASRSReportClassificationEvaluator(lbl)
-                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, target[i], self._encodings.get(lbl))
+                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets[i], self._encodings.get(lbl))
                 Visualizer().print_metrics(f"Evaluating '{lbl}' predictor on training data:", model_conf_matrix, model_results_dict)
 
         self.save_models()
@@ -344,11 +343,11 @@ class ASRSReportClassificationTrainer:
         model_dir_path = Path(classifiers_dir, model_dir_name)
         model_dir_path.mkdir(exist_ok=False)
         with lzma.open(Path(model_dir_path, "classifier.model"), "wb") as model_file:
-            logging.info(f"Saving {len(self._models)} model(s): {self._models}")
+            logger.info(f"Saving {len(self._models)} model(s): {self._models}")
             pickle.dump((self._models, self._preprocessor.encoders), model_file)
 
         with open(Path(model_dir_path, "parameters.json"), "w", encoding="utf-8") as params_file:
-            logging.info(f"Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]")
+            logger.info(f"Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]")
             json.dump(self._params, params_file, indent=4)
 
 
@@ -409,16 +408,10 @@ def train_classification(
         _, _ = classifier.train_report_classification(texts_paths, label, label_values)
 
 
-def test_classification(model_path: str, text_paths: list, decode: bool = False, evaluate: bool = True, show_curves: bool = False):
-    """
+def evaluate_classification(model_path: str, text_paths: list, show_curves: bool):
 
-    :param decode:
-    :param model_path:
-    :param text_paths:
-    :return:
-    """
     if not model_path or not text_paths:
-        logging.error("Both model_path and text_path arguments must be specified")
+        logger.error("Both model_path and text_path arguments must be specified")
         return
 
     with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file,\
@@ -429,95 +422,36 @@ def test_classification(model_path: str, text_paths: list, decode: bool = False,
     extractor = CsvAsrsDataExtractor(text_paths)
     predictor = ASRSReportClassificationPredictor(extractor)
 
-    if evaluate:
-        predictions_targets = predictor.get_evaluation_predictions(model_predictors, params.get("trained_labels"))
-        for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
-            evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder)
-            model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets, show_curves=show_curves)
-            Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
-            evaluator.evaluate_dummy_baseline(targets, show_curves=show_curves)
-            evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
+    predictions_targets = predictor.get_evaluation_predictions(model_predictors, params.get("trained_labels"))
+    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(),
+                                                                  label_encoders):
+        evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder)
+        model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets, show_curves=show_curves)
+        Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
+        evaluator.evaluate_dummy_baseline(targets)
+        evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
+
+
+def test_classification(model_path: str, text_paths: list):
+    """
+    :param model_path:
+    :param text_paths:
+    :return:
+    """
+    if not model_path or not text_paths:
+        logger.error("Both model_path and text_path arguments must be specified")
         return
 
+    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file:
+        model_predictors, label_encoders = pickle.load(model_file)
+
+    extractor = CsvAsrsDataExtractor(text_paths)
+    predictor = ASRSReportClassificationPredictor(extractor)
     predictions = predictor.get_all_predictions(model_predictors)
 
-    if decode:
-        decoded_classes = ASRSReportClassificationDecoder(label_encoders).decode_predictions(predictions)
-        print(list(model_predictors.keys()))
-        print(decoded_classes[:10])
+    decoded_classes = ASRSReportClassificationDecoder(label_encoders).decode_predictions(predictions)
+    # TODO: write structured form of text and predicted classes
+    print(list(model_predictors.keys()))
+    print(decoded_classes[:10])
 
     return predictions
-
-
-"""
-def launch_classification(
-    models_dir_paths: list,
-    texts_paths: list,
-    label: str,
-    label_filter: list,
-    algorithm: str,
-    normalize: str,
-    mode: str,
-    plot: bool,
-):
-
-    if mode == "train":
-        logging.debug("Training")
-
-        if models_dir_paths is None:
-            models_dir_paths = []
-
-        min_iterations = max(len(models_dir_paths), 1)  # we want to iterate through all given models or once if no model was given
-        for idx in range(min_iterations):
-
-            if models_dir_paths:
-                with lzma.open(Path(models_dir_paths[idx], "classifier.model"), "rb") as model_file:
-                    models, encoders = pickle.load(model_file)
-
-                with open(Path(models_dir_paths[idx], "parameters.json"), "r") as params_file:
-                    parameters = json.load(params_file)
-            else:
-                models = None
-                encoders = None
-                parameters = None
-
-            classifier = ASRSReportClassificationTrainer(models=models, encoders=encoders, parameters=parameters,
-                                                         algorithm=algorithm, normalization=normalize,
-                                                         deviation_rate=0.0)
-            classifier.train_report_classification(
-                texts_paths, label, label_filter, mode=mode
-            )
-    else:
-        logging.debug(f'Testing on { "normalized " if normalize else "" }{ mode }')
-
-        if models_dir_paths is None:
-            raise ValueError("The path to the model cannot be null for testing")
-
-        models_predictions = []
-        test_targets = None
-        for model_dir_path in models_dir_paths:
-
-            with lzma.open(Path(model_dir_path, "classifier.model"), "rb") as model_file, open(Path(model_dir_path, "parameters.json"), "r") as params_file:
-                models, encoders = pickle.load(model_file)
-                logging.debug(f"Loaded {len(models)} models")
-                parameters = json.load(params_file)
-
-            # with open(Path(model_dir_path, "parameters.json"), "r") as params_file:
-            #     parameters = json.load(params_file)
-
-            predictor = ASRSReportClassificationTrainer(models=models, encoders=encoders, parameters=parameters, normalization=normalize, deviation_rate=0.0)
-
-            if not texts_paths:
-                texts_paths = [f"../ASRS/ASRS_{ mode }.csv"]
-
-            predictions, targets = predictor.train_report_classification(
-                texts_paths, label, label_filter, mode=mode
-            )
-            models_predictions.append(predictions)
-            if test_targets is None:
-                test_targets = targets
-        if plot:
-            ASRSReportClassificationEvaluator.plot(models_predictions, test_targets)
-
-        ASRSReportClassificationEvaluator.evaluate(models_predictions, test_targets)
-"""

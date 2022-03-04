@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve
@@ -16,6 +15,8 @@ class Visualizer:
         for metric_name, value in model_results_dict.items():
             if isinstance(value, float):
                 print(f"\t{metric_name}: %0.2f" % (value * 100))
+            elif isinstance(value, list) or isinstance(value, np.ndarray):
+                print(f"\t{metric_name}: {' '.join(value)}")
             else:
                 print(f"\t{metric_name}: {value}")
 

@@ -20,7 +20,7 @@ from classification.classifier import train_classification, test_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
-logging.getLogger()
+logger = logging.getLogger("avisaf_logger")
 logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
 # TODO: replace string with file loading
@@ -233,11 +233,11 @@ def choose_action(args: Namespace):
         if func:
             func()
         else:
-            logging.error("No action is to be invoked.")
+            logger.error("No action is to be invoked.")
     except AttributeError as ex:
-        logging.error(ex.with_traceback(sys.exc_info()[0]))
+        logger.error(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
-        logging.error(e.with_traceback(sys.exc_info()[2]))
+        logger.error(e.with_traceback(sys.exc_info()[2]))
 
 
 def main():
@@ -259,11 +259,11 @@ def main():
     args = main_parser.parse_args()
 
     if not args.verbose or args.verbose == 0:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger("avisaf_logger").setLevel(logging.WARNING)
     elif args.verbose == 1:
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger("avisaf_logger").setLevel(logging.INFO)
     else:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("avisaf_logger").setLevel(logging.DEBUG)
 
     if args.dest == "ner_test":
         visualization_not_available = not args.print and not args.render and args.save is None

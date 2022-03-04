@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 from typing import Union
 
+logger = logging.getLogger("avisaf_logger")
+
 
 class DataExtractor:
 
@@ -69,7 +71,7 @@ def get_training_data(training_data_file_path: Path):
     """
     if not training_data_file_path:
         msg = "Training data file path cannot be None"
-        logging.error(msg)
+        logger.error(msg)
         raise TypeError(msg)
 
     if not training_data_file_path.is_absolute():
@@ -98,7 +100,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
 
     if file_path is None:
         msg = "The file_path to have narratives extracted from cannot be None"
-        logging.error(msg)
+        logger.error(msg)
         raise TypeError(msg)
 
     file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
@@ -113,7 +115,7 @@ def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0)
         calls2 = report_df["Report 2_Callback"].values.tolist()
 
     except KeyError:
-        logging.error("No such key was found")
+        logger.error("No such key was found")
         return None
 
     length = len(narratives1)
@@ -182,19 +184,19 @@ class CsvAsrsDataExtractor(DataExtractor):
 
                 requested_file = find_file_by_path(file_path)
                 if requested_file is None:
-                    logging.error(f"The file given by \"{file_path}\" path was not found in the given range.")
+                    logger.error(f"The file given by \"{file_path}\" path was not found in the given range.")
                     # Ignoring the file with current file path
                     continue
                 with open(requested_file) as file:
                     csv_dataframe = pd.read_csv(file, skip_blank_lines=True, header=[0, 1])
-                logging.debug(f"File {requested_file} is closed: {file.closed}")
+                logger.debug(f"File {requested_file} is closed: {file.closed}")
                 csv_dataframe.columns = csv_dataframe.columns.map("_".join)
                 csv_dataframe = csv_dataframe.replace(np.nan, "", regex=True)
 
                 try:
                     extracted_values_collection = csv_dataframe[field_name].values.tolist()
                 except KeyError:
-                    logging.error(f"\"{field_name}\" is not a correct field name. Please make sure the column name is in format \"FirstLineTitle_SecondLineTitle\"")
+                    logger.error(f"\"{field_name}\" is not a correct field name. Please make sure the column name is in format \"FirstLineTitle_SecondLineTitle\"")
                     continue
 
                 length = len(extracted_values_collection)
