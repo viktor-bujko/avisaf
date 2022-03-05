@@ -7,6 +7,7 @@ the texts to the user and then letting him choose the words to be annotated
 as well as the entity labels used for the chosen phrases.
 """
 
+import re
 import sys
 import os
 import json
@@ -18,7 +19,7 @@ from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
-from util.data_extractor import DataExtractor, get_narratives, get_entities
+from util.data_extractor import get_narratives, get_entities
 import classification.vectorizers as vectorizers
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -32,6 +33,8 @@ while not str(path.resolve()).endswith("avisaf"):
 SOURCES_ROOT_PATH = Path(path).resolve()
 if str(SOURCES_ROOT_PATH) not in sys.path:
     sys.path.append(str(SOURCES_ROOT_PATH))
+
+logger = logging.getLogger("avisaf_logger")
 
 
 def get_current_texts_and_ents(train_data_file: Path, extract_texts: bool):
@@ -78,17 +81,17 @@ def ner_auto_annotation_handler(
     """
 
     if training_src_file is None:
-        logging.error("The training data src file path cannot be None")
+        logger.error("The training data src file path cannot be None")
 
     if patterns_file_path is None:
-        logging.error("File with patterns supposed to be used has not been found.")
+        logger.error("File with patterns supposed to be used has not been found.")
 
     # converting string paths to Path instances
     training_src_file = Path(training_src_file)
     patterns_file_path = Path(patterns_file_path)
 
-    logging.debug(f"Taking data from: {training_src_file}")
-    logging.debug(f"Taking patterns from: {patterns_file_path}")
+    logger.debug(f"Taking data from: {training_src_file}")
+    logger.debug(f"Taking patterns from: {patterns_file_path}")
 
     assert isinstance(training_src_file, Path) and training_src_file is not None, f"{training_src_file} is not Path instance or is None"
     assert isinstance(patterns_file_path, Path) and patterns_file_path is not None, f"{patterns_file_path} is not Path instance or is None"
@@ -116,10 +119,10 @@ def ner_auto_annotation_handler(
         return final_train_data
 
     if save_to is None:
-        logging.info("Overwriting original training file")
+        logger.info("Overwriting original training file")
         save_to_file = training_src_file
     else:
-        logging.info(f"'{save_to}' path will be used to save the result.")
+        logger.info(f"'{save_to}' path will be used to save the result.")
         save_to_file = Path(save_to)
 
     with save_to_file.open(mode="w") as f:
@@ -189,14 +192,14 @@ def launch_auto_annotation(
         matcher = Matcher(nlp.vocab, validate=True)
         matcher.add(label_text, patterns)
 
-    logging.info(f"Using {matcher}")
+    logger.info(f"Using {matcher}")
 
     for doc in nlp.pipe(texts, batch_size=256):
         matches = matcher(doc)
         matched_spans = [doc[start:end] for match_id, start, end in matches]
 
         if matched_spans:
-            logging.info(f"Doc index: {texts.index(doc.text)}, Matched spans {len(matched_spans)}: {matched_spans}")
+            logger.info(f"Doc index: {texts.index(doc.text)}, Matched spans {len(matched_spans)}: {matched_spans}")
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
         # following line of code also resolves situation when the entities dictionary is None
         train_example = (doc.text, {"entities": new_entities})
@@ -273,7 +276,7 @@ def ner_man_annotation_handler(
         result.append(train_data)
         if save:
             train_data_file = Path("data_files", "ner", "train_data", "annotated_" + file_path.name).resolve()
-            logging.debug(train_data_file)
+            logger.debug(train_data_file)
             train_data_file.touch(exist_ok=True)
 
             # if the file is not empty
@@ -287,7 +290,7 @@ def ner_man_annotation_handler(
             with open(os.path.expanduser(train_data_file), mode="w") as file:
                 old_content.append(train_data)
                 json.dump(old_content, file)
-                logging.info(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                logger.info(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
 
             train.pretty_print_training_data(train_data_file)
 
@@ -348,319 +351,232 @@ def launch_man_annotation(texts: list, labels: list):
 
 class ASRSReportDataPreprocessor:
     def __init__(self, vectorizer=None, encoders=None):
-        self._label_encoders = [] if not encoders else encoders
+        self._label_encoders = {} if not encoders else encoders
+        self._normalization_methods = {
+            "undersample": self.undersample_data_distribution,
+            "oversample": self.oversample_data_distribution
+        }
         # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        self.vectorizer = (
-            vectorizers.Doc2VecAsrsReportVectorizer()
-            if vectorizer is None
-            else vectorizer
-        )
+        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
         # self.vectorizer = vectorizers.FastTextAsrsReportVectorizer()
 
-    def filter_texts_by_label(
-        self,
-        src_dict: dict,
-        texts: np.ndarray,
-        target_labels: list,
-        target_label_filter: list = None,
-        train: bool = False,
-    ):
+    def filter_texts_by_label(self, extracted_labels: dict, target_label_filters: list = None):
         """
-        :param train:
-        :param src_dict:
-        :param target_label_filter:
-        :param texts:
-        :param target_labels:
-        :return:
+        :param target_label_filters: List of lists for each extracted topic. Each list inside target_label_filters
+                                     list contains desired class names which should be filtered for classification.
+                                     Texts which are annotated with a label different from those in a given topic
+                                     filter list, will be omitted from classification process.
+        :param extracted_labels: Represents extracted data dictionary with extracted topic names as keys and
+                                 array with target-class names annotations for each extracted text as values.
+                                 The number of items contained in the dictionary equals the number of extracted
+                                 topics, where each contains number_of_extracted_samples labels.
+        :return: Array of ndarrays for each topic to be classified. Each ndarray contains in first column the indices
+                 of texts with corresponding target class label. Since each text may contain several matching target
+                 classes for given classification topic, a text index may appear multiple times - once for each match.
+                 Second and third column represent matching target class labels - string version in 2nd column and its
+                 integer encoding in the 3rd column. Also, label encoder-decoder objects are set in this method.
         """
+        target_labels = np.array(list(extracted_labels.values()))
 
-        new_texts, new_labels = [], []
-        """target_labels = np.array(list(src_dict.values()))
+        result_arrays = [[] for _ in range(target_labels.shape[0])]  # creating an empty array for each investigated topic
+        encoders = dict(zip(extracted_labels.keys(), [LabelEncoder()] * len(extracted_labels.keys())))
 
-        for idx in range(len(src_dict.keys())):
-            matching_texts_mask, matching_texts_labels = [], []
-            for filter_pttrn in target_label_filter[idx]:
-                pattern_mask = []
+        for text_idx in range(target_labels.shape[1]):
+            text_labels_sets = target_labels[:, text_idx]
 
-                def matches_filter(sample_target):
-                    return sample_target.startswith(filter_pttrn) or sample_target.endswith(filter_pttrn)
-                # iterating through all values to filter - this also preserves labels composition
-                for i, sample_targets in enumerate(map(lambda lbl: lbl.split('; '), target_labels[idx])):         # Takes different values in the given column
-                    if any(map(matches_filter, sample_targets)):
-                        pattern_mask.append(i)
-                matching_texts_mask.append(texts[np.array(pattern_mask)])
-                matching_texts_labels.append(np.full(shape=len(pattern_mask), fill_value=filter_pttrn))
-            new_texts.append(
-                # concatenates all the texts and labels into (n_texts, 2) where n_texts corresponds to
-                # all texts with corresponding filtered labels
+            for idx, label_set in enumerate(text_labels_sets):  # iterating through different topics target classes
+                class_filter_regexes = [re.compile(class_regex) for class_regex in target_label_filters[idx]]
+                # Some reports may be correspond to multiple target classes separated by ";"
+                # We want to use them all as possible outcomes
+                labels = label_set.split(";")
+                for label in labels:
+                    label = label.strip()
+                    if not class_filter_regexes:
+                        result_arrays[idx].append(np.array([text_idx, label]))  # adding each label - not applying any filter
+                        continue
 
-                # will be used for simpler shuffling
-                np.concatenate([
-                    np.reshape(np.concatenate(matching_texts_mask), (-1, 1)),
-                    np.reshape(np.concatenate(matching_texts_labels), (-1, 1))
-                ], axis=1)
-            )
-
-        state = np.random.get_state()
-        for text_data in new_texts:
-            np.random.shuffle(text_data)
-            np.random.set_state(state)
-            np.random.shuffle(target_labels)"""
-
-        for text_idx, text in enumerate(texts):
-            # Some reports may be annotated with multiple labels separated by ;
-            # We want to use them all as possible outcomes
-            labels = target_labels[text_idx].split("; ")
-
-            for label in labels:
-                label = label.strip()
-                matched_label = label  # label which will be used as prediction label
-
-                if target_label_filter is not None:
-                    # apply label filtration and truncation
-                    matched_filter = list(
-                        filter(
-                            lambda x: str(label).startswith(x.strip()),
-                            target_label_filter,
-                        )
-                    ) + list(
-                        filter(
-                            lambda x: str(label).endswith(x.strip()),
-                            target_label_filter,
-                        )
-                    )
-
-                    if len(matched_filter) != 1:
-
-                        if label in matched_filter:
-                            matched_label = label
-                        else:
-                            # The label is not unambiguous
+                    matched_classes = []  # matched_classes contains all regexes that fit target classes
+                    for class_regex in class_filter_regexes:
+                        matched_regex = re.findall(class_regex, label)
+                        if not matched_regex:
                             continue
-                    else:
-                        matched_label = matched_filter[0]
-                new_texts.append(text)
-                new_labels.append(matched_label)
+                        matched_classes.append(class_regex.pattern)  # expecting only 1-item matched_regex list
+                    if not matched_classes:
+                        # target class did not match any desired filter item -> text will not be used for classification
+                        continue
+                    matched_class = max(matched_classes, key=len)  # taking longest matching pattern as target class
+                    result_arrays[idx].append(np.array([text_idx, matched_class]))
 
-        if target_label_filter:
-            for label in target_label_filter:
-                if label not in new_labels:
-                    print(
-                        f'The label has not been found. Check whether "{label}" is correct category spelling.',
-                        file=sys.stderr,
-                    )
+        for idx, (result_array, encoder) in enumerate(zip(result_arrays, encoders.values())):
+            target_classes = np.array(result_array)[:, 1]
+            encoded_classes = np.reshape(encoder.fit_transform(target_classes), (-1, 1))
+            result_arrays[idx] = np.concatenate((result_array, encoded_classes), axis=1)
 
-        """result = []
-        for idx, text in enumerate(new_texts):
-            texts, labels = text[:, 0], text[:, 1]
-            if train:
-                encoder = LabelEncoder()
-                labels = encoder.fit_transform(labels)
-                self._label_encoders.append(encoder)
-            else:
-                encoder = self._label_encoders[idx]
-                labels = encoder.transform(labels)
-            _, counts = np.unique(labels, return_counts=True)
-            logging.info(dict(zip(encoder.classes_, counts)))
-            result.append((texts, labels))"""
+        result_arrays = np.array([np.array(res_array) for res_array in result_arrays], dtype=object)
+        self._label_encoders = encoders
 
-        encoder = LabelEncoder()
-        new_labels = encoder.fit_transform(new_labels)
-        self._label_encoders.append(encoder)
+        return result_arrays
 
-        # return result
-        return np.array(new_texts), new_labels
+    def get_most_present(self, topic_label: str, target_labels):
 
-    def undersample_data_distribution(
-        self, text_data, target_labels, deviation_percentage: float
-    ):
+        distribution_counts, dist = self.get_data_targets_distribution(target_labels, label=topic_label)
+        dist = np.array(list(dist.values()))  # not using label classes names now
+        most_even_distribution = 1 / len(distribution_counts)
+        return np.where(dist > most_even_distribution), distribution_counts, dist
+
+    def undersample_data_distribution(self, topic_label: str, text_data: np.ndarray, target_labels: np.ndarray):
         """
 
-        :param deviation_percentage:
+        :param topic_label:
         :param text_data:
         :param target_labels:
         :return:
         """
+        more_present_idxs, distribution_counts, _ = self.get_most_present(topic_label, target_labels)
+        normalized_counts = (np.min(distribution_counts) * np.random.uniform(low=1.05, high=1.2, size=len(distribution_counts))).astype(np.int)  # generating random overweight factor for each class
+        examples_to_remove_counts = np.maximum(distribution_counts - normalized_counts, 0)  # preventing samples repetition by replacing negative number of removed samples by 0
 
-        more_present_idxs, distribution_counts = self.get_most_present_idxs(
-            target_labels
-        )
-        examples_to_remove = int(
-            np.sum(
-                (distribution_counts[more_present_idxs] - np.min(distribution_counts))
-                * deviation_percentage
-            )
-        )
-
-        repeated_match = 0
         filtered_indices = set()
-        not_filtered_indices = set()
-        while examples_to_remove > 0:
-            rnd_index = np.random.randint(0, text_data.shape[0])
-            should_be_filtered = target_labels[rnd_index] in more_present_idxs
-            if not should_be_filtered:
-                not_filtered_indices.add(rnd_index)
-                continue
+        for idx, to_remove_class_count in enumerate(examples_to_remove_counts):
+            repeated_match = 0
+            while to_remove_class_count > 0:
+                text_idx = np.random.randint(0, text_data.shape[0])  # take random text sample
+                if target_labels[text_idx] != idx:
+                    # filtration does not apply for different labels
+                    continue
 
-            # rnd_index should be filtered here
-            if rnd_index in filtered_indices:
-                repeated_match += 1
-            else:
-                filtered_indices.add(rnd_index)
-                examples_to_remove -= 1
-                repeated_match = 0
+                # text_idx should be filtered
+                if text_idx in filtered_indices:
+                    repeated_match += 1
+                else:
+                    filtered_indices.add(text_idx)
+                    to_remove_class_count -= 1
+                    repeated_match = 0
+                    continue
 
-            # Avoiding "infinite loop" caused by always matching already filtered examples
-            # Giving up on filtering the exact number of examples -> The distribution will be less even
-            examples_to_remove = (
-                examples_to_remove - 1
-                if (repeated_match > 0 and repeated_match % 100 == 0)
-                else examples_to_remove
-            )
+                # Avoiding "infinite loop" caused by always matching already filtered examples
+                # Giving up on filtering the exact number of examples -> The distribution will be less even
+                assert repeated_match > 0
+                if repeated_match % 500 == 0:
+                    to_remove_class_count -= 1
+                    repeated_match = 0
 
         arr_filter = [idx not in filtered_indices for idx in range(text_data.shape[0])]
 
         return text_data[arr_filter], target_labels[arr_filter]
 
-    def oversample_data_distribution(
-        self, text_data, target_labels, deviation_percentage: float
-    ):
-        distribution_counts, dist = self.get_data_distribution(target_labels)
-        most_even_distribution = 1 / len(distribution_counts)
-        more_present_labels = np.where(dist > most_even_distribution)
+    def oversample_data_distribution(self, topic_label: str, text_data: np.ndarray, target_labels: np.ndarray):
+        """
 
-        least_present_labels = np.concatenate(
-            np.argwhere(dist < most_even_distribution)
-        )
+        :param topic_label:
+        :param text_data:
+        :param target_labels:
+        :return:
+        """
+        more_present_labels, distribution_counts, dist = self.get_most_present(topic_label, target_labels)
+        normalized_counts = (np.mean(distribution_counts[more_present_labels]) * np.random.uniform(low=0.8, high=0.95, size=len(distribution_counts))).astype(np.int)
+        examples_to_add_counts = np.maximum(normalized_counts - distribution_counts, 0)
 
-        examples_to_have_per_minor_class = int(
-            np.mean(distribution_counts[more_present_labels]) * 0.85
-        )  # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
-
-        for label in least_present_labels:
-            to_add_per_class = (
-                examples_to_have_per_minor_class - distribution_counts[label]
-            )  # subtracting the number of examples we already have
-            texts_filtered_by_label = text_data[target_labels == label]
+        for label, to_add_class_count in enumerate(examples_to_add_counts):  # enumerate idx acts as label now
+            texts_filtered_by_label = text_data[np.array(target_labels == label).ravel()]
             labels_filtered = target_labels[target_labels == label]
             # randomly choose less present data and its label
-            idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_per_class)
+            idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_class_count)
 
             text_data = np.concatenate([text_data, texts_filtered_by_label[idxs]])
-            target_labels = np.concatenate([target_labels, labels_filtered[idxs]])
+            target_labels = np.concatenate([target_labels.ravel(), labels_filtered[idxs]])
 
         state = np.random.get_state()
         np.random.shuffle(text_data)
         np.random.set_state(state)
         np.random.shuffle(target_labels)
 
-        if logging.INFO:
-            distribution_counts, _ = self.get_data_distribution(target_labels)
-            info_dict = {}
-            for label, counts in zip(set(target_labels), distribution_counts):
-                info_dict.update({label: counts})
-            logging.info(f"New data distribution: { info_dict }")
-
         return text_data, target_labels
 
-    def get_most_present_idxs(self, target):
-
-        distribution_counts, dist = self.get_data_distribution(target)
-        most_even_distribution = 1 / len(distribution_counts)
-        return np.where(dist > most_even_distribution)[0], distribution_counts
-
-    def normalize(self, text_data, target_labels, deviation_rate: float):
-        old_data_counts = text_data.shape[0]
-        # text_data, target_labels = self.undersample_data_distribution(text_data, target_labels, deviation_rate)
-        text_data, target_labels = self.oversample_data_distribution(
-            text_data, target_labels, deviation_rate
-        )
-
-        new_data_counts = text_data.shape[0]
-        logging.debug(self.get_data_distribution(target_labels)[1])
-
-        if old_data_counts - new_data_counts > 0:
-            logging.info(
-                f"Normalization: {old_data_counts - new_data_counts} of examples had to be removed to have an even distribution of examples"
-            )
-
-        return text_data, target_labels
-
-    def vectorize_texts(
-        self,
-        texts_paths: list,
-        labels_to_extract: list,
-        train: bool,
-        label_values_filter: list,
-        normalize: bool = False,
-    ):
+    def vectorize_texts(self, extractor, return_vectors: bool = True):
         narrative_label = "Report 1_Narrative"
+        narratives = extractor.extract_data([narrative_label])[narrative_label]
 
-        extractor = DataExtractor(texts_paths)
-        labels_to_extract = (
-            labels_to_extract if labels_to_extract is not None else [narrative_label]
-        )
-        extracted_dict = extractor.extract_from_csv_columns(labels_to_extract)
-        narratives = extractor.extract_from_csv_columns([narrative_label])[
-            narrative_label
-        ]
+        if return_vectors:
+            return self.vectorizer.build_feature_vectors(narratives)
+        else:
+            return narratives
 
-        logging.debug(labels_to_extract)
-        logging.debug(label_values_filter)
+    def extract_labeled_data(self, extractor, labels_to_extract: list, label_classes_filter: list = None, normalize: str = None):
 
-        texts_labels_arr = []
-        for idx, key in enumerate(extracted_dict.keys()):
-            if label_values_filter:
-                texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict,  # extracted_dict[narrative_label],
-                    narratives,  # extracted_dict[labels_to_extract],
-                    extracted_dict[key],  # labels_to_extract,
-                    label_values_filter[idx],  # label_values_filter,
-                    train=train,
-                )
-                texts_labels_arr.append(texts_labels_arr_1)
-            else:
-                texts_labels_arr_1 = self.filter_texts_by_label(
-                    extracted_dict, narratives, extracted_dict[key], None, train=train
-                )
-                texts_labels_arr.append(texts_labels_arr_1)
+        data = self.vectorize_texts(extractor)
 
-        result_data, result_targets = [], []
-        for texts, target_labels in texts_labels_arr:
-            data = self.vectorizer.build_feature_vectors(
-                texts, target_labels, train=train  # .shape[0],
-            )
+        labels_to_extract = labels_to_extract if labels_to_extract is not None else []
+        extracted_dict = extractor.extract_data(labels_to_extract)
 
-            vectorizers.show_vector_space_3d(data, target_labels)
+        logger.debug(labels_to_extract)
+        logger.debug(label_classes_filter)
 
+        filtered_arrays = self.filter_texts_by_label(extracted_dict, label_classes_filter)
+        extracted_data, targets = [], []
+        for filtered_array in filtered_arrays:
+            logger.debug(f"Filtered array shape: {filtered_array.shape}")
+            text_idx_filter = (filtered_array[:, 0]).astype(np.int)  # ndarray with (text_index, text_label, text_encoded_label) items
+            labels = np.reshape((filtered_array[:, -1]).astype(np.int), (-1, 1))
+            # keeping labels separated from the text vectors
+            extracted_data.append(data[text_idx_filter])
+            targets.append(labels)
+
+        extracted_data, targets = np.array(extracted_data, dtype=object), np.array(targets, dtype=object)
+        # vectorizers.show_vector_space_3d(texts_labels_pairs)
+
+        norm_method = self._normalization_methods.get(normalize)
+        if not norm_method:
             if normalize:
-                data, target_labels = self.normalize(data, target_labels, 0.1)
+                logger.warning(f"{normalize} normalization method is not supported. Please choose from: {list(self._normalization_methods.keys())}")
+            # return extracted data without further modifications
+            return extracted_data, targets
 
-            result_data.append(data)
-            result_targets.append(target_labels)
+        return self._normalize(extracted_data, targets, norm_method)
 
-        return np.array(result_data), np.array(result_targets)
+    def _normalize(self, data: np.ndarray, targets: np.ndarray, normalization_method):
 
-    @staticmethod
-    def get_data_distribution(target: list):
+        normalized_extracted_data, normalized_targets = [], []
+        for data, target_labels, topic_label_name in zip(data, targets, self._label_encoders.keys()):
+            normalized_data, normalized_target_labels = normalization_method(topic_label_name, data, target_labels)
+            logger.debug(f"Before normalization: {self.get_data_targets_distribution(target_labels, label=topic_label_name)[1]}")
+            logger.debug(f"After normalization: {self.get_data_targets_distribution(normalized_target_labels, label=topic_label_name)[1]}")
+            samples_diff = np.abs(data.shape[0] - normalized_data.shape[0])
+            logger.info(f"Normalization: {samples_diff} examples had to be removed or added to obtain more even distribution of samples.")
+            normalized_extracted_data.append(normalized_data)
+            normalized_targets.append(normalized_target_labels)
+        normalized_extracted_data, normalized_targets = np.array(normalized_extracted_data, dtype=object), np.array(normalized_targets, dtype=object)
+
+        return normalized_extracted_data, normalized_targets
+
+    def get_data_targets_distribution(self, data_targets: list, label: str):
         """
 
-        :param target:
+        :param label:
+        :param data_targets:
         :return:
         """
+        label_encoder = self._label_encoders.get(label)
+        if not label_encoder:
+            logger.error(f"LabelEncoder object could not be found for \"{label}\".")
+            raise ValueError()
 
-        distribution_counts = np.histogram(target, bins=np.unique(target).shape[0])[0]
-        dist = distribution_counts / np.sum(
-            distribution_counts
-        )  # Gets percentage presence of each class in the data
+        distribution_counts, _ = np.histogram(data_targets, bins=len(label_encoder.classes_))
+        dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
+        # named distribution - target classes names as keys
+        dist = dict(zip(label_encoder.classes_, dist))
 
         return distribution_counts, dist
 
-    def encoder(self, idx):
-        return self._label_encoders[idx]
+    def encoder(self, encoder_name: str):
+        return self._label_encoders.get(encoder_name)
+
+    @property
+    def normalization_methods(self):
+        return list(self._normalization_methods.keys())
 
     @property
     def encoders(self):
-        return self._label_encoders
+        return list(self._label_encoders.values())

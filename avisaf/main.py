@@ -6,7 +6,6 @@ new models using existing examples but also build new and improve existing
 entity recognition models.
 """
 import logging
-
 import spacy
 import spacy.displacy as displacy
 import sys
@@ -17,29 +16,12 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import launch_classification
+from classification.classifier import train_classification, launch_classification, evaluate_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
-sample_text = (
-    "Flight XXXX at FL340 in cruise flight; cleared direct to ZZZZZ intersection to join the XXXXX arrival "
-    "to ZZZ and cleared to cross ZZZZZ1 at FL270. Just after top of descent in VNAV when the throttles "
-    "powered back for descent a loud bang came from the left side of the aircraft followed by significant "
-    "airframe vibration. No EICAS messages were observed at this time however a check of the engine synoptic"
-    " revealed high vibration coming from the Number 2 Engine. I brought the Number 2 Throttle to idle but "
-    "the vibration continued and severe damage was determined. We ran the severe damage checklist and "
-    "secured the engine and then requested a slower speed from ATC to lessen the vibration and advised ATC. "
-    "The slower speed made the vibration acceptable and the flight continued to descend on the arrival via "
-    "ATC instructions. The FO was dispatched to the main deck to visually survey damage. He returned with "
-    "pictures of obvious catastrophic damage of the Number 2 Engine and confirmed no visible damage to the "
-    "leading edge or any other visible portion of the left side of the aircraft. The impending three engine "
-    "approach; landing and possible go-around were talked about and briefed as well as the possibilities of "
-    "leading and trailing edge flap malfunctions. A landing on Runway XXC followed and the aircraft was "
-    "inspected by personnel before proceeding to the gate. After block in; inspection of the Number 2 "
-    "revealed extensive damage.A mention of the exceptional level of competency and professionalism "
-    "exhibited by FO [Name1] and FO [Name] is in order; their calm demeanor and practical thinking should be"
-    " attributed with the safe termination of Flight XXXX!"
-)
+logger = logging.getLogger("avisaf_logger")
+logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
 
 def test_spacy_ner(
@@ -81,7 +63,8 @@ def test_spacy_ner(
 
     if text_path is None:
         # use sample text
-        text = sample_text
+        with open("sample_text.txt", mode="r") as sample_text_file:
+            text = sample_text_file.read()
     else:
         # extract the text
         try:
@@ -196,28 +179,32 @@ def choose_action(args: Namespace):
             save=args.not_save,
             start_index=args.start_index,
         ),
-        "classifier": lambda: launch_classification(
-            label=args.label,
+        "classifier_train": lambda: train_classification(
+            models_paths=args.model,
             texts_paths=args.paths,
-            label_filter=args.filter,
+            label=args.label,
+            label_values=args.filter,
             algorithm=args.algorithm,
-            normalize=args.normalize,
-            mode=args.mode,
-            models_dir_paths=args.model,
-            plot=args.plot,
+            normalization=args.normalize
         ),
+        "classifier_process": lambda: launch_classification(
+            model_path=args.model,
+            text_paths=args.paths
+        ),
+        "classifier_eval": lambda: evaluate_classification(
+            model_path=args.model,
+            text_paths=args.paths,
+            compare_baseline=args.compare_baseline,
+            show_curves=args.show_curves,
+        )
     }
 
     try:
-        func = functions.get(args.dest)
-        if func:
-            func()
-        else:
-            logging.error("No action is to be invoked.")
+        functions.get(args.dest, lambda: logger.error(f"Desired function \"{args.dest}\" is not supported."))()
     except AttributeError as ex:
-        logging.debug(ex.with_traceback(sys.exc_info()[0]))
+        logger.error(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
-        logging.debug(e.with_traceback(sys.exc_info()[2]))
+        logger.error(e.with_traceback(sys.exc_info()[2]))
 
 
 def main():
@@ -239,11 +226,11 @@ def main():
     args = main_parser.parse_args()
 
     if not args.verbose or args.verbose == 0:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger("avisaf_logger").setLevel(logging.WARNING)
     elif args.verbose == 1:
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger("avisaf_logger").setLevel(logging.INFO)
     else:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("avisaf_logger").setLevel(logging.DEBUG)
 
     if args.dest == "ner_test":
         visualization_not_available = not args.print and not args.render and args.save is None

@@ -14,9 +14,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import utils
 import gensim.downloader as dwnldr
-from gensim.models import Doc2Vec, Word2Vec, KeyedVectors
+from gensim.models import Doc2Vec, KeyedVectors  # , Word2Vec,
 from gensim.models.doc2vec import TaggedDocument
-from gensim.models.fasttext import FastText
+# from gensim.models.fasttext import FastText
 
 import fasttext
 import fasttext.util
@@ -24,6 +24,8 @@ import tempfile
 
 import lzma
 import pickle
+
+logger = logging.getLogger("avisaf_logger")
 
 
 def show_vector_space_3d(vectors, targets):
@@ -33,7 +35,7 @@ def show_vector_space_3d(vectors, targets):
     pca = PCA(n_components=3)
     components = pca.fit_transform(vectors)
 
-    fig = plt.figure(figsize=(5, 5))
+    plt.figure(figsize=(5, 5))
     ax = plt.axes(projection="3d")
     ax.patch.set_alpha(0.5)
     ax.grid()
@@ -96,16 +98,10 @@ def show_vector_space_2d(vectors, targets):
 
 
 class AsrsReportVectorizer:
-    def build_feature_vectors(
-        self, texts: np.ndarray, target_labels_shape: int, train: bool = False
-    ) -> np.ndarray:
+    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         """
-        :param train:
-        :type train: bool
         :param texts:
         :type texts: np.ndarray
-        :param target_labels_shape:
-        :type target_labels_shape: int
         :return: Feature vectors for given texts.
         :rtype: np.ndarray
         """
@@ -113,40 +109,26 @@ class AsrsReportVectorizer:
 
     @staticmethod
     def preprocess(texts):
-        logging.debug("Started preprocessing")
+        logger.debug("Started preprocessing")
         preprocessed = []
         for text in texts:
-            text = re.sub(
-                r" [A-Z]{5} ", " waypoint ", text
-            )  # replacing uppercase 5-letter words - most probably waypoints
+            text = re.sub(r" [A-Z]{5} ", " waypoint ", text)  # replacing uppercase 5-letter words - most probably waypoints
             text = text.lower()
-            text = re.sub(
-                r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", text
-            )  # ; separated numbers - usually altitude
-            text = re.sub(
-                r"fl[0-9]{2,3}", "flight level", text
-            )  # flight level representation
-            text = re.sub(
-                r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", text
-            )  # runway identifiers
-            text = re.sub(
-                r"([a-z]*)[?!\-.]([a-z]*)", r"\1 \2", text
-            )  # "word[?!/-.]word" -> "word word"
-            text = re.sub(
-                r"(z){3,}[0-9]*", r"airport", text
-            )  # anonymized "zzz" airports
+            text = re.sub(r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", text)  # ; separated numbers - usually altitude
+            text = re.sub(r"fl[0-9]{2,3}", "flight level", text)  # flight level representation
+            text = re.sub(r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", text)  # runway identifiers
+            text = re.sub(r"([a-z]*)[?!\-.]([a-z]*)", r"\1 \2", text)  # "word[?!/-.]word" -> "word word"
+            text = re.sub(r"(z){3,}[0-9]*", r"airport", text)  # anonymized "zzz" airports
             text = re.sub(r"tx?wys?", "taxiway", text)
             text = re.sub(r"twrs?[^a-z]", "tower", text)
             text = re.sub("tcas", "traffic collision avoidance system", text)
-            text = re.sub(
-                r"([a-z0-9]+\.){2,}[a-z0-9]*", "", text
-            )  # removing words with several dots
+            text = re.sub(r"([a-z0-9]+\.){2,}[a-z0-9]*", "", text)  # removing words with several dots
             text = re.sub(r"(air)?spds?", "speed", text)
             text = re.sub(r"qnh", "pressure", text)
             text = re.sub(r"lndgs?", "landing", text)
             preprocessed.append(text)
 
-        logging.debug("Ended preprocessing")
+        logger.debug("Ended preprocessing")
 
         return preprocessed
 
@@ -164,39 +146,30 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             analyzer="word",
             max_features=300_000,
         )
-        self._pipeline = Pipeline(
-            [("reductor", TruncatedSVD(n_components=300)), ("scaler", StandardScaler())]
-        )
+        self._pipeline = Pipeline([("reductor", TruncatedSVD(n_components=300)), ("scaler", StandardScaler())])
 
-    def build_feature_vectors(
-        self,
-        texts: type(np.ndarray),
-        target_labels: type(np.ndarray),
-        train: bool = False,
-    ):
-        logging.debug("Started vectorization")
+    def build_feature_vectors(self, texts: np.ndarray, target_labels: np.ndarray, train: bool = False):
+        logger.debug("Started vectorization")
 
         if texts.shape[0] != target_labels.shape[0]:
             msg = "The number of training examples is not equal to the the number of labels."
-            logging.error(msg)
-            logging.error(
-                f"Texts.shape: {texts.shape[0]} vs labels.shape: {target_labels}"
-            )
+            logger.error(msg)
+            logger.error(f"Texts.shape: {texts.shape[0]} vs labels.shape: {target_labels.shape}")
             raise ValueError(msg)
 
-        logging.debug(f"TFIDF is training: {train}")
+        logger.debug(f"TFIDF is training: {train}")
         texts = self.preprocess(texts)
 
         if train:
-            logging.debug("tfidf fit transform")
+            logger.debug("tfidf fit transform")
             texts_vectors = self._transformer.fit_transform(texts)
-            logging.debug("dimension reduction, scaling")
+            logger.debug("dimension reduction, scaling")
             texts_vectors = self._pipeline.fit_transform(texts_vectors)
-            logging.debug("scaling done")
+            logger.debug("scaling done")
             with lzma.open("pipeline.model", "wb") as pipe:
                 pickle.dump((self._transformer, self._pipeline), pipe)
             with lzma.open("tfidf_vectors_dev.vec", "wb") as pipe:
-                logging.debug("saving vectors")
+                logger.debug("saving vectors")
                 pickle.dump(texts_vectors, pipe)
         else:
             with lzma.open("pipeline.model", "rb") as pipe:
@@ -206,7 +179,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             texts_vectors = self._transformer.transform(texts)
             texts_vectors = self._pipeline.transform(texts_vectors)
 
-        logging.debug("Ended vectorization")
+        logger.debug("Ended vectorization")
         return texts_vectors
 
     def get_params(self):
@@ -233,12 +206,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
         pass
 
-    def build_feature_vectors(
-        self,
-        texts: type(np.ndarray),
-        target_labels: type(np.ndarray),
-        train: bool = False,
-    ):
+    def build_feature_vectors(self, texts: type(np.ndarray)):
 
         try:
             model = Doc2Vec.load("doc2vec.model")
@@ -248,12 +216,18 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         tagged_docs = []
         texts = np.array(self.preprocess(texts))
 
-        assert texts.shape[0] == target_labels.shape[0]
+        """
+         assert texts.shape[0] == target_labels.shape[0]
 
         for text, label in zip(enumerate(texts), target_labels):
             idx, text = text
             tokens = utils.simple_preprocess(text)
             tagged_docs.append(TaggedDocument(words=tokens, tags=[label]))
+        """
+
+        for idx, text in enumerate(texts):
+            tokens = utils.simple_preprocess(text)
+            tagged_docs.append(TaggedDocument(words=tokens, tags=[]))
 
         if model is None:
             model = Doc2Vec(
@@ -268,7 +242,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
                 alpha=0.001,
                 min_alpha=0.0001,
             )
-            logging.debug(f"Estimated memory: {model.estimate_memory()}")
+            logger.debug(f"Estimated memory: {model.estimate_memory()}")
             model.build_vocab(documents=tagged_docs)
 
             model.train(
@@ -286,7 +260,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         for idx, tagged_doc in enumerate(tagged_docs):
             doc2veced_count += 1
             if doc2veced_count % 1000 == 0:
-                logging.debug(doc2veced_count)
+                logger.debug(doc2veced_count)
             doc2veced[idx] = model.infer_vector(tagged_doc.words, epochs=6)
         return doc2veced
 
@@ -299,10 +273,8 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
         self._nlp = spacy.load("en_core_web_md")
         self._vectors = vectors
 
-    def build_feature_vectors(
-        self, texts: np.ndarray, target_labels_shape: int, train: bool = False
-    ) -> np.ndarray:
-        logging.debug("Started vectorization")
+    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+        logger.debug("Started vectorization")
 
         texts = self.preprocess(texts)
 
@@ -312,7 +284,7 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
             print("===========================")
 
         result = np.concatenate(doc_vectors, axis=0)
-        logging.debug(f"Vectorized {result.shape[0]} texts")
+        logger.debug(f"Vectorized {result.shape[0]} texts")
 
         return result
 
@@ -351,9 +323,7 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
                     # ignoring word which don't have vector representation
                     if token.text not in oov:
-                        logging.warning(
-                            f'Word "{token.text}" with lemma "{token.lemma_}" not in vocabulary'
-                        )
+                        logger.warning(f'Word "{token.text}" with lemma "{token.lemma_}" not in vocabulary')
                         oov.add(token.text)
                     continue
 
@@ -365,7 +335,7 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
         yield np.array(doc_vectors)
 
         # with open('out_of_vocab_20210421.txt', 'w') as oov_file:
-        #    logging.debug("Saving unused words")
+        #    logger.debug("Saving unused words")
         #    print(*sorted(list(oov)), sep='\n', file=oov_file)
 
     def _get_doc_vector(self, lemmas):
@@ -374,7 +344,7 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
 class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
-        logging.debug("Loading spacy model")
+        logger.debug("Loading spacy model")
         self._nlp = spacy.load("en_core_web_md")
         super().__init__(list(self._nlp.vocab.strings))
 
@@ -387,22 +357,13 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
 
 class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
-        logging.debug(Path().absolute())
+        logger.debug(Path().absolute())
         self._model_path = Path("gensim-data", "GoogleNews-vectors-negative300.bin")
         if not self._model_path.exists():
-            logging.warning(
-                "Pre-trained GoogleNews model used for vectorization has not been found."
-            )
-            if (
-                input(
-                    "Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) "
-                ).lower()
-                == "y"
-            ):
-                logging.debug("(down)LOADING")
-                self._model_path = dwnldr.load(
-                    "word2vec-google-news-300", return_path=True
-                )
+            logger.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
+            if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) ").lower() == "y":
+                logger.debug("(down)LOADING")
+                self._model_path = dwnldr.load("word2vec-google-news-300", return_path=True)
                 print(f"MODEL PATH: {self._model_path}")
             else:
                 sys.exit(1)
@@ -425,10 +386,8 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         self._vectors = fasttext.load_model(model_name)
         super().__init__(vectors=self._vectors)
 
-    def build_feature_vectors(
-        self, texts: np.ndarray, target_labels_shape: int, train: bool = False
-    ) -> np.ndarray:
-        logging.debug("Started vectorization")
+    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+        logger.debug("Started vectorization")
 
         try:
             model = fasttext.load_model("fasttext.model")
@@ -441,9 +400,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             _, filename = tempfile.mkstemp(text=True)
             with open(filename, "w") as f:
                 print(*texts, sep="\n", file=f)
-            model = fasttext.train_unsupervised(
-                filename, model="skipgram", dim=300, ws=8, epoch=25, minCount=3
-            )
+            model = fasttext.train_unsupervised(filename, model="skipgram", dim=300, ws=8, epoch=25, minCount=3)
 
             self._vectors = model
             model.save_model("fasttext.model")
@@ -454,7 +411,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             print("===========================")
 
         result = np.concatenate(doc_vectors, axis=0)
-        logging.debug(f"Vectorized {result.shape[0]} texts")
+        logger.debug(f"Vectorized {result.shape[0]} texts")
 
         return result
 

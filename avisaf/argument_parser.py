@@ -230,23 +230,17 @@ def add_classification_train_parser(subparsers):
     """Method responsible for parsing classification training command and its arguments."""
 
     parser = subparsers.add_parser(
-        "classifier",
+        "classifier_train",
         help="Train an ASRS reports classification model.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.set_defaults(dest="classifier")
+    parser.set_defaults(dest="classifier_train")
     parser.add_argument(
         "--paths",
         nargs="+",
         help="Strings representing the paths to training data texts",
         default=[],
-    )
-    parser.add_argument(
-        "--mode",
-        choices={"train", "dev", "test"},
-        default="test",
-        help="Choose classifier operating mode (default test)",
     )
     parser.add_argument(
         "-l",
@@ -268,21 +262,79 @@ def add_classification_train_parser(subparsers):
         help="The algorithm used for classification training.",
         choices={"knn", "svm", "mlp", "forest", "gauss", "mnb", "regression"},
     )
-    # TODO: Enable --oversample / --undersample arguments instead
     parser.add_argument(
         "--normalize",
-        action="store_true",
+        "-n",
+        choices={"undersample", "oversample"},
+        default=None,
         help="Normalize the distribution of classes in training data",
-    )
-    parser.add_argument(
-        "--plot", action="store_true", help="Show AUC for each of selected models"
     )
     parser.add_argument(
         "-m",
         "--model",
-        default=None,
+        default=[],  # TODO: Add default model relative path
         nargs="+",
         help="Trained model(s) to use (at least one is required)",
+    )
+    return parser
+
+
+def add_classification_processing_parser(subparsers):
+
+    parser = subparsers.add_parser(
+        "classifier_process",
+        help="Train an ASRS reports classification model.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.set_defaults(dest="classifier_process")
+    parser.add_argument(
+        "--paths",
+        nargs="+",
+        help="Strings representing the paths to training data texts",
+        default=[],
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        default=None,  # TODO: Add default model relative path
+        help="Path of a trained model to be tested."
+    )
+
+    return parser
+
+
+def add_classification_evaluation_parser(subparsers):
+    parser = subparsers.add_parser(
+        "classifier_eval",
+        help="Evaluate an ASRS reports classification model.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.set_defaults(dest="classifier_eval")
+    parser.add_argument(
+        "--paths",
+        nargs="+",
+        help="Strings representing the paths to training data texts",
+        default=[],
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        default=None,  # TODO: Add default model relative path
+        help="Path of a trained model to be tested."
+    )
+    parser.add_argument(
+        "--compare_baseline",
+        action="store_true",
+        default=False,
+        help="Compare given prediction model with baseline dummy and random predictors."
+    )
+    parser.add_argument(
+        "--show_curves",
+        action="store_true",
+        default=False,
+        help="Show ROC and Precision-Recall curves for evaluated model."
     )
 
     return parser
@@ -312,14 +364,12 @@ def parse_args() -> tuple:
         add_ner_evaluator_parser,
         add_auto_annotator_parser,
         add_manual_annotator_parser,
-        add_classification_train_parser
+        add_classification_train_parser,
+        add_classification_processing_parser,
+        add_classification_evaluation_parser
     ]:
-        parsers_list.append(
-            parser_func(subparser)
-        )
+        parsers_list.append(parser_func(subparser))
 
-    available_parsers = dict(
-        map(lambda parser: (parser.prog.split()[1], parser), parsers_list)
-    )  # parser.prog is a `avisaf operation` string
+    available_parsers = dict(map(lambda parser: (parser.prog.split()[1], parser), parsers_list))  # parser.prog is a `avisaf operation` string
 
     return main_parser, available_parsers
