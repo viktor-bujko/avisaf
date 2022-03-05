@@ -17,6 +17,8 @@ from typing import List
 
 from util.data_extractor import get_entities, get_training_data
 
+logger = logging.getLogger("avisaf_logger")
+
 
 def load_spacy_model(model: str = "en_core_web_md") -> spacy.Language:
 
@@ -25,11 +27,11 @@ def load_spacy_model(model: str = "en_core_web_md") -> spacy.Language:
 
     try:
         nlp = spacy.load(model)
-        logging.info(f"An already existing spaCy model has been loaded successfully: {model}.")
+        logger.info(f"An already existing spaCy model has been loaded successfully: {model}.")
     except OSError:
         # using a blank English language spaCy model
         nlp = spacy.blank("en")
-        logging.info("A new blank model has been created.")
+        logger.info("A new blank model has been created.")
 
     return nlp
 
@@ -78,11 +80,11 @@ def train_spacy_ner(
     # Start the training
     optimizer = nlp.initialize() if model is None else nlp.resume_training()
 
-    logging.debug(f'Starting')
+    logger.debug(f'Starting')
     start_time = time.time()
 
     if not train_data_srcfiles:
-        logging.error("Missing training data path argument")
+        logger.error("Missing training data path argument")
         return
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
@@ -95,13 +97,13 @@ def train_spacy_ner(
     for itn in range(iter_number):
 
         for train_data_file in train_data_srcfiles:
-            logging.info(f"Iteration: {itn}.")
-            logging.info(f"Model will be saved to the {model_path}_itn_{itn}")
+            logger.info(f"Iteration: {itn}.")
+            logger.info(f"Model will be saved to the {model_path}_itn_{itn}")
 
             train_data_file = Path(train_data_file)
             train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
 
-            logging.info(f"Using training dataset: {train_data_file}")
+            logger.info(f"Using training dataset: {train_data_file}")
             training_data = get_training_data(train_data_file)
 
             random.shuffle(training_data)
@@ -128,20 +130,20 @@ def train_spacy_ner(
                         )
                         new_time = time.time()
                         if new_time - start > 60:
-                            logging.info("Time information update")
+                            logger.info("Time information update")
                             start = new_time
 
                     except ValueError as e:
-                        logging.error(e)
-                        logging.error(f"Exception occurred while processing file: {train_data_srcfiles}.")
+                        logger.error(e)
+                        logger.error(f"Exception occurred while processing file: {train_data_srcfiles}.")
                         sys.exit(1)
 
             nlp.to_disk(f"{model_path}_itn_{itn}")
-            logging.info(f"    Model saved successfully to {model_path}_itn_{itn}")
-            logging.info(f"    Losses for current train data file in iteration {itn}: {losses}.")
+            logger.info(f"    Model saved successfully to {model_path}_itn_{itn}")
+            logger.info(f"    Losses for current train data file in iteration {itn}: {losses}.")
 
-    logging.info("Model saved")
-    logging.info(f"Execution time: {time.time() - start_time}")
-    logging.info(f'Finished training.')
+    logger.info("Model saved")
+    logger.info(f"Execution time: {time.time() - start_time}")
+    logger.info(f'Finished training.')
 
     return nlp

@@ -16,11 +16,11 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import train_classification, test_classification
+from classification.classifier import train_classification, launch_classification, evaluate_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
-logging.getLogger()
+logger = logging.getLogger("avisaf_logger")
 logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
 
 
@@ -142,19 +142,6 @@ def choose_action(args: Namespace):
     :param args: argparse command-line arguments wrapped in Namespace object.
     """
 
-    """
-            "classifier_train": lambda: launch_classification(
-                label=args.label,
-                texts_paths=args.paths,
-                label_filter=args.filter,
-                algorithm=args.algorithm,
-                normalize=args.normalize,
-                mode=args.mode,
-                models_dir_paths=args.model,
-                plot=args.plot,
-            ),
-            """
-
     functions = {
         "train_ner": lambda: train_spacy_ner(
             iter_number=args.iterations,
@@ -200,24 +187,24 @@ def choose_action(args: Namespace):
             algorithm=args.algorithm,
             normalization=args.normalize
         ),
-        "classifier_test": lambda: test_classification(
+        "classifier_process": lambda: launch_classification(
+            model_path=args.model,
+            text_paths=args.paths
+        ),
+        "classifier_eval": lambda: evaluate_classification(
             model_path=args.model,
             text_paths=args.paths,
-            decode=args.decode,
-            show_curves=args.show_curves
+            compare_baseline=args.compare_baseline,
+            show_curves=args.show_curves,
         )
     }
 
     try:
-        func = functions.get(args.dest)
-        if func:
-            func()
-        else:
-            logging.error("No action is to be invoked.")
+        functions.get(args.dest, lambda: logger.error(f"Desired function \"{args.dest}\" is not supported."))()
     except AttributeError as ex:
-        logging.error(ex.with_traceback(sys.exc_info()[0]))
+        logger.error(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
-        logging.error(e.with_traceback(sys.exc_info()[2]))
+        logger.error(e.with_traceback(sys.exc_info()[2]))
 
 
 def main():
@@ -239,11 +226,11 @@ def main():
     args = main_parser.parse_args()
 
     if not args.verbose or args.verbose == 0:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger("avisaf_logger").setLevel(logging.WARNING)
     elif args.verbose == 1:
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger("avisaf_logger").setLevel(logging.INFO)
     else:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("avisaf_logger").setLevel(logging.DEBUG)
 
     if args.dest == "ner_test":
         visualization_not_available = not args.print and not args.render and args.save is None

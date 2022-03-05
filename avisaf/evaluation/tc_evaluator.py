@@ -5,7 +5,7 @@ import numpy as np
 import sklearn.metrics as metrics
 from evaluation.visualizer import Visualizer
 
-logger = logging.getLogger()
+logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationEvaluator:
@@ -14,12 +14,12 @@ class ASRSReportClassificationEvaluator:
         self._label_encoder = label_encoder
         self._visualizer = Visualizer()
 
-    def evaluate_dummy_baseline(self, target_classes: np.ndarray, show_curves: bool = False):
+    def evaluate_dummy_baseline(self, target_classes: np.ndarray):
         unique_targets_count = np.unique(target_classes).shape[0]
         for baseline_mockup in range(unique_targets_count):
             mockup_predictions = np.zeros((target_classes.shape[0], unique_targets_count))
             mockup_predictions[:, baseline_mockup] = 1
-            baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes, show_curves=show_curves)
+            baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes, show_curves=False)
             self._visualizer.print_metrics("Baseline metrics: ", baseline_conf_matrix, baseline_results_dict)
 
     def evaluate_random_predictions(self, target_classes: np.ndarray, show_curves: bool = False):
@@ -36,13 +36,11 @@ class ASRSReportClassificationEvaluator:
         confusion_matrix = metrics.confusion_matrix(target_classes, class_predictions)
         results = {
             "Accuracy": metrics.accuracy_score(target_classes, class_predictions),
-            "Precision": metrics.precision_score(target_classes, class_predictions, average=avg_method),
-            "Recall": metrics.recall_score(target_classes, class_predictions, average=avg_method),
-            "F1 score": metrics.f1_score(target_classes, class_predictions, average=avg_method),
+            "Precision": metrics.precision_score(target_classes, class_predictions, average=avg_method, zero_division=0),
+            "Recall": metrics.recall_score(target_classes, class_predictions, average=avg_method, zero_division=0),
+            "F1 score": metrics.f1_score(target_classes, class_predictions, average=avg_method, zero_division=0),
             "ROC AUC macro ovr": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovr", average="macro"),
-            "ROC AUC macro ovo": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovo", average="macro"),
-            "ROC AUC weighted ovr": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovr", average="weighted"),
-            "ROC AUC weighted ovo": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovo", average="weighted"),
+            "ROC AUC weighted ovr": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovr", average="weighted")
         }
 
         if show_curves:

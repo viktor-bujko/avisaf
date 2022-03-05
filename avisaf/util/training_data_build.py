@@ -6,8 +6,6 @@ overlaps from entity annotations as well as file content formatting.
 """
 
 import json
-import logging
-import sys
 from pathlib import Path
 from util.data_extractor import get_training_data
 
