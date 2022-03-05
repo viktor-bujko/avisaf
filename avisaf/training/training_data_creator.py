@@ -419,99 +419,81 @@ class ASRSReportDataPreprocessor:
 
         return result_arrays
 
-    def undersample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
+    def get_most_present(self, topic_label: str, target_labels):
+
+        distribution_counts, dist = self.get_data_targets_distribution(target_labels, label=topic_label)
+        dist = np.array(list(dist.values()))  # not using label classes names now
+        most_even_distribution = 1 / len(distribution_counts)
+        return np.where(dist > most_even_distribution), distribution_counts, dist
+
+    def undersample_data_distribution(self, topic_label: str, text_data: np.ndarray, target_labels: np.ndarray):
         """
 
-        :param deviation_percentage:
+        :param topic_label:
         :param text_data:
         :param target_labels:
         :return:
         """
+        more_present_idxs, distribution_counts, _ = self.get_most_present(topic_label, target_labels)
+        normalized_counts = (np.min(distribution_counts) * np.random.uniform(low=1.05, high=1.2, size=len(distribution_counts))).astype(np.int)  # generating random overweight factor for each class
+        examples_to_remove_counts = np.maximum(distribution_counts - normalized_counts, 0)  # preventing samples repetition by replacing negative number of removed samples by 0
 
-        more_present_idxs, distribution_counts = self.get_most_present_idxs(
-            target_labels
-        )
-        examples_to_remove = int(
-            np.sum(
-                (distribution_counts[more_present_idxs] - np.min(distribution_counts))
-                * deviation_percentage
-            )
-        )
-
-        repeated_match = 0
         filtered_indices = set()
-        not_filtered_indices = set()
-        while examples_to_remove > 0:
-            rnd_index = np.random.randint(0, text_data.shape[0])
-            should_be_filtered = target_labels[rnd_index] in more_present_idxs
-            if not should_be_filtered:
-                not_filtered_indices.add(rnd_index)
-                continue
+        for idx, to_remove_class_count in enumerate(examples_to_remove_counts):
+            repeated_match = 0
+            while to_remove_class_count > 0:
+                text_idx = np.random.randint(0, text_data.shape[0])  # take random text sample
+                if target_labels[text_idx] != idx:
+                    # filtration does not apply for different labels
+                    continue
 
-            # rnd_index should be filtered here
-            if rnd_index in filtered_indices:
-                repeated_match += 1
-            else:
-                filtered_indices.add(rnd_index)
-                examples_to_remove -= 1
-                repeated_match = 0
+                # text_idx should be filtered
+                if text_idx in filtered_indices:
+                    repeated_match += 1
+                else:
+                    filtered_indices.add(text_idx)
+                    to_remove_class_count -= 1
+                    repeated_match = 0
+                    continue
 
-            # Avoiding "infinite loop" caused by always matching already filtered examples
-            # Giving up on filtering the exact number of examples -> The distribution will be less even
-            examples_to_remove = (
-                examples_to_remove - 1
-                if (repeated_match > 0 and repeated_match % 100 == 0)
-                else examples_to_remove
-            )
+                # Avoiding "infinite loop" caused by always matching already filtered examples
+                # Giving up on filtering the exact number of examples -> The distribution will be less even
+                assert repeated_match > 0
+                if repeated_match % 500 == 0:
+                    to_remove_class_count -= 1
+                    repeated_match = 0
 
         arr_filter = [idx not in filtered_indices for idx in range(text_data.shape[0])]
 
         return text_data[arr_filter], target_labels[arr_filter]
 
-    def oversample_data_distribution(self, text_data, target_labels, deviation_percentage: float):
-        distribution_counts, dist = self.get_data_distribution(target_labels)
-        most_even_distribution = 1 / len(distribution_counts)
-        more_present_labels = np.where(dist > most_even_distribution)
+    def oversample_data_distribution(self, topic_label: str, text_data: np.ndarray, target_labels: np.ndarray):
+        """
 
-        least_present_labels = np.concatenate(
-            np.argwhere(dist < most_even_distribution)
-        )
+        :param topic_label:
+        :param text_data:
+        :param target_labels:
+        :return:
+        """
+        more_present_labels, distribution_counts, dist = self.get_most_present(topic_label, target_labels)
+        normalized_counts = (np.mean(distribution_counts[more_present_labels]) * np.random.uniform(low=0.8, high=0.95, size=len(distribution_counts))).astype(np.int)
+        examples_to_add_counts = np.maximum(normalized_counts - distribution_counts, 0)
 
-        examples_to_have_per_minor_class = int(
-            np.mean(distribution_counts[more_present_labels]) * 0.85
-        )  # (total_examples_to_add - np.sum(least_present_labels)) / least_present_labels.shape[0]
-
-        for label in least_present_labels:
-            to_add_per_class = (
-                examples_to_have_per_minor_class - distribution_counts[label]
-            )  # subtracting the number of examples we already have
-            texts_filtered_by_label = text_data[target_labels == label]
+        for label, to_add_class_count in enumerate(examples_to_add_counts):  # enumerate idx acts as label now
+            texts_filtered_by_label = text_data[np.array(target_labels == label).ravel()]
             labels_filtered = target_labels[target_labels == label]
             # randomly choose less present data and its label
-            idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_per_class)
+            idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_class_count)
 
             text_data = np.concatenate([text_data, texts_filtered_by_label[idxs]])
-            target_labels = np.concatenate([target_labels, labels_filtered[idxs]])
+            target_labels = np.concatenate([target_labels.ravel(), labels_filtered[idxs]])
 
         state = np.random.get_state()
         np.random.shuffle(text_data)
         np.random.set_state(state)
         np.random.shuffle(target_labels)
 
-        if logging.INFO:
-            distribution_counts, _ = self.get_data_distribution(target_labels)
-            info_dict = {}
-            for label, counts in zip(set(target_labels), distribution_counts):
-                info_dict.update({label: counts})
-            logger.info(f"New data distribution: { info_dict }")
-
         return text_data, target_labels
-
-    def get_most_present_idxs(self, target):
-
-        distribution_counts, dist = self.get_data_distribution(target)
-        most_even_distribution = 1 / len(distribution_counts)
-        return np.where(dist > most_even_distribution)[0], distribution_counts
 
     def vectorize_texts(self, extractor, return_vectors: bool = True):
         narrative_label = "Report 1_Narrative"
@@ -557,29 +539,34 @@ class ASRSReportDataPreprocessor:
     def _normalize(self, data: np.ndarray, targets: np.ndarray, normalization_method):
 
         normalized_extracted_data, normalized_targets = [], []
-        for data, target_labels in zip(data, targets):
-            normalized_data, normalized_target_labels = normalization_method(data, target_labels, 0.1)
-            logger.debug(f"Before normalization: {self.get_data_distribution(target_labels)[1]}")
-            logger.debug(f"After normalization: {self.get_data_distribution(normalized_target_labels)[1]}")
+        for data, target_labels, topic_label_name in zip(data, targets, self._label_encoders.keys()):
+            normalized_data, normalized_target_labels = normalization_method(topic_label_name, data, target_labels)
+            logger.debug(f"Before normalization: {self.get_data_targets_distribution(target_labels, label=topic_label_name)[1]}")
+            logger.debug(f"After normalization: {self.get_data_targets_distribution(normalized_target_labels, label=topic_label_name)[1]}")
             samples_diff = np.abs(data.shape[0] - normalized_data.shape[0])
-            if samples_diff > 0:
-                logger.info(f"Normalization: {samples_diff} examples had to be either removed or added to obtain more even distribution of samples")
+            logger.info(f"Normalization: {samples_diff} examples had to be removed or added to obtain more even distribution of samples.")
             normalized_extracted_data.append(normalized_data)
             normalized_targets.append(normalized_target_labels)
         normalized_extracted_data, normalized_targets = np.array(normalized_extracted_data, dtype=object), np.array(normalized_targets, dtype=object)
 
         return normalized_extracted_data, normalized_targets
 
-    @staticmethod
-    def get_data_distribution(target: list):
+    def get_data_targets_distribution(self, data_targets: list, label: str):
         """
 
-        :param target:
+        :param label:
+        :param data_targets:
         :return:
         """
+        label_encoder = self._label_encoders.get(label)
+        if not label_encoder:
+            logger.error(f"LabelEncoder object could not be found for \"{label}\".")
+            raise ValueError()
 
-        distribution_counts = np.histogram(target, bins=np.unique(target).shape[0])[0]
+        distribution_counts, _ = np.histogram(data_targets, bins=len(label_encoder.classes_))
         dist = distribution_counts / np.sum(distribution_counts)  # Gets percentage presence of each class in the data
+        # named distribution - target classes names as keys
+        dist = dict(zip(label_encoder.classes_, dist))
 
         return distribution_counts, dist
 

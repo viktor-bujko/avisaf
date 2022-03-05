@@ -63,8 +63,8 @@ class ASRSReportClassificationPredictor:
         )
 
         all_predictions = []
-        for model, test_data, target in zip(prediction_models.values(), data, targets):
-            logger.info(self._preprocessor.get_data_distribution(target)[1])
+        for topic_label, model, test_data, target in zip(trained_labels.keys(), prediction_models.values(), data, targets):
+            logger.info(self._preprocessor.get_data_targets_distribution(target, label=topic_label)[1])
             predictions = self.get_model_predictions(model, test_data)  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
             all_predictions.append((predictions, target))
 
@@ -216,8 +216,7 @@ class ASRSReportClassificationTrainer:
         encoders: list = None,
         parameters: dict = None,
         algorithm=None,
-        normalization: str = None,
-        deviation_rate: float = 0.0,
+        normalization: str = None
     ):
         """
 
@@ -229,7 +228,6 @@ class ASRSReportClassificationTrainer:
         :param parameters: Dictionary of model parameters for better accessibility from ASRSTrainer.
         :param algorithm:  Text classification algorithm to be used.
         :param normalization: Training samples normalization method.
-        :param deviation_rate:
         """
         if not parameters:
             parameters = {}
@@ -240,7 +238,6 @@ class ASRSReportClassificationTrainer:
         if not models:
             self._classifier = self._set_classification_algorithm(algorithm)
             self._models = {}
-            self._deviation_rate = 0.0
             self._encodings = {}
             self._model_params = self._classifier.get_params()
             self._params = {"algorithm": algorithm}
@@ -250,7 +247,6 @@ class ASRSReportClassificationTrainer:
             try:
                 self._classifier = list(models.values())[0]  # extracting first scikit prediction object
                 self._models = models
-                self._deviation_rate = deviation_rate
                 self._params = parameters
                 self._encodings = self._get_encodings(parameters)
                 self._model_params = parameters.get("model_params", {})
@@ -288,22 +284,22 @@ class ASRSReportClassificationTrainer:
 
         for i, zipped in enumerate(zip(labels_to_train, labels_values)):
             # iterating through both lists
-            lbl, fltr = zipped
+            topic_label, topic_classes_filter = zipped
 
             logger.debug(f"training data shape: {data[i].shape}")
-            logger.debug(self._preprocessor.get_data_distribution(targets[i])[1])
+            logger.debug(self._preprocessor.get_data_targets_distribution(targets[i], label=topic_label)[1])
 
-            if self._models.get(lbl) is None:
+            if self._models.get(topic_label) is None:
                 classifier = clone(self._classifier)
             else:
-                # extracted classification model for given topic label "lbl"
+                # extracted classification model for given topic_label
                 logger.debug("Found previously trained model")
-                classifier = self._models.get(lbl)
+                classifier = self._models.get(topic_label)
                 setattr(classifier, "warm_start", True)
                 setattr(classifier, "learning_rate_init", 0.0005)
 
             # encoding is available only after texts vectorization
-            self._update_model_encoding(lbl)
+            self._update_model_encoding(topic_label)
             self._params = {
                 "algorithm": self._params.get("algorithm"),
                 "encodings": self._encodings,
@@ -315,14 +311,14 @@ class ASRSReportClassificationTrainer:
 
             logger.info(f"MODEL: {classifier}")
             classifier.fit(data[i], targets[i])
-            self._models.update({lbl: classifier})
+            self._models.update({topic_label: classifier})
 
             get_train_predictions = True
             if get_train_predictions:
                 predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, data[i])
-                evaluator = ASRSReportClassificationEvaluator(lbl)
-                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets[i], self._encodings.get(lbl))
-                Visualizer().print_metrics(f"Evaluating '{lbl}' predictor on training data:", model_conf_matrix, model_results_dict)
+                evaluator = ASRSReportClassificationEvaluator(topic_label)
+                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets[i], self._encodings.get(topic_label))
+                Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor on training data:", model_conf_matrix, model_results_dict)
 
         self.save_models()
 
@@ -353,14 +349,7 @@ class ASRSReportClassificationTrainer:
             json.dump(self._params, params_file, indent=4)
 
 
-def train_classification(
-    models_paths: list,
-    texts_paths: list,
-    label: str,
-    label_values: list,
-    algorithm: str,
-    normalization: str
-):
+def train_classification(models_paths: list, texts_paths: list, label: str, label_values: list, algorithm: str, normalization: str):
     """
     Method which sequentially launches the training of multiple text classification models.
 
@@ -377,7 +366,6 @@ def train_classification(
                           normalization methods are undersampling and oversampling of training
                           examples.
     """
-    normalization_rate = (np.random.uniform(low=0.95, high=1.05, size=None) if normalization else None)  # 5% of maximum deviation between classes
 
     if not models_paths:
         classifier = ASRSReportClassificationTrainer(
@@ -385,8 +373,7 @@ def train_classification(
             encoders=None,
             parameters=None,
             algorithm=algorithm,
-            normalization=normalization,
-            deviation_rate=normalization_rate
+            normalization=normalization
         )
 
         _, _ = classifier.train_report_classification(texts_paths, label, label_values)
@@ -404,8 +391,7 @@ def train_classification(
             encoders=encoders,
             parameters=parameters,
             algorithm=algorithm,
-            normalization=normalization,
-            deviation_rate=normalization_rate
+            normalization=normalization
         )
         _, _ = classifier.train_report_classification(texts_paths, label, label_values)
 
