@@ -270,9 +270,6 @@ def add_classification_train_parser(subparsers):
         help="Normalize the distribution of classes in training data",
     )
     parser.add_argument(
-        "--plot", action="store_true", help="Show AUC for each of selected models"
-    )
-    parser.add_argument(
         "-m",
         "--model",
         default=[],  # TODO: Add default model relative path
@@ -373,8 +370,6 @@ def parse_args() -> tuple:
     ]:
         parsers_list.append(parser_func(subparser))
 
-    available_parsers = dict(
-        map(lambda parser: (parser.prog.split()[1], parser), parsers_list)
-    )  # parser.prog is a `avisaf operation` string
+    available_parsers = dict(map(lambda parser: (parser.prog.split()[1], parser), parsers_list))  # parser.prog is a `avisaf operation` string
 
     return main_parser, available_parsers

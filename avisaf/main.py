@@ -220,11 +220,7 @@ def choose_action(args: Namespace):
     }
 
     try:
-        func = functions.get(args.dest)
-        if func:
-            func()
-        else:
-            logger.error("No action is to be invoked.")
+        functions.get(args.dest, lambda: logger.error(f"Desired function \"{args.dest}\" is not supported."))()
     except AttributeError as ex:
         logger.error(ex.with_traceback(sys.exc_info()[0]))
     except OSError as e:
