@@ -78,22 +78,6 @@ def get_spans_indexes(sentence: str, spans: list):
     return result
 
 
-# TODO: To remove
-def print_matches(match_text: str, entities_dict: dict):
-    """Function which takes a text, its annotated entities and prints the
-    annotated text along with its labeled entity.
-
-    :type match_text: str
-    :param match_text: The text to be searched in for labeled entities.
-    :type entities_dict: dict
-    :param entities_dict: The dictionary with 'entities key containing the list
-        of (start_index, end_index, label) entities of the text.
-    """
-    ent_list = entities_dict["entities"]  # list of entities in the form of (start_index, end_index, label)
-    for (start, end, label) in ent_list:
-        print(f"'{match_text[start:end]}'", f'"{label}"')
-
-
 def get_training_data(path: Path):
     """Gets the training data from a given file.
 

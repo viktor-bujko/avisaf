@@ -19,7 +19,7 @@ from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
-from util.data_extractor import get_narratives, get_entities
+from util.data_extractor import get_entities, CsvAsrsDataExtractor
 import classification.vectorizers as vectorizers
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -40,17 +40,20 @@ logger = logging.getLogger("avisaf_logger")
 def get_current_texts_and_ents(train_data_file: Path, extract_texts: bool):
     if extract_texts:
         # get testing texts
-        texts = list(get_narratives(train_data_file))
+        extractor = CsvAsrsDataExtractor([train_data_file])
+        texts = list(extractor.get_narratives())
         entities = None
-    else:
-        with train_data_file.open(mode="r") as tr_data_file:
-            # load the JSON file containing the list of training ('text string', entity dict) tuples
-            texts, entities = zip(*json.load(tr_data_file))  # replacement for the code below
 
-            # texts, entities = [], []
-            # for text, ents in json.load(tr_data_file):
-            #    texts.append(text)
-            #    entities.append(ents)
+        return texts, entities
+
+    with train_data_file.open(mode="r") as tr_data_file:
+        # load the JSON file containing the list of training ('text string', entity dict) tuples
+        texts, entities = zip(*json.load(tr_data_file))  # replacement for the code below
+
+        # texts, entities = [], []
+        # for text, ents in json.load(tr_data_file):
+        #    texts.append(text)
+        #    entities.append(ents)
 
     return texts, entities
 
@@ -109,9 +112,7 @@ def ner_auto_annotation_handler(
 
     for text, annotations in train_data_with_overlaps:
         new_annotations = train.remove_overlaps(annotations)
-        final_train_data.append(
-            (text, new_annotations)  # Saving modified sorted annotations without overlaps
-        )
+        final_train_data.append((text, new_annotations))  # Saving modified sorted annotations without overlaps
 
     # training_src_file is checked above to be not None
     if not save:
@@ -255,11 +256,13 @@ def ner_man_annotation_handler(
     try:
         if file_path.exists():
             if file_path.suffix == ".csv":
-                texts = get_narratives(lines_count=lines, file_path=file_path, start_index=start_index)
+                extractor = CsvAsrsDataExtractor([file_path])
+                texts = extractor.get_narratives(lines_count=lines, start_index=start_index)
             else:
                 with file_path.open(mode="r") as file:
                     texts = json.load(file)
         else:
+            # use given argument as the text to be annotated
             texts = [str(file_path)]
     except OSError:
         # use given argument as the text to be annotated
@@ -268,7 +271,6 @@ def ner_man_annotation_handler(
 
     # if we don't want to annotate all texts
     if lines != -1:
-        # TODO: texts accessed before assignment
         texts = texts[start_index: start_index + lines]
 
     result = []

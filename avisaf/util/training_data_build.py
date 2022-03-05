@@ -7,7 +7,7 @@ overlaps from entity annotations as well as file content formatting.
 
 import json
 from pathlib import Path
-from util.data_extractor import get_training_data
+from util.data_extractor import JsonDataExtractor
 
 
 def fetch_and_sort_annotations(file_path: Path):
@@ -24,8 +24,8 @@ def fetch_and_sort_annotations(file_path: Path):
     """
 
     file_path = file_path.resolve()
-
-    training_data = get_training_data(file_path)
+    extractor = JsonDataExtractor([file_path])
+    training_data = extractor.get_training_data()
     sorted_training_data = []
 
     for text, annotation in training_data:
@@ -98,37 +98,6 @@ def remove_overlaps(annotations_dict: dict) -> dict:
         annotations_dict = {"entities": sorted(list(keep_list))}
 
     return annotations_dict
-
-
-# TODO: Method to be removed
-def remove_overlaps_from_file(file_path: Path):
-    """The function removes overlapping annotations from all the
-    (text, annotations) tuples in JSON file specified in the file_path argument.
-
-    :type file_path: Path
-    :param file_path: The path to the JSON file which will have all overlapping
-        annotations removed.
-
-    :return: Returns the content of the JSON file in the file_path arg without
-        overlapping annotations.
-    """
-
-    # sorting annotations list for simpler overlap detection
-    training_data = fetch_and_sort_annotations(file_path)
-    result = []
-
-    for text, annotations in training_data:
-        new_annotations = remove_overlaps(annotations)
-        result.append(
-            (text, new_annotations)
-        )  # recreate new (text, annotations) tuple
-
-    with file_path.open(mode="w") as file:  # update the file
-        json.dump(result, file)
-
-    pretty_print_training_data(file_path)
-
-    return result
 
 
 def decide_overlap_between(entity_triplet, next_triplet):

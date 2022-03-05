@@ -15,7 +15,7 @@ from spacy.training import Example
 # importing own modules
 from typing import List
 
-from util.data_extractor import get_entities, get_training_data
+from util.data_extractor import get_entities, JsonDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -104,7 +104,8 @@ def train_spacy_ner(
             train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
 
             logger.info(f"Using training dataset: {train_data_file}")
-            training_data = get_training_data(train_data_file)
+            extractor = JsonDataExtractor([train_data_file])
+            training_data = extractor.get_training_data()
 
             random.shuffle(training_data)
             start = time.time()

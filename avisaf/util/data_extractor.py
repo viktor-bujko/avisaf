@@ -18,24 +18,43 @@ class DataExtractor:
     def __init__(self, file_paths: list):
         self.file_paths = file_paths
 
-    def extract_data(self, a: list, lines_count: int = -1, start_index: int = 0) -> dict:
+    def extract_data(self, field_names: list, **kwargs) -> dict:
         pass
 
 
 class JsonDataExtractor(DataExtractor):
-    # TODO: This class should contain methods for working with json files
-    # get_entities, get_training_data
-
     def __init__(self, file_paths: list):
         super().__init__(file_paths)
 
-    def extract_data(self) -> dict:
+    def extract_data(self, field_names: list, **kwargs) -> dict:
         pass
+
+    def get_training_data(self):
+        """Function which reads given JSON file supposed to contain the training data.
+        The training data are supposed to be a list of (text, annotations) tuples.
+
+        :return: Returns the JSON list of (text, annotations) tuples.
+        """
+
+        if not self.file_paths:
+            logger.error("No JSON file to fetch training data from.")
+            raise ValueError()
+        training_data_file_path = Path(self.file_paths[0])
+
+        if not training_data_file_path:
+            msg = "Training data file path cannot be None"
+            logger.error(msg)
+            raise TypeError(msg)
+
+        if not training_data_file_path.is_absolute():
+            training_data_file_path = training_data_file_path.resolve()
+
+        with training_data_file_path.open(mode="r") as tr_data_file:
+            return json.load(tr_data_file)
 
 
 def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     # Works with entities_labels.json file = only a simple json list
-    # Probably will be moved to JsonDataExtractor
     """Function which reads given JSON file supposed to contain the list of user
     defined entity labels.
 
@@ -55,81 +74,6 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
 
     with entities_file_path.open(mode="r") as entities_file:
         return json.load(entities_file)
-
-
-def get_training_data(training_data_file_path: Path):
-    # Works with (text, annotations) list JSON file
-    # TODO: Probably will be moved to JsonDataExtractor
-    """Function which reads given JSON file supposed to contain the training data.
-    The training data are supposed to be a list of (text, annotations) tuples.
-
-    :type training_data_file_path: Path
-    :param training_data_file_path: The path to the JSON file containing the
-        training data.
-
-    :return: Returns the JSON list of (text, annotations) tuples.
-    """
-    if not training_data_file_path:
-        msg = "Training data file path cannot be None"
-        logger.error(msg)
-        raise TypeError(msg)
-
-    if not training_data_file_path.is_absolute():
-        training_data_file_path = training_data_file_path.resolve()
-
-    with training_data_file_path.open(mode="r") as tr_data_file:
-        return json.load(tr_data_file)
-
-
-def get_narratives(file_path: Path, lines_count: int = -1, start_index: int = 0):
-    # TODO: This method should be replaced by CsvDataExtractor.extract_data_from_csv_columns
-
-    """Function responsible for reading raw csv file containing the original
-    safety reports from the ASRS database.
-
-    :type lines_count: int
-    :param lines_count: Number of lines to be read.
-    :type file_path: Path
-    :param file_path: The path to the csv file containing the texts.
-    :type start_index: int
-    :param start_index: Number indicating the index of the first text to be
-        returned.
-
-    :return: Returns a python generator object of all texts.
-    """
-
-    if file_path is None:
-        msg = "The file_path to have narratives extracted from cannot be None"
-        logger.error(msg)
-        raise TypeError(msg)
-
-    file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
-
-    report_df = pd.read_csv(file_path, skip_blank_lines=True, index_col=0, header=[0, 1])
-    report_df.columns = report_df.columns.map("_".join)
-
-    try:
-        narratives1 = report_df["Report 1_Narrative"].values.tolist()
-        calls1 = report_df["Report 1_Callback"].values.tolist()
-        narratives2 = report_df["Report 2_Narrative"].values.tolist()
-        calls2 = report_df["Report 2_Callback"].values.tolist()
-
-    except KeyError:
-        logger.error("No such key was found")
-        return None
-
-    length = len(narratives1)
-    lists = [narratives1, calls1, narratives2, calls2]
-
-    end_index = start_index + lines_count
-
-    result = []
-    for index in range(start_index, length):
-        if lines_count != -1 and index >= end_index:
-            break
-        result.append(" ".join([str(lst[index]) for lst in lists if str(lst[index]) != "nan"]))
-
-    return result
 
 
 def find_file_by_path(file_path: Union[Path, str], max_iterations: int = 5):
@@ -161,7 +105,54 @@ class CsvAsrsDataExtractor(DataExtractor):
     def __init__(self, file_paths: list):
         super().__init__(file_paths)
 
-    def extract_data(self, field_names: list, lines_count: int = -1, start_index: int = 0) -> dict:
+    def get_narratives(self, lines_count: int = -1, start_index: int = 0):
+        """Function responsible for reading raw csv file containing the original
+        safety reports from the ASRS database.
+
+        :type lines_count: int
+        :param lines_count: Number of lines to be read.
+        :type start_index: int
+        :param start_index: Number indicating the index of the first text to be
+            returned.
+
+        :return: Returns a python generator object of all texts.
+        """
+        file_path = self.file_paths[0]
+
+        if file_path is None:
+            msg = "The file_path to have narratives extracted from cannot be None"
+            logger.error(msg)
+            raise TypeError(msg)
+
+        file_path = str(file_path) if file_path.is_absolute() else str(file_path.resolve())
+
+        report_df = pd.read_csv(file_path, skip_blank_lines=True, index_col=0, header=[0, 1])
+        report_df.columns = report_df.columns.map("_".join)
+
+        try:
+            narratives1 = report_df["Report 1_Narrative"].values.tolist()
+            calls1 = report_df["Report 1_Callback"].values.tolist()
+            narratives2 = report_df["Report 2_Narrative"].values.tolist()
+            calls2 = report_df["Report 2_Callback"].values.tolist()
+
+        except KeyError:
+            logger.error("No such key was found")
+            return None
+
+        length = len(narratives1)
+        lists = [narratives1, calls1, narratives2, calls2]
+
+        end_index = start_index + lines_count
+
+        result = []
+        for index in range(start_index, length):
+            if lines_count != -1 and index >= end_index:
+                break
+            result.append(" ".join([str(lst[index]) for lst in lists if str(lst[index]) != "nan"]))
+
+        return result
+
+    def extract_data(self, field_names: list, **kwargs) -> dict:
         """
 
         :param field_names:
@@ -170,6 +161,8 @@ class CsvAsrsDataExtractor(DataExtractor):
         :return:
         """
 
+        lines_count = kwargs.get("lines_count", -1)
+        start_index = kwargs.get("start_index", 0)
         skipped_files = 0
 
         label_data_dict = {}

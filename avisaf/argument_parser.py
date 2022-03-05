@@ -272,7 +272,7 @@ def add_classification_train_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        default=[],  # TODO: Add default model relative path
+        default=[],
         nargs="+",
         help="Trained model(s) to use (at least one is required)",
     )
