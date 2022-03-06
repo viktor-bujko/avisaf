@@ -30,7 +30,7 @@ class JsonDataExtractor(DataExtractor):
         pass
 
     def get_ner_training_data(self):
-        """Function which reads given JSON file supposed to contain the training data.
+        """Function which reads given JSON file(s) supposed to contain the training data.
         The training data are supposed to be a list of (text, annotations) tuples.
 
         :return: Returns the JSON list of (text, annotations) tuples.
@@ -39,18 +39,23 @@ class JsonDataExtractor(DataExtractor):
         if not self.file_paths:
             logger.error("No JSON file to fetch training data from.")
             raise ValueError()
-        training_data_file_path = Path(self.file_paths[0])
 
-        if not training_data_file_path:
-            msg = "Training data file path cannot be None"
-            logger.error(msg)
-            raise TypeError(msg)
+        training_data = []
+        for training_data_path in self.file_paths:
+            training_data_file_path = Path(training_data_path)
 
-        if not training_data_file_path.is_absolute():
-            training_data_file_path = training_data_file_path.resolve()
+            if not training_data_file_path:
+                msg = "Training data file path cannot be None"
+                logger.error(msg)
+                raise TypeError(msg)
 
-        with training_data_file_path.open(mode="r") as tr_data_file:
-            return json.load(tr_data_file)
+            if not training_data_file_path.is_absolute():
+                training_data_file_path = training_data_file_path.resolve()
+
+            with training_data_file_path.open(mode="r") as tr_data_file:
+                training_data += json.load(tr_data_file)
+
+        return training_data
 
 
 def get_entities(entities_file_path: Union[str, Path] = None) -> dict:

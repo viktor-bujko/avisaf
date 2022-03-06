@@ -91,57 +91,60 @@ def train_spacy_ner(
     if new_model_name is None:
         model_path = Path(models_basedir,  f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}")
     else:
-        model_path = Path(models_basedir, new_model_name).resolve()
+        model_path = Path(new_model_name).resolve()
+
+    extractor = JsonDataExtractor(train_data_srcfiles)
+    training_data = extractor.get_ner_training_data()
 
     # Iterate iter_number times
     for itn in range(iter_number):
 
-        for train_data_file in train_data_srcfiles:
-            logger.info(f"Iteration: {itn}.")
-            logger.info(f"Model will be saved to the {model_path}_itn_{itn}")
+        logger.info(f"Iteration: {itn}.")
+        logger.info(f"Model will be saved to the {model_path}_itn_{itn}")
 
-            train_data_file = Path(train_data_file)
-            train_data_file = train_data_file if train_data_file.is_absolute() else train_data_file.resolve()
+        random.shuffle(training_data)
+        start = time.time()
+        losses = {}
 
-            logger.info(f"Using training dataset: {train_data_file}")
-            extractor = JsonDataExtractor([train_data_file])
-            training_data = extractor.get_ner_training_data()
+        with nlp.disable_pipes(*other_pipes):
+            for batch in spacy.util.minibatch(training_data, size=batch_size):
+                # Get all the texts from the batch
+                # Get all entity annotations from the batch
+                examples = []
+                for text, ents in batch:
+                    doc = nlp.make_doc(text)
+                    doc_dict = {
+                        "pos": [token.pos_ for token in doc],
+                        "tags": [token.tag_ for token in doc],
+                        "lemmas": [token.lemma_ for token in doc],
+                        "deps": [token.dep_ for token in doc],
+                        "text": doc.text
+                    }
+                    doc_dict.update(ents)
+                    example = Example.from_dict(doc, doc_dict)
+                    examples.append(example)
+                logger.debug(f"Current examples count: {len(examples)}")
+                try:
+                    # Update the current model
+                    nlp.update(
+                        examples,
+                        drop=0.3,
+                        sgd=optimizer,
+                        losses=losses
+                    )
+                    new_time = time.time()
+                    if new_time - start > 60:
+                        logger.info("Time information update")
+                        start = new_time
 
-            random.shuffle(training_data)
-            start = time.time()
-            losses = {}
+                except ValueError as e:
+                    logger.error(e)
+                    logger.error(f"Exception occurred while processing file: {train_data_srcfiles}.")
+                    sys.exit(1)
 
-            with nlp.disable_pipes(*other_pipes):
-                for batch in spacy.util.minibatch(training_data, size=batch_size):
-                    # Get all the texts from the batch
-                    # Get all entity annotations from the batch
-                    examples = []
-                    for text, ents in batch:
-                        doc = nlp.make_doc(text)
-                        example = Example.from_dict(doc, ents)
-                        examples.append(example)
-
-                    try:
-                        # Update the current model
-                        nlp.update(
-                            examples,
-                            drop=0.3,
-                            sgd=optimizer,
-                            losses=losses
-                        )
-                        new_time = time.time()
-                        if new_time - start > 60:
-                            logger.info("Time information update")
-                            start = new_time
-
-                    except ValueError as e:
-                        logger.error(e)
-                        logger.error(f"Exception occurred while processing file: {train_data_srcfiles}.")
-                        sys.exit(1)
-
-            nlp.to_disk(f"{model_path}_itn_{itn}")
-            logger.info(f"    Model saved successfully to {model_path}_itn_{itn}")
-            logger.info(f"    Losses for current train data file in iteration {itn}: {losses}.")
+        nlp.to_disk(f"{model_path}_itn_{itn}")
+        logger.info(f"\tModel saved successfully to {model_path}_itn_{itn}")
+        logger.info(f"\tLosses for current train data file in iteration {itn}: {losses}.")
 
     logger.info("Model saved")
     logger.info(f"Execution time: {time.time() - start_time}")
