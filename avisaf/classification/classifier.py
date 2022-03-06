@@ -135,12 +135,9 @@ class ASRSReportClassificationTrainer:
         }
 
         # Setting a default classifier value
-        _classifier = available_classifiers["knn"]
+        classifier = available_classifiers.get(classification_algorithm, available_classifiers.get("knn"))
 
-        if available_classifiers.get(classification_algorithm) is not None:
-            _classifier = available_classifiers[classification_algorithm]
-
-        return _classifier
+        return classifier
 
     @staticmethod
     def _get_encodings(parameters: dict):

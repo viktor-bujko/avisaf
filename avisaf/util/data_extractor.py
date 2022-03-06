@@ -29,7 +29,7 @@ class JsonDataExtractor(DataExtractor):
     def extract_data(self, field_names: list, **kwargs) -> dict:
         pass
 
-    def get_training_data(self):
+    def get_ner_training_data(self):
         """Function which reads given JSON file supposed to contain the training data.
         The training data are supposed to be a list of (text, annotations) tuples.
 
@@ -65,7 +65,6 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     :return: Returns the list of available entity labels.
     """
     if entities_file_path is None:
-        # entities_file_path = Path(Path().resolve(), 'avisaf_ner/entities_labels.json')
         entities_file_path = find_file_by_path("entities_labels.json")
         if entities_file_path is None:
             raise FileNotFoundError()

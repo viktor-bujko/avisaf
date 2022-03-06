@@ -69,7 +69,6 @@ def train_spacy_ner(
     ner_pipe_name = "ner"
     if not nlp.has_pipe(ner_pipe_name):
         ner = nlp.add_pipe(ner_pipe_name, last=True)
-        # nlp.add_pipe(ner, last=True)
     else:
         ner = nlp.get_pipe(ner_pipe_name)
 
@@ -88,10 +87,11 @@ def train_spacy_ner(
         return
 
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != ner_pipe_name]
+    models_basedir = Path("models", "ner")
     if new_model_name is None:
-        model_path = Path("models", f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}")
+        model_path = Path(models_basedir,  f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}")
     else:
-        model_path = Path("models", new_model_name).resolve()
+        model_path = Path(models_basedir, new_model_name).resolve()
 
     # Iterate iter_number times
     for itn in range(iter_number):
@@ -105,7 +105,7 @@ def train_spacy_ner(
 
             logger.info(f"Using training dataset: {train_data_file}")
             extractor = JsonDataExtractor([train_data_file])
-            training_data = extractor.get_training_data()
+            training_data = extractor.get_ner_training_data()
 
             random.shuffle(training_data)
             start = time.time()

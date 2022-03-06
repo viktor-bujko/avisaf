@@ -69,19 +69,18 @@ def test_spacy_ner(
         # extract the text
         try:
             text_path = Path(text_path).resolve()
+            text = text_path
             if text_path.exists():
                 # in case the argument is the path to the file containing the text
                 with text_path.open(mode="r") as file:
                     text = file.read()
-            else:
-                raise OSError
         except OSError:
             # if the text is passed as argument
             text = text_path
 
     # create new nlp object
     if model.startswith("en_core_web"):
-        print("Using a default english language model!")
+        logger.info("Using a default english language model!")
     try:
         # trying to load either the pre-trained spaCy model or a model in current directory
         nlp = spacy.load(model)
@@ -90,7 +89,7 @@ def test_spacy_ner(
         nlp = spacy.load(model_path)
 
     if not nlp.has_pipe("ner"):
-        print(f"The model '{model}' is not available or does not contain required components.", file=sys.stderr)
+        logger.error(f"The model '{model}' is not available or does not contain required components.")
         return
 
     # create doc object nlp(text)

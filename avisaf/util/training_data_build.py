@@ -25,7 +25,7 @@ def fetch_and_sort_annotations(file_path: Path):
 
     file_path = file_path.resolve()
     extractor = JsonDataExtractor([file_path])
-    training_data = extractor.get_training_data()
+    training_data = extractor.get_ner_training_data()
     sorted_training_data = []
 
     for text, annotation in training_data:

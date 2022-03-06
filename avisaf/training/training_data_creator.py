@@ -8,7 +8,6 @@ as well as the entity labels used for the chosen phrases.
 """
 
 import re
-import sys
 import os
 import json
 import spacy
@@ -23,16 +22,6 @@ from util.data_extractor import get_entities, CsvAsrsDataExtractor
 import classification.vectorizers as vectorizers
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-
-
-# looking for the project root
-path = Path(__file__)
-while not str(path.resolve()).endswith("avisaf"):
-    path = path.parent.resolve()
-
-SOURCES_ROOT_PATH = Path(path).resolve()
-if str(SOURCES_ROOT_PATH) not in sys.path:
-    sys.path.append(str(SOURCES_ROOT_PATH))
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -292,7 +281,7 @@ def ner_man_annotation_handler(
             with open(os.path.expanduser(train_data_file), mode="w") as file:
                 old_content.append(train_data)
                 json.dump(old_content, file)
-                logger.info(f"Content in the {train_data_file.relative_to(SOURCES_ROOT_PATH.parent)} updated.\n")
+                logger.info(f"Content in the {train_data_file.name} updated.\n")
 
             train.pretty_print_training_data(train_data_file)
 
