@@ -105,7 +105,7 @@ class Evaluator:
 
         return entity_tuples
 
-    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True, ent_label: str = None) -> np.array:
         """
         Compute the scores based on the given the prediction statistics for each
         entity label or entire text.
@@ -171,9 +171,9 @@ class Evaluator:
         for idx, ent_type in enumerate(self._available_entities):
             print(
                 f"\t{ent_type}",
-                "\t\tPrecision: {:.3f}".format(entity_class_metrics[idx, 0]),
-                "\t\tRecall: {:.3f}".format(entity_class_metrics[idx, 1]),
-                "\t\tF1 Score: {:.3f}".format(entity_class_metrics[idx, 2]),
+                "\t\tPrecision: {:.3f}".format(entity_class_metrics[idx, 0] * 100),
+                "\t\tRecall: {:.3f}".format(entity_class_metrics[idx, 1] * 100),
+                "\t\tF1 Score: {:.3f}".format(entity_class_metrics[idx, 2] * 100),
                 sep="\n"
             )
 
@@ -224,10 +224,10 @@ class Evaluator:
                 for stat, value in entity_stats.items():
                     total_entity_stats[entity_label][stat] += value
 
-        metrics = self._compute_scores(total_text_stats)
+        metrics = self._compute_scores(total_text_stats, ent_label="Text")
         entity_class_metrics = []
         for entity_label, entity_stats in total_entity_stats.items():
-            entity_class_metrics.append(self._compute_scores(entity_stats, include_accuracy=False))
+            entity_class_metrics.append(self._compute_scores(entity_stats, include_accuracy=False, ent_label=entity_label))
 
         self._annotated_count = txt_idx + 1
         self._aggregate_and_print_results(np.array(metrics), np.array(entity_class_metrics))
@@ -306,7 +306,7 @@ class StrictEvaluator(Evaluator):
 
         return entity_stats
 
-    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True, ent_label: str = None) -> np.array:
         """See base class docstring."""
 
         if stats["predicted"] != 0:
@@ -314,15 +314,17 @@ class StrictEvaluator(Evaluator):
             precision = stats["tp"] / stats["predicted"]
         else:
             # Model has found 0 entities -> this case is correct only if the model should not have found any annotations
-            logger.warning("Undefined Metric!")
-            precision = 1.0 if stats["gold"] == 0 else 0.0
+            logger.warning(f"Undefined Precision Metric{f' for {ent_label}: ' if ent_label else ': '}")
+            # precision = 1.0 if stats["gold"] == 0 else 0.0
+            precision = 0.0
 
         if stats["gold"] != 0:
             recall = stats["tp"] / stats["gold"]
         else:
             # gold entities list contains 0 entities -> 0 should be found
-            logger.warning("Undefined Metric!")
-            recall = 1.0 if stats["predicted"] == 0 else 0.0
+            logger.warning(f"Undefined Recall Metric{f' for {ent_label}: ' if ent_label else ': '}")
+            # recall = 1.0 if stats["predicted"] == 0 else 0.0
+            recall = 0.0
 
         f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0.0
 
@@ -433,7 +435,7 @@ class IntersectionEvaluator(Evaluator):
         text_stats = self._get_overall_text_stats(entity_stats, text_stats)
         return entity_stats, text_stats
 
-    def _compute_scores(self, stats: dict, include_accuracy: bool = True) -> np.array:
+    def _compute_scores(self, stats: dict, include_accuracy: bool = True, ent_label: str = None) -> np.array:
         """See base class docstring."""
 
         if stats["predicted"] != 0:
