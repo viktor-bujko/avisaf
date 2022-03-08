@@ -65,8 +65,8 @@ class ASRSReportClassificationPredictor:
         all_predictions = []
         for topic_label, model, test_data, target in zip(trained_labels.keys(), prediction_models.values(), data, targets):
             logger.info(self._preprocessor.get_data_targets_distribution(target, label=topic_label)[1])
-            predictions = self.get_model_predictions(model, test_data)  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
-            all_predictions.append((predictions, target))
+            predictions = self.get_model_predictions(model, test_data.astype(np.float))  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
+            all_predictions.append((predictions, target.astype(np.int)))
 
         return all_predictions
 
@@ -343,7 +343,7 @@ class ASRSReportClassificationTrainer:
             pickle.dump((self._models, self._preprocessor.encoders), model_file)
 
         with open(Path(model_dir_path, "parameters.json"), "w", encoding="utf-8") as params_file:
-            logger.info(f"Saving parameters [encoding, model parameters, train_texts_paths, trained_labels, label_filter]")
+            logger.info(f"Saving model parameters")
             json.dump(self._params, params_file, indent=4)
 
 
@@ -409,8 +409,7 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
     predictor = ASRSReportClassificationPredictor(extractor)
 
     predictions_targets = predictor.get_evaluation_predictions(model_predictors, params.get("trained_labels"))
-    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(),
-                                                                  label_encoders):
+    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets, show_curves=show_curves)
         Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)

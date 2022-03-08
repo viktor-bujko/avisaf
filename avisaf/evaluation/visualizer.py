@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
+import logging
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve
+from datetime import datetime
+
+logger = logging.getLogger("avisaf_logger")
 
 
 class Visualizer:
@@ -16,7 +21,7 @@ class Visualizer:
             if isinstance(value, float):
                 print(f"\t{metric_name}: %0.2f" % (value * 100))
             elif isinstance(value, list) or isinstance(value, np.ndarray):
-                formatted_floats_list = [("| %0.2f |" % fl_number) for fl_number in value]
+                formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
                 print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
             else:
                 print(f"\t{metric_name}: {value}")
@@ -42,6 +47,12 @@ class Visualizer:
         plt.ylabel(kwargs.get("ylabel", ""))
         plt.xlabel(kwargs.get("xlabel", ""))
         plt.tight_layout()
+        if matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']:
+            logger.warning("Non GUI backend is active. Saving the figure")
+            default_filename = "avisaf_classification_curve_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+            plt.savefig(fname=kwargs.get("title", default_filename).replace(" ", "_", -1) + ".svg")
+            plt.clf()
+            return
         plt.show()
 
     @staticmethod

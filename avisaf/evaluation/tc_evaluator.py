@@ -19,7 +19,7 @@ class ASRSReportClassificationEvaluator:
         for baseline_mockup in range(unique_targets_count):
             mockup_predictions = np.zeros((target_classes.shape[0], unique_targets_count))
             mockup_predictions[:, baseline_mockup] = 1
-            baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes, show_curves=False)
+            baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes, show_curves=False, model_type="dummy_" + str(baseline_mockup))
             self._visualizer.print_metrics("Baseline metrics: ", baseline_conf_matrix, baseline_results_dict)
 
     def evaluate_random_predictions(self, target_classes: np.ndarray, show_curves: bool = False):
@@ -28,10 +28,10 @@ class ASRSReportClassificationEvaluator:
         random_predictions = np.zeros((target_classes.shape[0], unique_targets_count))
         for idx, x in enumerate(random_idxs):
             random_predictions[idx, x] = 1
-        random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes, show_curves=show_curves)
+        random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes, show_curves=show_curves, model_type="random predictions")
         self._visualizer.print_metrics("Random metrics: ", random_conf_matrix, random_results_dict)
 
-    def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None, show_curves: bool = False) -> tuple:
+    def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None, show_curves: bool = False, model_type: str = "prediction model") -> tuple:
         class_predictions = np.argmax(predictions_distribution, axis=1)
         confusion_matrix = metrics.confusion_matrix(target_classes, class_predictions)
         results = {
@@ -46,7 +46,7 @@ class ASRSReportClassificationEvaluator:
         if show_curves:
             roc_curves_data, prec_recall_data = [], []
             class_predictions = np.argmax(predictions_distribution, axis=1)
-            add_string = f" for \"{self._evaluated_topic_label}\" classes" if self._evaluated_topic_label else ""
+            add_string = (f" for \"{self._evaluated_topic_label}\" classes" if self._evaluated_topic_label else "") + f" ({model_type})"
             roc_curves_title = "ROC Curve" + add_string
             prec_recall_title = "Precision-recall curve" + add_string
             precision = metrics.precision_score(target_classes, class_predictions, average=avg_method)
@@ -63,7 +63,8 @@ class ASRSReportClassificationEvaluator:
                 title=prec_recall_title,
                 xlabel="Recall",
                 ylabel="Precision",
-                label="AP"
+                label="AP",
+                model_type=model_type
             )
             self._visualizer.plot_evaluation_curves(
                 roc_curves_data,
@@ -72,7 +73,8 @@ class ASRSReportClassificationEvaluator:
                 xlabel="False Positive Rate",
                 ylabel="True Positive Rate",
                 label="AUC",
-                show_diagonal=True
+                show_diagonal=True,
+                model_type=model_type
             )
 
         return confusion_matrix, results
