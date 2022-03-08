@@ -42,7 +42,7 @@ class Visualizer:
                     print(f"\t{metric_name}: {value}")
         sys.stdout = stdout
 
-    def show_curves(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, model_type: str = "prediction model", avg_method: str = None):
+    def show_curves(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, model_type: str = "prediction_model", avg_method: str = None):
         roc_curves_data, prec_recall_data = [], []
         class_predictions = np.argmax(predictions_distribution, axis=1)
         add_string = (f" for \"{self._topic_label}\" classes" if self._topic_label else "") + f" ({model_type})"
@@ -57,6 +57,7 @@ class Visualizer:
             prec, recall, thresholds = metrics.precision_recall_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
             prec_recall_data.append((prec, recall, precision[positive_class], label))
 
+        fname = f"{'_' + self._topic_label if self._topic_label else ''}_{model_type}.svg"
         self.plot_evaluation_curves(
             prec_recall_data,
             title=prec_recall_title,
@@ -64,7 +65,8 @@ class Visualizer:
             ylabel="Precision",
             label="AP",
             model_type=model_type,
-            model_dir=self._model_dir
+            model_dir=self._model_dir,
+            filename="precision_recall" + fname
         )
         self.plot_evaluation_curves(
             roc_curves_data,
@@ -75,7 +77,8 @@ class Visualizer:
             label="AUC",
             show_diagonal=True,
             model_type=model_type,
-            model_dir=self._model_dir
+            model_dir=self._model_dir,
+            filename="roc_curve" + fname
         )
 
     @staticmethod
@@ -99,15 +102,17 @@ class Visualizer:
         plt.ylabel(kwargs.get("ylabel", ""))
         plt.xlabel(kwargs.get("xlabel", ""))
         plt.tight_layout()
-        default_filename = "avisaf_classification_curve_"
-        if matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']:
-            logger.warning("Non GUI backend is active. Saving the figure")
-            plt.savefig(fname=kwargs.get("title", default_filename).replace(" ", "_", -1) + ".svg")
+        default_filename = "avisaf_classification_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg"
+        model_dir = kwargs.get("model_dir", ".")
+        fname = Path(model_dir, kwargs.get("filename", default_filename))
+        non_gui_backend = matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']
+        if non_gui_backend:
+            logger.warning(f"Non GUI backend is active. Saving the figure to: {fname}")
+            plt.savefig(fname=fname)
             plt.clf()
             return
-        model_dir = kwargs.get("model_dir")
+        # gui backend is available - showing the figure with possible saving
         if model_dir:
-            fname = Path(model_dir, default_filename + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg")
             logger.info(f"Saving figure to: {fname}")
             plt.savefig(fname=fname)
         plt.show()

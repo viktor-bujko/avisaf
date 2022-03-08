@@ -31,7 +31,7 @@ class ASRSReportClassificationEvaluator:
             random_predictions[idx, x] = 1
         random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes)
         if show_curves:
-            self._visualizer.show_curves(random_predictions, target_classes, model_type="random predictions", avg_method=None)
+            self._visualizer.show_curves(random_predictions, target_classes, model_type="random_predictions", avg_method=None)
         self._visualizer.print_metrics("Random metrics: ", random_conf_matrix, random_results_dict)
 
     def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None) -> tuple:
