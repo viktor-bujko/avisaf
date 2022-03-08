@@ -93,11 +93,13 @@ def test_spacy_ner(
         return
 
     # create doc object nlp(text)
-    document = nlp(text)
+    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
+    document = nlp(text, disable=other_pipes)
 
     ents_colors_dict = get_entities()
     # identify entities
     if cli_result:
+        print()  # separate output text
 
         def print_highlighted_entity(tkn):
             if not tkn.ent_type_:

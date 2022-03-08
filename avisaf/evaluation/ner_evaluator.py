@@ -31,6 +31,7 @@ class Evaluator:
 
     def __init__(self, model_to_evaluate: Path):
         self._nlp = spacy.load(model_to_evaluate)
+        logger.debug(f"Current pipeline components: {self._nlp.pipe_names}")
         self._available_entities = get_entities().keys()
         self._annotated_count = 0  # number of annotated texts
         self._used_metrics = {
@@ -212,8 +213,9 @@ class Evaluator:
 
         txt_idx = 0
         all_texts, all_gold_entities = zip(*texts_to_evaluate)
+        other_pipes = [pipe for pipe in self._nlp.pipe_names if pipe != "ner"]  # only named-entity recognizer will be used
         # processing the given batch of texts to get the predictions
-        for txt_idx, doc in enumerate(self._nlp.pipe(all_texts, batch_size=512)):
+        for txt_idx, doc in enumerate(self._nlp.pipe(all_texts, batch_size=512, disable=other_pipes)):
             if txt_idx % 100 == 0:
                 # reducing the number of output messages
                 print(f"Evaluating text {txt_idx + 1} / {len(texts_to_evaluate)}")
