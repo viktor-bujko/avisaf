@@ -279,12 +279,13 @@ class ASRSReportClassificationTrainer:
             if text_path not in self._trained_texts:
                 self._trained_texts.append(text_path)
 
-        for i, zipped in enumerate(zip(labels_to_train, labels_values)):
+        for i, (topic_label, topic_classes_filter) in enumerate(zip(labels_to_train, labels_values)):
             # iterating through both lists
-            topic_label, topic_classes_filter = zipped
+            train_data = (data[i]).astype(np.float)
+            train_targets = targets[i].astype(np.int).ravel()
 
-            logger.debug(f"training data shape: {data[i].shape}")
-            logger.debug(self._preprocessor.get_data_targets_distribution(targets[i], label=topic_label)[1])
+            logger.debug(f"training data shape: {train_data.shape}")
+            logger.debug(self._preprocessor.get_data_targets_distribution(train_targets, label=topic_label)[1])
 
             if self._models.get(topic_label) is None:
                 classifier = clone(self._classifier)
@@ -307,14 +308,14 @@ class ASRSReportClassificationTrainer:
             }
 
             logger.info(f"MODEL: {classifier}")
-            classifier.fit(data[i], targets[i])
+            classifier.fit(train_data, train_targets)
             self._models.update({topic_label: classifier})
 
             get_train_predictions = True
             if get_train_predictions:
-                predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, data[i])
-                evaluator = ASRSReportClassificationEvaluator(topic_label)
-                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets[i], self._encodings.get(topic_label))
+                predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, train_data)
+                evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label))
+                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets, show_curves=True)
                 Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor on training data:", model_conf_matrix, model_results_dict)
 
         self.save_models()

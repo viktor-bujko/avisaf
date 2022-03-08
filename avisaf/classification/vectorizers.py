@@ -227,7 +227,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
         for idx, text in enumerate(texts):
             tokens = utils.simple_preprocess(text)
-            tagged_docs.append(TaggedDocument(words=tokens, tags=[]))
+            tagged_docs.append(TaggedDocument(words=tokens, tags=[idx]))
 
         if model is None:
             model = Doc2Vec(
@@ -243,13 +243,17 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
                 min_alpha=0.0001,
             )
             logger.debug(f"Estimated memory: {model.estimate_memory()}")
+            logger.debug("Starting vocabulary build")
             model.build_vocab(documents=tagged_docs)
+            logger.debug("Ended vocabulary build")
 
+            logger.debug("Started doc2vec model training")
             model.train(
                 documents=tagged_docs,
                 total_examples=model.corpus_count,
                 epochs=model.epochs,
             )
+            logger.debug("Ended doc2vec model training")
             model.save("doc2vec.model")
 
         doc2veced = np.zeros(shape=(texts.shape[0], model.vector_size))
