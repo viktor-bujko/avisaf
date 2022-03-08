@@ -4,6 +4,7 @@ import logging
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn.metrics as metrics
 from sklearn.model_selection import learning_curve
 from datetime import datetime
 
@@ -11,6 +12,10 @@ logger = logging.getLogger("avisaf_logger")
 
 
 class Visualizer:
+
+    def __init__(self, evaluated_label: str, label_encoder):
+        self._topic_label = evaluated_label
+        self._label_encoder = label_encoder
 
     @staticmethod
     def print_metrics(title: str, model_conf_matrix, model_results_dict: dict):
@@ -25,6 +30,40 @@ class Visualizer:
                 print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
             else:
                 print(f"\t{metric_name}: {value}")
+
+    def show_curves(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, model_type: str = "prediction model", avg_method: str = None):
+        roc_curves_data, prec_recall_data = [], []
+        class_predictions = np.argmax(predictions_distribution, axis=1)
+        add_string = (f" for \"{self._topic_label}\" classes" if self._topic_label else "") + f" ({model_type})"
+        roc_curves_title = "ROC Curve" + add_string
+        prec_recall_title = "Precision-recall curve" + add_string
+        precision = metrics.precision_score(target_classes, class_predictions, average=avg_method)
+        for positive_class in np.unique(target_classes):
+            # inverse_transforms returns the list of decoded labels - list now contains only 1 item
+            label = self._label_encoder.inverse_transform([positive_class])[0]
+            fpr, tpr, thresholds = metrics.roc_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
+            roc_curves_data.append((fpr, tpr, thresholds, label))
+            prec, recall, thresholds = metrics.precision_recall_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
+            prec_recall_data.append((prec, recall, precision[positive_class], label))
+
+        self.plot_evaluation_curves(
+            prec_recall_data,
+            title=prec_recall_title,
+            xlabel="Recall",
+            ylabel="Precision",
+            label="AP",
+            model_type=model_type
+        )
+        self.plot_evaluation_curves(
+            roc_curves_data,
+            label_method=metrics.auc,
+            title=roc_curves_title,
+            xlabel="False Positive Rate",
+            ylabel="True Positive Rate",
+            label="AUC",
+            show_diagonal=True,
+            model_type=model_type
+        )
 
     @staticmethod
     def plot_evaluation_curves(curves_data: list, **kwargs):

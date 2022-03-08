@@ -315,8 +315,10 @@ class ASRSReportClassificationTrainer:
             if get_train_predictions:
                 predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, train_data)
                 evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label))
-                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets, show_curves=True)
-                Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor on training data:", model_conf_matrix, model_results_dict)
+                model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
+                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label))
+                visualizer.show_curves(predictions, train_targets, "prediction model on train data")
+                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict)
 
         self.save_models()
 
@@ -411,9 +413,13 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
     predictions_targets = predictor.get_evaluation_predictions(model_predictors, params.get("trained_labels"))
     for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder)
-        model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets, show_curves=show_curves)
-        Visualizer().print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
+        model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
+        visualizer = Visualizer(topic_label, label_encoder)
+        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
+        if show_curves:
+            visualizer.show_curves(predictions, targets, avg_method=None)
         if compare_baseline:
+            # generate baseline predictions and evaluate them
             evaluator.evaluate_dummy_baseline(targets)
             evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
 
