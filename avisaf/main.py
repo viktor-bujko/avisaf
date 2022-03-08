@@ -29,7 +29,7 @@ def test_spacy_ner(
     text_path=None,
     cli_result: bool = False,
     visualize: bool = False,
-    html_result_file: Path = None,
+    html_result_file: str = None,
     port: int = 5000,
 ):
     """Function which executes entity extraction and processing. The function
@@ -51,7 +51,7 @@ def test_spacy_ner(
     :type visualize: bool
     :param visualize: A flag which will use the spaCy visualizer in order to
         render the result and show it in the browser., defaults to False
-    :type html_result_file: Path
+    :type html_result_file: str
     :param html_result_file: The file path to the file where the result rendered
         by spaCy visualizer tool will be saved. The file will be created if it
         does not exist yet., defaults to None
@@ -109,28 +109,33 @@ def test_spacy_ner(
         for token in document:
             print_highlighted_entity(token)
         print()  # to end the text
+        return
 
-    if html_result_file is not None or visualize:
-        options = {
-            "ents": list(ents_colors_dict.keys()),
-            "colors": dict(
-                zip(
-                    ents_colors_dict.keys(),
-                    map(lambda color_list: color_list[0], ents_colors_dict.values()),
-                )
-            ),
-        }
+    if html_result_file is None and not visualize:
+        logger.warning("Named-entity recognition output method is not defined. Please use --help to get info about possible output visualizations.")
+        return
 
-        if html_result_file is None:
-            displacy.serve(document, style="ent", options=options, port=port, host="localhost")
-            return
+    options = {
+        "ents": list(ents_colors_dict.keys()),
+        "colors": dict(
+            zip(
+                ents_colors_dict.keys(),
+                map(lambda color_list: color_list[0], ents_colors_dict.values()),
+            )
+        ),
+    }
 
-        result_file_path = Path(html_result_file)
-        result_file_path.touch(exist_ok=True)
+    if html_result_file is None:
+        displacy.serve(document, style="ent", options=options, port=port, host="localhost")
+        return
 
-        with result_file_path.open(mode="w") as file:
-            html = displacy.render(document, style="ent", options=options)
-            file.write(html)
+    if html_result_file and not html_result_file.endswith(".html"):
+        html_result_file += ".html"
+    result_file_path = Path(html_result_file)
+    result_file_path.touch(exist_ok=True)
+    with result_file_path.open(mode="w") as file:
+        html = displacy.render(document, style="ent", options=options)
+        file.write(html)
 
 
 def choose_action(args: Namespace):
