@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 import logging
+import sys
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 from sklearn.model_selection import learning_curve
+from pathlib import Path
 from datetime import datetime
 
 logger = logging.getLogger("avisaf_logger")
@@ -13,23 +15,32 @@ logger = logging.getLogger("avisaf_logger")
 
 class Visualizer:
 
-    def __init__(self, evaluated_label: str, label_encoder):
+    def __init__(self, evaluated_label: str, label_encoder, model_dir: str = None):
         self._topic_label = evaluated_label
         self._label_encoder = label_encoder
+        self._model_dir = model_dir
 
-    @staticmethod
-    def print_metrics(title: str, model_conf_matrix, model_results_dict: dict):
+    def print_metrics(self, title: str, model_conf_matrix, model_results_dict: dict):
 
-        print(title)
-        print(model_conf_matrix)
-        for metric_name, value in model_results_dict.items():
-            if isinstance(value, float):
-                print(f"\t{metric_name}: %0.2f" % (value * 100))
-            elif isinstance(value, list) or isinstance(value, np.ndarray):
-                formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
-                print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
-            else:
-                print(f"\t{metric_name}: {value}")
+        stdout = sys.stdout
+        files_to_write = {stdout}  # results will always be written to stdout
+        if self._model_dir is not None:
+            file_stream = open(Path(self._model_dir, "results.txt"), "a")
+            files_to_write.add(file_stream)
+
+        for f in files_to_write:
+            sys.stdout = f
+            print(title)
+            print(model_conf_matrix)
+            for metric_name, value in model_results_dict.items():
+                if isinstance(value, float):
+                    print(f"\t{metric_name}: %0.2f" % (value * 100))
+                elif isinstance(value, list) or isinstance(value, np.ndarray):
+                    formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
+                    print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
+                else:
+                    print(f"\t{metric_name}: {value}")
+        sys.stdout = stdout
 
     def show_curves(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, model_type: str = "prediction model", avg_method: str = None):
         roc_curves_data, prec_recall_data = [], []
@@ -52,7 +63,8 @@ class Visualizer:
             xlabel="Recall",
             ylabel="Precision",
             label="AP",
-            model_type=model_type
+            model_type=model_type,
+            model_dir=self._model_dir
         )
         self.plot_evaluation_curves(
             roc_curves_data,
@@ -62,7 +74,8 @@ class Visualizer:
             ylabel="True Positive Rate",
             label="AUC",
             show_diagonal=True,
-            model_type=model_type
+            model_type=model_type,
+            model_dir=self._model_dir
         )
 
     @staticmethod
@@ -86,12 +99,17 @@ class Visualizer:
         plt.ylabel(kwargs.get("ylabel", ""))
         plt.xlabel(kwargs.get("xlabel", ""))
         plt.tight_layout()
+        default_filename = "avisaf_classification_curve_"
         if matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']:
             logger.warning("Non GUI backend is active. Saving the figure")
-            default_filename = "avisaf_classification_curve_" + datetime.now().strftime("%Y%m%d_%H%M%S")
             plt.savefig(fname=kwargs.get("title", default_filename).replace(" ", "_", -1) + ".svg")
             plt.clf()
             return
+        model_dir = kwargs.get("model_dir")
+        if model_dir:
+            fname = Path(model_dir, default_filename + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg")
+            logger.info(f"Saving figure to: {fname}")
+            plt.savefig(fname=fname)
         plt.show()
 
     @staticmethod

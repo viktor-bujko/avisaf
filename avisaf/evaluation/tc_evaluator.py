@@ -9,10 +9,10 @@ logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationEvaluator:
-    def __init__(self, evaluated_label: str = None, label_encoder=None):
+    def __init__(self, evaluated_label: str = None, label_encoder=None, model_dir: str = None):
         self._evaluated_topic_label = evaluated_label
         self._label_encoder = label_encoder
-        self._visualizer = Visualizer(evaluated_label, label_encoder)
+        self._visualizer = Visualizer(evaluated_label, label_encoder, model_dir)
 
     def evaluate_dummy_baseline(self, target_classes: np.ndarray):
         unique_targets_count = np.unique(target_classes).shape[0]
