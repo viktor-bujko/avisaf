@@ -19,7 +19,7 @@ from spacy.matcher import PhraseMatcher, Matcher
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
 from util.data_extractor import get_entities, CsvAsrsDataExtractor
-import classification.vectorizers as vectorizers
+from classification.vectorizers import VectorizerFactory
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
@@ -347,11 +347,7 @@ class ASRSReportDataPreprocessor:
             "undersample": self.undersample_data_distribution,
             "oversample": self.oversample_data_distribution
         }
-        # self.vectorizer = vectorizers.TfIdfAsrsReportVectorizer() if vectorizer is None else vectorizer
-        # self.vectorizer = vectorizers.SpaCyWord2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
-        # self.vectorizer = vectorizers.GoogleNewsWord2VecAsrsReportVectorizer()
-        self.vectorizer = vectorizers.Doc2VecAsrsReportVectorizer() if vectorizer is None else vectorizer
-        # self.vectorizer = vectorizers.FastTextAsrsReportVectorizer()
+        self.vectorizer = VectorizerFactory.create_vectorizer("d2v") if not vectorizer else vectorizer
 
     def filter_texts_by_label(self, extracted_labels: dict, target_label_filters: list = None):
         """

@@ -97,6 +97,19 @@ def show_vector_space_2d(vectors, targets):
     plt.show()
 
 
+class VectorizerFactory:
+    @staticmethod
+    def create_vectorizer(param):
+        available_vectorizers = {
+            "tf_idf": TfidfVectorizer(),
+            "spacy_w2v": SpaCyWord2VecAsrsReportVectorizer,
+            "google_w2v": GoogleNewsWord2VecAsrsReportVectorizer(),
+            "d2v": Doc2VecAsrsReportVectorizer(),
+            "fasttext": FastTextAsrsReportVectorizer()
+        }
+        return available_vectorizers.get(param, Doc2VecAsrsReportVectorizer())
+
+
 class AsrsReportVectorizer:
     def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         """
@@ -204,57 +217,53 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
 
 class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
-        pass
+        self._model_path = str(Path("vectors", "doc2vec", "doc2vec.model"))
+
+    def train_new_model(self, tagged_docs):
+        model = Doc2Vec(
+            vector_size=300,
+            epochs=40,
+            min_count=5,
+            dm=0,
+            dbow_words=1,
+            negative=5,
+            workers=3,
+            window=4,
+            alpha=0.001,
+            min_alpha=0.0001,
+        )
+        logger.debug(f"Estimated memory: {model.estimate_memory()}")
+        logger.debug("Starting vocabulary build")
+        model.build_vocab(documents=tagged_docs)
+        logger.debug("Ended vocabulary build")
+
+        logger.debug("Started doc2vec model training")
+        model.train(
+            documents=tagged_docs,
+            total_examples=model.corpus_count,
+            epochs=model.epochs,
+        )
+        logger.debug("Ended doc2vec model training")
+        model.save(self._model_path)
+
+        return model
 
     def build_feature_vectors(self, texts: type(np.ndarray)):
 
         try:
-            model = Doc2Vec.load("doc2vec.model")
+            model = Doc2Vec.load(self._model_path, mmap="r")
         except FileNotFoundError:
             model = None
 
         tagged_docs = []
         texts = np.array(self.preprocess(texts))
 
-        """
-         assert texts.shape[0] == target_labels.shape[0]
-
-        for text, label in zip(enumerate(texts), target_labels):
-            idx, text = text
-            tokens = utils.simple_preprocess(text)
-            tagged_docs.append(TaggedDocument(words=tokens, tags=[label]))
-        """
-
         for idx, text in enumerate(texts):
             tokens = utils.simple_preprocess(text)
             tagged_docs.append(TaggedDocument(words=tokens, tags=[idx]))
 
         if model is None:
-            model = Doc2Vec(
-                vector_size=300,
-                epochs=40,
-                min_count=5,
-                dm=0,
-                dbow_words=1,
-                negative=5,
-                workers=3,
-                window=4,
-                alpha=0.001,
-                min_alpha=0.0001,
-            )
-            logger.debug(f"Estimated memory: {model.estimate_memory()}")
-            logger.debug("Starting vocabulary build")
-            model.build_vocab(documents=tagged_docs)
-            logger.debug("Ended vocabulary build")
-
-            logger.debug("Started doc2vec model training")
-            model.train(
-                documents=tagged_docs,
-                total_examples=model.corpus_count,
-                epochs=model.epochs,
-            )
-            logger.debug("Ended doc2vec model training")
-            model.save("doc2vec.model")
+            model = self.train_new_model(tagged_docs)
 
         doc2veced = np.zeros(shape=(texts.shape[0], model.vector_size))
         if len(tagged_docs) != texts.shape[0]:
@@ -264,12 +273,12 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         for idx, tagged_doc in enumerate(tagged_docs):
             doc2veced_count += 1
             if doc2veced_count % 1000 == 0:
-                logger.debug(doc2veced_count)
+                logger.debug(f"Number of vectorized texts: {doc2veced_count}")
             doc2veced[idx] = model.infer_vector(tagged_doc.words, epochs=6)
         return doc2veced
 
     def get_params(self):
-        return {"name": "Doc2Vec", "path": "doc2vec.model"}
+        return {"name": "Doc2Vec", "path": self._model_path}
 
 
 class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
