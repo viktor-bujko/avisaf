@@ -280,6 +280,7 @@ class ASRSReportClassificationTrainer:
             if text_path not in self._trained_texts:
                 self._trained_texts.append(text_path)
 
+        model_dir_path = self._create_model_directory()
         for i, (topic_label, topic_classes_filter) in enumerate(zip(labels_to_train, labels_values)):
             # iterating through both lists
             train_data = (data[i]).astype(np.float)
@@ -317,20 +318,21 @@ class ASRSReportClassificationTrainer:
                 predictions = ASRSReportClassificationPredictor(extractor, ).get_model_predictions(classifier, train_data)
                 evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label), None)
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
-                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label))
-                visualizer.show_curves(predictions, train_targets, "prediction model on train data")
+                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label), model_dir_path)
+                visualizer.show_curves(predictions, train_targets, "train_data_model_prediction")
                 visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict)
 
-        self.save_models()
+        self.save_models(model_dir_path)
 
         return labels_predictions, labels_targets
 
-    def save_models(self):
+    def _create_model_directory(self) -> str:
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
             self._params.get("algorithm", ""),
             datetime.now().strftime("%Y%m%d_%H%M%S"),
             ",".join(
-                "{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(self._model_params.items())
+                "{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in
+                sorted(self._model_params.items())
             ).replace(" ", "_", -1),
         )[:100]
 
@@ -341,6 +343,10 @@ class ASRSReportClassificationTrainer:
         classifiers_dir.mkdir(exist_ok=True)
         model_dir_path = Path(classifiers_dir, model_dir_name)
         model_dir_path.mkdir(exist_ok=False)
+
+        return str(model_dir_path)
+
+    def save_models(self, model_dir_path: str):
         with lzma.open(Path(model_dir_path, "classifier.model"), "wb") as model_file:
             logger.info(f"Saving {len(self._models)} model(s): {self._models}")
             pickle.dump((self._models, self._preprocessor.encoders), model_file)
