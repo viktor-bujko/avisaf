@@ -347,7 +347,7 @@ class ASRSReportDataPreprocessor:
             "undersample": self.undersample_data_distribution,
             "oversample": self.oversample_data_distribution
         }
-        self.vectorizer = VectorizerFactory.create_vectorizer("d2v") if not vectorizer else vectorizer
+        self.vectorizer = VectorizerFactory.create_vectorizer(vectorizer)
 
     def filter_texts_by_label(self, extracted_labels: dict, target_label_filters: list = None):
         """
