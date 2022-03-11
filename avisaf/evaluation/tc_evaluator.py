@@ -21,7 +21,7 @@ class ASRSReportClassificationEvaluator:
             mockup_predictions[:, baseline_mockup] = 1
             baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes)
             # self._visualizer.show_curves(mockup_predictions, target_classes, model_type="dummy_" + str(baseline_mockup), avg_method=None)
-            self._visualizer.print_metrics("Baseline metrics: ", baseline_conf_matrix, baseline_results_dict)
+            self._visualizer.print_metrics(f"Baseline {self._evaluated_topic_label if self._evaluated_topic_label else ''} metrics: ", baseline_conf_matrix, baseline_results_dict, "results_dummy")
 
     def evaluate_random_predictions(self, target_classes: np.ndarray, show_curves: bool = False):
         unique_targets_count = np.unique(target_classes).shape[0]
@@ -32,7 +32,7 @@ class ASRSReportClassificationEvaluator:
         random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes)
         if show_curves:
             self._visualizer.show_curves(random_predictions, target_classes, model_type="random_predictions", avg_method=None)
-        self._visualizer.print_metrics("Random metrics: ", random_conf_matrix, random_results_dict)
+        self._visualizer.print_metrics("Random metrics: ", random_conf_matrix, random_results_dict, "results_random")
 
     def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None) -> tuple:
         class_predictions = np.argmax(predictions_distribution, axis=1)

@@ -320,7 +320,7 @@ class ASRSReportClassificationTrainer:
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
                 visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label), model_dir_path)
                 visualizer.show_curves(predictions, train_targets, "train_data_model_prediction")
-                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict)
+                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict, "results_train")
 
         self.save_models(model_dir_path)
 
@@ -422,7 +422,7 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
         visualizer = Visualizer(topic_label, label_encoder, model_path)
-        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
+        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
         if show_curves:
             visualizer.show_curves(predictions, targets, avg_method=None)
         if compare_baseline:
