@@ -17,7 +17,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 
 from training.training_data_creator import ASRSReportDataPreprocessor
 from util.data_extractor import DataExtractor
@@ -120,7 +120,7 @@ class ASRSReportClassificationTrainer:
                 early_stopping=True,
                 n_iter_no_change=20,
             ),
-            "svm": LinearSVC(dual=False, class_weight="balanced"),
+            "svm": SVC(probability=True, class_weight="balanced", verbose=True, max_iter=5000),
             "forest": RandomForestClassifier(
                 n_estimators=150,
                 criterion="entropy",
