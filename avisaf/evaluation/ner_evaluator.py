@@ -2,10 +2,12 @@
 
 import json
 import numpy as np
+import logging
 from pathlib import Path
 import spacy
-from main import logger
 from util.data_extractor import find_file_by_path, get_entities
+
+logger = logging.getLogger("avisaf_logger")
 
 
 def evaluate_spacy_ner(model: str, texts_file: str):

@@ -2,15 +2,17 @@
 import json
 import lzma
 import pickle
+import logging
 from pathlib import Path
 
 import numpy as np
 import sklearn.metrics as metrics
 
-from main import logger
 from classification.predictor_decoder import ASRSReportClassificationPredictor
 from evaluation.visualizer import Visualizer
 from util.data_extractor import CsvAsrsDataExtractor
+
+logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationEvaluator:

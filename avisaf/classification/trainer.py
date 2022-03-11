@@ -5,6 +5,7 @@
 
 import lzma
 import json
+import logging
 import pickle
 import numpy as np
 from re import sub
@@ -18,12 +19,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from sklearn.svm import SVC
 
-from main import logger
 from classification.predictor_decoder import ASRSReportClassificationPredictor
 from training.training_data_creator import ASRSReportDataPreprocessor
 from evaluation.tc_evaluator import ASRSReportClassificationEvaluator
 from evaluation.visualizer import Visualizer
 from util.data_extractor import CsvAsrsDataExtractor
+
+logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationTrainer:

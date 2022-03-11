@@ -4,6 +4,7 @@ import numpy as np
 import spacy
 import sys
 import re
+import logging
 from pathlib import Path
 from spacy.language import Doc
 import matplotlib.pyplot as plt
@@ -12,7 +13,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import utils
-from main import logger
 import gensim.downloader as dwnldr
 from gensim.models import Doc2Vec, KeyedVectors  # , Word2Vec,
 from gensim.models.doc2vec import TaggedDocument
@@ -24,6 +24,8 @@ import tempfile
 
 import lzma
 import pickle
+
+logger = logging.getLogger("avisaf_logger")
 
 
 def show_vector_space_3d(vectors, targets):

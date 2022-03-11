@@ -5,10 +5,12 @@ training data used by other modules.
 
 import pandas as pd
 import json
-from main import logger
+import logging
 from pathlib import Path
 import numpy as np
 from typing import Union
+
+logger = logging.getLogger("avisaf_logger")
 
 
 class DataExtractor:

@@ -6,13 +6,15 @@
 import json
 import lzma
 import pickle
+import logging
 from pathlib import Path
 
 import numpy as np
 
-from main import logger
 from training.training_data_creator import ASRSReportDataPreprocessor
 from util.data_extractor import DataExtractor, CsvAsrsDataExtractor
+
+logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationDecoder:
