@@ -100,18 +100,20 @@ def show_vector_space_2d(vectors, targets):
 class VectorizerFactory:
     @staticmethod
     def create_vectorizer(vect: str):
-        default = Doc2VecAsrsReportVectorizer
+        default = Doc2VecAsrsReportVectorizer()
         if not vect:
             return default
 
         available_vectorizers = {
-            "tf_idf": TfidfVectorizer,
-            "spacy_w2v": SpaCyWord2VecAsrsReportVectorizer,
-            "google_w2v": GoogleNewsWord2VecAsrsReportVectorizer,
-            "d2v": default,
-            "fasttext": FastTextAsrsReportVectorizer
+            "tf_idf": lambda: TfidfVectorizer(),
+            "spacy_w2v": lambda: SpaCyWord2VecAsrsReportVectorizer(),
+            "google_w2v": lambda: GoogleNewsWord2VecAsrsReportVectorizer(),
+            "d2v": lambda: default,
+            "fasttext": lambda: FastTextAsrsReportVectorizer()
         }
-        return available_vectorizers.get(vect, default)()
+
+        vectorizer = available_vectorizers.get(vect, default)()
+        return vectorizer
 
 
 class AsrsReportVectorizer:
