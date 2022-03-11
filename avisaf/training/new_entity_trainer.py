@@ -3,7 +3,6 @@
 and improving an existing Named Entity Recognition model. The module uses
 train_spaCy_model function which updates the model using spaCy.
 """
-import logging
 import sys
 import spacy
 import random
@@ -14,10 +13,8 @@ from spacy.training import Example
 
 # importing own modules
 from typing import List
-
+from main import logger
 from util.data_extractor import get_entities, JsonDataExtractor
-
-logger = logging.getLogger("avisaf_logger")
 
 
 def load_spacy_model(model: str = "en_core_web_md") -> spacy.Language:

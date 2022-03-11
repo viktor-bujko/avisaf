@@ -6,7 +6,6 @@
 import lzma
 import json
 import pickle
-import logging
 import numpy as np
 from re import sub
 from datetime import datetime
@@ -17,92 +16,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
-from sklearn.svm import LinearSVC, SVC
+from sklearn.svm import SVC
 
+from main import logger
+from classification.predictor_decoder import ASRSReportClassificationPredictor
 from training.training_data_creator import ASRSReportDataPreprocessor
-from util.data_extractor import DataExtractor
 from evaluation.tc_evaluator import ASRSReportClassificationEvaluator
 from evaluation.visualizer import Visualizer
 from util.data_extractor import CsvAsrsDataExtractor
-
-logger = logging.getLogger("avisaf_logger")
-
-logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
-
-
-class ASRSReportClassificationDecoder:
-    def __init__(self, encodings: list):
-        self._encodings = encodings
-
-    def decode_predictions(self, predictions: list):
-        decoded_predictions = []
-
-        for encoder, prediction in zip(self._encodings, predictions):
-            predicted_classes = np.argmax(prediction, axis=1)
-            original_encoding = encoder.inverse_transform(predicted_classes)
-            decoded_predictions.append(np.reshape(original_encoding, (-1, 1)))
-
-        decoded_predictions = np.concatenate(decoded_predictions, axis=1)
-        return decoded_predictions
-
-
-class ASRSReportClassificationPredictor:
-    def __init__(self, data_extractor: DataExtractor, vectorizer: str = None):
-        self._data_extractor = data_extractor
-        self._preprocessor = ASRSReportDataPreprocessor(vectorizer=vectorizer)
-
-    def get_evaluation_predictions(self, prediction_models: dict, trained_labels: dict) -> list:
-
-        # only asrs csv files are currently supported
-        asrs_extractor = CsvAsrsDataExtractor(self._data_extractor.file_paths)
-        data, targets = self._preprocessor.extract_labeled_data(
-            asrs_extractor,
-            labels_to_extract=list(trained_labels.keys()),
-            label_classes_filter=list(trained_labels.values()),
-            normalize=None  # do NOT change data distribution in prediction mode
-        )
-
-        all_predictions = []
-        for topic_label, model, test_data, target in zip(trained_labels.keys(), prediction_models.values(), data, targets):
-            logger.info(self._preprocessor.get_data_targets_distribution(target, label=topic_label)[1])
-            predictions = self.get_model_predictions(model, test_data.astype(np.float))  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
-            all_predictions.append((predictions, target.astype(np.int)))
-
-        return all_predictions
-
-    def get_all_predictions(self, prediction_models: dict) -> list:
-        """
-        :param prediction_models: Dictionary which contains (topic_label, model) items. topic_labels are the topics
-                                  for which the model associated model predicts a class.
-        :return: Numpy array of predictions for each prediction model i.e. array of matrices, where each matrix has
-                (number_of_texts, number_of_classes_for_topic) shape.
-        """
-
-        all_predictions = []
-        data = self._preprocessor.vectorize_texts(self._data_extractor)
-        for predictor in prediction_models.values():
-            predictions = self.get_model_predictions(predictor, data)
-            all_predictions.append(predictions)
-
-        return all_predictions
-
-    @staticmethod
-    def get_model_predictions(prediction_model, data_vectors: np.array) -> np.array:
-        if prediction_model is None:
-            raise ValueError("A model needs to be trained or loaded first to perform predictions.")
-
-        logger.info(f"Probability predictions made using model: {prediction_model}")
-        if getattr(prediction_model, "predict_proba", None) is not None:
-            predictions = prediction_model.predict_proba(data_vectors)
-        else:
-            predictions = prediction_model.predict(data_vectors)
-            one_hot_predictions = np.zeros((predictions.shape[0], np.unique(predictions).shape[0]))  # we expect to predict each desired class at least once
-            for idx, pred in enumerate(predictions):
-                # arbitrarily chosen confidence value of 100 % = 1
-                one_hot_predictions[idx, pred] = 1
-            predictions = one_hot_predictions
-
-        return predictions
 
 
 class ASRSReportClassificationTrainer:
@@ -339,7 +260,7 @@ class ASRSReportClassificationTrainer:
         if self._normalize_method in self._preprocessor.normalization_methods:
             model_dir_name += self._normalize_method
 
-        classifiers_dir = Path("models", "classifiers")
+        classifiers_dir = Path("models", "classifiers", self._params.get("algorithm", "."))
         classifiers_dir.mkdir(exist_ok=True)
         model_dir_path = Path(classifiers_dir, model_dir_name)
         model_dir_path.mkdir(exist_ok=False)
@@ -401,58 +322,3 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             normalization=normalization
         )
         _, _ = classifier.train_report_classification(texts_paths, label, label_values)
-
-
-def evaluate_classification(model_path: str, text_paths: list, show_curves: bool, compare_baseline: bool):
-
-    if not model_path or not text_paths:
-        logger.error("Both model_path and text_path arguments must be specified")
-        return
-
-    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file,\
-         open(Path(model_path, "parameters.json"), "r") as model_parameters:
-        model_predictors, label_encoders = pickle.load(model_file)
-        model_parameters = json.load(model_parameters)
-
-    extractor = CsvAsrsDataExtractor(text_paths)
-    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
-
-    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"))
-    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
-        evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
-        model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
-        visualizer = Visualizer(topic_label, label_encoder, model_path)
-        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
-        if show_curves:
-            visualizer.show_curves(predictions, targets, avg_method=None)
-        if compare_baseline:
-            # generate baseline predictions and evaluate them
-            evaluator.evaluate_dummy_baseline(targets)
-            evaluator.evaluate_random_predictions(targets, show_curves=show_curves)
-
-
-def launch_classification(model_path: str, text_paths: list):
-    """
-    :param model_path:
-    :param text_paths:
-    :return:
-    """
-    if not model_path or not text_paths:
-        logger.error("Both model_path and text_path arguments must be specified")
-        return
-
-    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file, \
-         open(Path(model_path, "parameters.json"), "r") as params_file:
-        model_predictors, label_encoders = pickle.load(model_file)
-        model_parameters = json.load(params_file)
-
-    extractor = CsvAsrsDataExtractor(text_paths)
-    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
-    predictions = predictor.get_all_predictions(model_predictors)
-
-    decoded_classes = ASRSReportClassificationDecoder(label_encoders).decode_predictions(predictions)
-    # TODO: write structured form of text and predicted classes
-    print(list(model_predictors.keys()))
-    print(decoded_classes[:10])
-
-    return predictions

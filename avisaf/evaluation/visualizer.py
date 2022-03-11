@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
-import logging
 import sys
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
 from sklearn.model_selection import learning_curve
+from main import logger
 from pathlib import Path
 from datetime import datetime
-
-logger = logging.getLogger("avisaf_logger")
 
 
 class Visualizer:

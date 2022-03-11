@@ -16,7 +16,9 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import train_classification, launch_classification, evaluate_classification
+from classification.trainer import train_classification
+from evaluation.tc_evaluator import evaluate_classification
+from classification.predictor_decoder import launch_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 

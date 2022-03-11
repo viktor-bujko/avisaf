@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
+import json
+import lzma
+import pickle
+from pathlib import Path
 
-import logging
 import numpy as np
 import sklearn.metrics as metrics
-from evaluation.visualizer import Visualizer
 
-logger = logging.getLogger("avisaf_logger")
+from main import logger
+from classification.predictor_decoder import ASRSReportClassificationPredictor
+from evaluation.visualizer import Visualizer
+from util.data_extractor import CsvAsrsDataExtractor
 
 
 class ASRSReportClassificationEvaluator:
@@ -47,3 +52,31 @@ class ASRSReportClassificationEvaluator:
         }
 
         return confusion_matrix, results
+
+
+def evaluate_classification(model_path: str, text_paths: list, show_curves: bool, compare_baseline: bool):
+
+    if not model_path or not text_paths:
+        logger.error("Both model_path and text_path arguments must be specified")
+        return
+
+    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file,\
+         open(Path(model_path, "parameters.json"), "r") as model_parameters:
+        model_predictors, label_encoders = pickle.load(model_file)
+        model_parameters = json.load(model_parameters)
+
+    extractor = CsvAsrsDataExtractor(text_paths)
+    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
+
+    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"))
+    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
+        evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
+        model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
+        visualizer = Visualizer(topic_label, label_encoder, model_path)
+        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
+        if show_curves:
+            visualizer.show_curves(predictions, targets, avg_method=None)
+        if compare_baseline:
+            # generate baseline predictions and evaluate them
+            evaluator.evaluate_dummy_baseline(targets)
+            evaluator.evaluate_random_predictions(targets, show_curves=show_curves)

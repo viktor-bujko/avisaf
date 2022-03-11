@@ -16,14 +16,13 @@ from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 
 # importing own modules used in this module
+from main import logger
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
 from util.data_extractor import get_entities, CsvAsrsDataExtractor
 from classification.vectorizers import VectorizerFactory
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-
-logger = logging.getLogger("avisaf_logger")
 
 
 def get_current_texts_and_ents(train_data_file: Path, extract_texts: bool):
