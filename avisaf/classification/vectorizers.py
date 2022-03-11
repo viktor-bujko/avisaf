@@ -97,6 +97,25 @@ def show_vector_space_2d(vectors, targets):
     plt.show()
 
 
+class VectorizerFactory:
+    @staticmethod
+    def create_vectorizer(vect: str):
+        default = Doc2VecAsrsReportVectorizer()
+        if not vect:
+            return default
+
+        available_vectorizers = {
+            "tf_idf": lambda: TfidfVectorizer(),
+            "spacy_w2v": lambda: SpaCyWord2VecAsrsReportVectorizer(),
+            "google_w2v": lambda: GoogleNewsWord2VecAsrsReportVectorizer(),
+            "d2v": lambda: default,
+            "fasttext": lambda: FastTextAsrsReportVectorizer()
+        }
+
+        vectorizer = available_vectorizers.get(vect, default)()
+        return vectorizer
+
+
 class AsrsReportVectorizer:
     def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         """
@@ -146,6 +165,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             analyzer="word",
             max_features=300_000,
         )
+        self._model_path = Path("vectors", "tfidf", "pipeline.model")
         self._pipeline = Pipeline([("reductor", TruncatedSVD(n_components=300)), ("scaler", StandardScaler())])
 
     def build_feature_vectors(self, texts: np.ndarray, target_labels: np.ndarray, train: bool = False):
@@ -166,16 +186,11 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             logger.debug("dimension reduction, scaling")
             texts_vectors = self._pipeline.fit_transform(texts_vectors)
             logger.debug("scaling done")
-            with lzma.open("pipeline.model", "wb") as pipe:
+            with lzma.open(self._model_path, "wb") as pipe:
                 pickle.dump((self._transformer, self._pipeline), pipe)
-            with lzma.open("tfidf_vectors_dev.vec", "wb") as pipe:
-                logger.debug("saving vectors")
-                pickle.dump(texts_vectors, pipe)
         else:
-            with lzma.open("pipeline.model", "rb") as pipe:
+            with lzma.open(self._model_path, "rb") as pipe:
                 self._transformer, self._pipeline = pickle.load(pipe)
-            # with lzma.open('tfidf_vectors.vec', 'rb') as pipe:
-            #    texts_vectors = pickle.load(pipe)
             texts_vectors = self._transformer.transform(texts)
             texts_vectors = self._pipeline.transform(texts_vectors)
 
@@ -184,6 +199,8 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
 
     def get_params(self):
         return {
+            "name": "TfIdfVectorizer",
+            "vectorizer": "tf_idf",
             "encoding": self._transformer.encoding,
             "decode_error": self._transformer.decode_error,
             "stop_words": self._transformer.stop_words,
@@ -204,57 +221,54 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
 
 class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
-        pass
+        self._model_path = str(Path("vectors", "doc2vec", "doc2vec.model"))
+
+    def train_new_model(self, tagged_docs):
+        model = Doc2Vec(
+            vector_size=300,
+            epochs=40,
+            min_count=5,
+            dm=0,
+            dbow_words=1,
+            negative=5,
+            workers=3,
+            window=4,
+            alpha=0.001,
+            min_alpha=0.0001,
+        )
+        logger.debug(f"Estimated memory: {model.estimate_memory()}")
+        logger.debug("Starting vocabulary build")
+        model.build_vocab(documents=tagged_docs)
+        logger.debug("Ended vocabulary build")
+
+        logger.debug("Started doc2vec model training")
+        model.train(
+            documents=tagged_docs,
+            total_examples=model.corpus_count,
+            epochs=model.epochs,
+        )
+        logger.debug("Ended doc2vec model training")
+        model.save(self._model_path)
+
+        return model
 
     def build_feature_vectors(self, texts: type(np.ndarray)):
 
         try:
-            model = Doc2Vec.load("doc2vec.model")
+            model = Doc2Vec.load(self._model_path, mmap="r")
         except FileNotFoundError:
             model = None
 
         tagged_docs = []
         texts = np.array(self.preprocess(texts))
 
-        """
-         assert texts.shape[0] == target_labels.shape[0]
-
-        for text, label in zip(enumerate(texts), target_labels):
-            idx, text = text
-            tokens = utils.simple_preprocess(text)
-            tagged_docs.append(TaggedDocument(words=tokens, tags=[label]))
-        """
-
         for idx, text in enumerate(texts):
             tokens = utils.simple_preprocess(text)
             tagged_docs.append(TaggedDocument(words=tokens, tags=[idx]))
 
         if model is None:
-            model = Doc2Vec(
-                vector_size=300,
-                epochs=40,
-                min_count=5,
-                dm=0,
-                dbow_words=1,
-                negative=5,
-                workers=3,
-                window=4,
-                alpha=0.001,
-                min_alpha=0.0001,
-            )
-            logger.debug(f"Estimated memory: {model.estimate_memory()}")
-            logger.debug("Starting vocabulary build")
-            model.build_vocab(documents=tagged_docs)
-            logger.debug("Ended vocabulary build")
-
-            logger.debug("Started doc2vec model training")
-            model.train(
-                documents=tagged_docs,
-                total_examples=model.corpus_count,
-                epochs=model.epochs,
-            )
-            logger.debug("Ended doc2vec model training")
-            model.save("doc2vec.model")
+            logger.warning("No trained doc2vec model to infer text vectors from. Training a new one.")
+            model = self.train_new_model(tagged_docs)
 
         doc2veced = np.zeros(shape=(texts.shape[0], model.vector_size))
         if len(tagged_docs) != texts.shape[0]:
@@ -264,12 +278,16 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
         for idx, tagged_doc in enumerate(tagged_docs):
             doc2veced_count += 1
             if doc2veced_count % 1000 == 0:
-                logger.debug(doc2veced_count)
+                logger.debug(f"Number of vectorized texts: {doc2veced_count}")
             doc2veced[idx] = model.infer_vector(tagged_doc.words, epochs=6)
         return doc2veced
 
     def get_params(self):
-        return {"name": "Doc2Vec", "path": "doc2vec.model"}
+        return {
+            "name": "Doc2Vec",
+            "vectorizer": "d2v",
+            "path": self._model_path
+        }
 
 
 class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
@@ -356,13 +374,16 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         return Doc(self._nlp.vocab, words=lemmas).vector * (len(lemmas) / 500)
 
     def get_params(self):
-        return {"name": "SpaCyWord2Vec"}
+        return {
+            "name": "SpaCyWord2Vec",
+            "vectorizer": "spacy_w2v"
+        }
 
 
 class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
         logger.debug(Path().absolute())
-        self._model_path = Path("gensim-data", "GoogleNews-vectors-negative300.bin")
+        self._model_path = Path("vectors", "gensim-data", "GoogleNews-vectors-negative300.bin")
         if not self._model_path.exists():
             logger.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
             if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) ").lower() == "y":
@@ -380,7 +401,11 @@ class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         return np.mean(self._model[lemmas] * (len(lemmas) / 500), axis=0)
 
     def get_params(self):
-        return {"name": "GoogleNewsWord2Vec", "model_path": str(self._model_path)}
+        return {
+            "name": "GoogleNewsWord2Vec",
+            "vectorizer": "google_w2v",
+            "model_path": str(self._model_path)
+        }
 
 
 class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
@@ -388,13 +413,14 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         model_name = "cc.en.300.bin"
         self._nlp = spacy.load("en_core_web_md")
         self._vectors = fasttext.load_model(model_name)
+        self._model_path = str(Path("vectors", "fasttext_vectors", "fasttext.model"))
         super().__init__(vectors=self._vectors)
 
     def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         logger.debug("Started vectorization")
 
         try:
-            model = fasttext.load_model("fasttext.model")
+            model = fasttext.load_model(self._model_path)
         except ValueError:
             model = None
 
@@ -407,7 +433,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             model = fasttext.train_unsupervised(filename, model="skipgram", dim=300, ws=8, epoch=25, minCount=3)
 
             self._vectors = model
-            model.save_model("fasttext.model")
+            model.save_model(self._model_path)
 
         doc_vectors = []
         for doc_vector_batch in self._generate_vectors(texts, model, 256):
@@ -433,6 +459,14 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
 
     def _get_doc_vector(self, lemmas):
         return np.mean(lemmas * (len(lemmas) / 500), axis=0)
+
+    def get_params(self):
+        return {
+            "name": "Fasttext",
+            "vectorizer":
+            "fasttext",
+            "model_path": self._model_path
+        }
 
 
 """

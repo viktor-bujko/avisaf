@@ -17,7 +17,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB, GaussianNB
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 
 from training.training_data_creator import ASRSReportDataPreprocessor
 from util.data_extractor import DataExtractor
@@ -47,9 +47,9 @@ class ASRSReportClassificationDecoder:
 
 
 class ASRSReportClassificationPredictor:
-    def __init__(self, data_extractor: DataExtractor):
+    def __init__(self, data_extractor: DataExtractor, vectorizer: str = None):
         self._data_extractor = data_extractor
-        self._preprocessor = ASRSReportDataPreprocessor()
+        self._preprocessor = ASRSReportDataPreprocessor(vectorizer=vectorizer)
 
     def get_evaluation_predictions(self, prediction_models: dict, trained_labels: dict) -> list:
 
@@ -120,7 +120,7 @@ class ASRSReportClassificationTrainer:
                 early_stopping=True,
                 n_iter_no_change=20,
             ),
-            "svm": LinearSVC(dual=False, class_weight="balanced"),
+            "svm": SVC(probability=True, class_weight="balanced", verbose=True, max_iter=5000),
             "forest": RandomForestClassifier(
                 n_estimators=150,
                 criterion="entropy",
@@ -230,7 +230,6 @@ class ASRSReportClassificationTrainer:
             parameters = {}
 
         self._normalize_method = normalization
-        self._preprocessor = ASRSReportDataPreprocessor(encoders=encoders)
 
         if not models:
             self._classifier = self._set_classification_algorithm(algorithm)
@@ -240,6 +239,7 @@ class ASRSReportClassificationTrainer:
             self._params = {"algorithm": algorithm}
             self._trained_filtered_labels = {}
             self._trained_texts = []
+            self._vectorizer_name = "d2v"
         else:
             try:
                 self._classifier = list(models.values())[0]  # extracting first scikit prediction object
@@ -249,9 +249,10 @@ class ASRSReportClassificationTrainer:
                 self._model_params = parameters.get("model_params", {})
                 self._trained_filtered_labels = parameters.get("trained_labels", {})
                 self._trained_texts = parameters.get("trained_texts", [])
+                self._vectorizer_name = self._model_params.get("vectorizer_params", {}).get("vectorizer")
             except AttributeError:
                 raise ValueError("Corrupted parameters.json file")
-
+        self._preprocessor = ASRSReportDataPreprocessor(encoders=encoders, vectorizer=self._vectorizer_name)
         assert self._models.keys() == self._encodings.keys()
 
         if self._classifier is not None and parameters.get("model_params") is not None:
@@ -279,6 +280,7 @@ class ASRSReportClassificationTrainer:
             if text_path not in self._trained_texts:
                 self._trained_texts.append(text_path)
 
+        model_dir_path = self._create_model_directory()
         for i, (topic_label, topic_classes_filter) in enumerate(zip(labels_to_train, labels_values)):
             # iterating through both lists
             train_data = (data[i]).astype(np.float)
@@ -313,23 +315,24 @@ class ASRSReportClassificationTrainer:
 
             get_train_predictions = True
             if get_train_predictions:
-                predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, train_data)
+                predictions = ASRSReportClassificationPredictor(extractor, ).get_model_predictions(classifier, train_data)
                 evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label), None)
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
-                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label))
-                visualizer.show_curves(predictions, train_targets, "prediction model on train data")
-                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict)
+                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label), model_dir_path)
+                visualizer.show_curves(predictions, train_targets, "train_data_model_prediction")
+                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict, "results_train")
 
-        self.save_models()
+        self.save_models(model_dir_path)
 
         return labels_predictions, labels_targets
 
-    def save_models(self):
+    def _create_model_directory(self) -> str:
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
             self._params.get("algorithm", ""),
             datetime.now().strftime("%Y%m%d_%H%M%S"),
             ",".join(
-                "{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in sorted(self._model_params.items())
+                "{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in
+                sorted(self._model_params.items())
             ).replace(" ", "_", -1),
         )[:100]
 
@@ -340,6 +343,10 @@ class ASRSReportClassificationTrainer:
         classifiers_dir.mkdir(exist_ok=True)
         model_dir_path = Path(classifiers_dir, model_dir_name)
         model_dir_path.mkdir(exist_ok=False)
+
+        return str(model_dir_path)
+
+    def save_models(self, model_dir_path: str):
         with lzma.open(Path(model_dir_path, "classifier.model"), "wb") as model_file:
             logger.info(f"Saving {len(self._models)} model(s): {self._models}")
             pickle.dump((self._models, self._preprocessor.encoders), model_file)
@@ -403,19 +410,19 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
         return
 
     with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file,\
-         open(Path(model_path, "parameters.json"), "r") as params:
+         open(Path(model_path, "parameters.json"), "r") as model_parameters:
         model_predictors, label_encoders = pickle.load(model_file)
-        params = json.load(params)
+        model_parameters = json.load(model_parameters)
 
     extractor = CsvAsrsDataExtractor(text_paths)
-    predictor = ASRSReportClassificationPredictor(extractor)
+    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
 
-    predictions_targets = predictor.get_evaluation_predictions(model_predictors, params.get("trained_labels"))
+    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"))
     for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
         visualizer = Visualizer(topic_label, label_encoder, model_path)
-        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict)
+        visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
         if show_curves:
             visualizer.show_curves(predictions, targets, avg_method=None)
         if compare_baseline:
@@ -434,11 +441,13 @@ def launch_classification(model_path: str, text_paths: list):
         logger.error("Both model_path and text_path arguments must be specified")
         return
 
-    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file:
+    with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file, \
+         open(Path(model_path, "parameters.json"), "r") as params_file:
         model_predictors, label_encoders = pickle.load(model_file)
+        model_parameters = json.load(params_file)
 
     extractor = CsvAsrsDataExtractor(text_paths)
-    predictor = ASRSReportClassificationPredictor(extractor)
+    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
     predictions = predictor.get_all_predictions(model_predictors)
 
     decoded_classes = ASRSReportClassificationDecoder(label_encoders).decode_predictions(predictions)

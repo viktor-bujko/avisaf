@@ -20,12 +20,12 @@ class Visualizer:
         self._label_encoder = label_encoder
         self._model_dir = model_dir
 
-    def print_metrics(self, title: str, model_conf_matrix, model_results_dict: dict):
+    def print_metrics(self, title: str, model_conf_matrix, model_results_dict: dict, filename: str):
 
         stdout = sys.stdout
         files_to_write = {stdout}  # results will always be written to stdout
         if self._model_dir is not None:
-            file_stream = open(Path(self._model_dir, "results.txt"), "a")
+            file_stream = open(Path(self._model_dir,  f"{filename}.txt"), "a")
             files_to_write.add(file_stream)
 
         for f in files_to_write:
@@ -38,6 +38,8 @@ class Visualizer:
                 elif isinstance(value, list) or isinstance(value, np.ndarray):
                     formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
                     print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
+                    print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
+                    print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
                 else:
                     print(f"\t{metric_name}: {value}")
         sys.stdout = stdout
