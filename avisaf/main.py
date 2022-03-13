@@ -23,7 +23,10 @@ from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
 logger = logging.getLogger("avisaf_logger")
-logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
+logging.basicConfig(
+    format=f"[%(levelname)s - %(asctime)s]: %(message)s",
+    filename="log_avisaf.log"
+)
 
 
 def test_spacy_ner(

@@ -75,7 +75,7 @@ class Visualizer:
             label_method=metrics.auc,
             title=roc_curves_title,
             xlabel="False Positive Rate",
-            ylabel="True Positive Rate",
+            ylabel="True Positive Rate (Recall)",
             label="AUC",
             show_diagonal=True,
             model_type=model_type,
