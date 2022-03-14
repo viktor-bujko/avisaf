@@ -38,8 +38,10 @@ class ASRSReportClassificationTrainer:
                 alpha=0.007,
                 batch_size=128,
                 learning_rate="adaptive",
+                power_t=0.75,
                 learning_rate_init=0.003,
                 verbose=True,
+                random_state=4030,
                 early_stopping=True,
                 n_iter_no_change=20,
             ),
@@ -162,7 +164,7 @@ class ASRSReportClassificationTrainer:
             self._params = {"algorithm": algorithm}
             self._trained_filtered_labels = {}
             self._trained_texts = []
-            self._vectorizer_name = "d2v"
+            self._vectorizer_name = "tfidf"
         else:
             try:
                 self._classifier = list(models.values())[0]  # extracting first scikit prediction object
@@ -233,7 +235,7 @@ class ASRSReportClassificationTrainer:
             }
 
             logger.info(f"MODEL: {classifier}")
-            classifier.fit(train_data, train_targets)
+            classifier = classifier.fit(train_data, train_targets)
             self._models.update({topic_label: classifier})
 
             get_train_predictions = True
@@ -251,7 +253,7 @@ class ASRSReportClassificationTrainer:
 
     def _create_model_directory(self) -> str:
         model_dir_name = "asrs_classifier-{}-{}-{}".format(
-            self._params.get("algorithm", ""),
+            self._vectorizer_name,
             datetime.now().strftime("%Y%m%d_%H%M%S"),
             ",".join(
                 "{}_{}".format(sub("(.)[^_]*_?", r"\1", key), value) for key, value in

@@ -105,9 +105,9 @@ class VectorizerFactory:
             return default
 
         available_vectorizers = {
-            "tf_idf": lambda: TfidfVectorizer(),
-            "spacy_w2v": lambda: SpaCyWord2VecAsrsReportVectorizer(),
-            "google_w2v": lambda: GoogleNewsWord2VecAsrsReportVectorizer(),
+            "tfidf": lambda: TfIdfAsrsReportVectorizer(),
+            "spacyw2v": lambda: SpaCyWord2VecAsrsReportVectorizer(),
+            "googlew2v": lambda: GoogleNewsWord2VecAsrsReportVectorizer(),
             "d2v": lambda: default,
             "fasttext": lambda: FastTextAsrsReportVectorizer()
         }
@@ -165,34 +165,35 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             analyzer="word",
             max_features=300_000,
         )
-        self._model_path = Path("vectors", "tfidf", "pipeline.model")
-        self._pipeline = Pipeline([("reductor", TruncatedSVD(n_components=300)), ("scaler", StandardScaler())])
+        self._model_dir = Path("vectors", self.transformer_name)
+        self._model_path = Path(self._model_dir, "tfidf_pipeline.model")
+        self._pipeline = Pipeline([
+            ("tfidf", self._transformer),
+            # ("reductor", TruncatedSVD(n_components=300)),
+            ("scaler", StandardScaler(with_mean=False))
+        ])
 
-    def build_feature_vectors(self, texts: np.ndarray, target_labels: np.ndarray, train: bool = False):
+    def build_feature_vectors(self, texts: np.ndarray):
         logger.debug("Started vectorization")
 
-        if texts.shape[0] != target_labels.shape[0]:
-            msg = "The number of training examples is not equal to the the number of labels."
-            logger.error(msg)
-            logger.error(f"Texts.shape: {texts.shape[0]} vs labels.shape: {target_labels.shape}")
-            raise ValueError(msg)
-
-        logger.debug(f"TFIDF is training: {train}")
         texts = self.preprocess(texts)
 
-        if train:
-            logger.debug("tfidf fit transform")
-            texts_vectors = self._transformer.fit_transform(texts)
-            logger.debug("dimension reduction, scaling")
-            texts_vectors = self._pipeline.fit_transform(texts_vectors)
-            logger.debug("scaling done")
+        if not self._model_path.exists():
+            if not self._model_dir.exists():
+                self._model_dir.mkdir(parents=True, exist_ok=True)
+            logger.debug("tfidf training started")
+            # texts_vectors = self._transformer.fit_transform(texts)
+            # logger.debug("dimension reduction, scaling")
+            texts_vectors = self._pipeline.fit_transform(texts)
+            logger.debug("tfidf training finished")
+
             with lzma.open(self._model_path, "wb") as pipe:
-                pickle.dump((self._transformer, self._pipeline), pipe)
+                pickle.dump(self._pipeline, pipe)
         else:
             with lzma.open(self._model_path, "rb") as pipe:
-                self._transformer, self._pipeline = pickle.load(pipe)
-            texts_vectors = self._transformer.transform(texts)
-            texts_vectors = self._pipeline.transform(texts_vectors)
+                self._pipeline = pickle.load(pipe)
+            # texts_vectors = self._transformer.transform(texts)
+            texts_vectors = self._pipeline.transform(texts)
 
         logger.debug("Ended vectorization")
         return texts_vectors
@@ -200,7 +201,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
     def get_params(self):
         return {
             "name": "TfIdfVectorizer",
-            "vectorizer": "tf_idf",
+            "vectorizer": self.transformer_name,
             "encoding": self._transformer.encoding,
             "decode_error": self._transformer.decode_error,
             "stop_words": self._transformer.stop_words,
