@@ -60,7 +60,24 @@ class ASRSReportClassificationTrainer:
         }
 
         # Setting a default classifier value
-        classifier = available_classifiers.get(classification_algorithm, available_classifiers.get("knn"))
+        classifier = available_classifiers.get(classification_algorithm, available_classifiers.get("mlp"))
+
+        return classifier
+
+    @staticmethod
+    def _override_classifier_parameters(params_overrides: list, classifier):
+        for override in params_overrides:
+            params = override.split("=", 1)
+            assert len(params) == 2, f"Please make sure at least one \"=\" character is present. See --help for required format."
+            param_key, param_value = params
+            try:
+                # casting string value to its type
+                param_value = eval(param_value)
+            except NameError:
+                # if NameError is thrown - treat param_value as string (do nothing)
+                pass
+            logger.debug(f"Setting classifier parameter: \"{param_key}\"={param_value}")
+            setattr(classifier, param_key, param_value)
 
         return classifier
 
@@ -138,7 +155,8 @@ class ASRSReportClassificationTrainer:
         encoders: list = None,
         parameters: dict = None,
         algorithm=None,
-        normalization: str = None
+        normalization: str = None,
+        params_overrides: list = None
     ):
         """
 
@@ -151,6 +169,8 @@ class ASRSReportClassificationTrainer:
         :param algorithm:  Text classification algorithm to be used.
         :param normalization: Training samples normalization method.
         """
+        if not params_overrides:
+            params_overrides = []
         if not parameters:
             parameters = {}
 
@@ -181,9 +201,10 @@ class ASRSReportClassificationTrainer:
                 raise ValueError("Corrupted parameters.json file")
         self._preprocessor = ASRSReportDataPreprocessor(encoders=encoders, vectorizer=self._vectorizer_name)
         assert self._models.keys() == self._encodings.keys()
+        assert self._classifier is not None
 
-        if self._classifier is not None and parameters.get("model_params") is not None:
-            self._restore_classifier_state(parameters)
+        self._restore_classifier_state(parameters)
+        self._classifier = self._override_classifier_parameters(params_overrides, self._classifier)
 
     def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None, set_default: bool = False):
         """
@@ -317,7 +338,8 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             encoders=None,
             parameters=None,
             algorithm=algorithm,
-            normalization=normalization
+            normalization=normalization,
+            params_overrides=params_overrides
         )
 
         _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default)
@@ -335,6 +357,7 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             encoders=encoders,
             parameters=parameters,
             algorithm=algorithm,
-            normalization=normalization
+            normalization=normalization,
+            params_overrides=params_overrides
         )
         _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default)

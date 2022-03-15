@@ -263,6 +263,12 @@ def add_classification_train_parser(subparsers):
         choices={"knn", "svm", "mlp", "forest", "gauss", "mnb", "regression"},
     )
     parser.add_argument(
+        "--params_overrides",
+        nargs="+",
+        help="Override default algorithm hyper-parameters. Use \"param_key=param_value\" from scikit documentation (>= 1 \"=\" character required per pair)",
+        default=[]
+    )
+    parser.add_argument(
         "--normalize",
         "-n",
         choices={"undersample", "oversample"},
