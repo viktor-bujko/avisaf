@@ -164,6 +164,7 @@ class ASRSReportClassificationTrainer:
             self._params = {"algorithm": algorithm}
             self._trained_filtered_labels = {}
             self._trained_texts = []
+            self._has_default_class = {}
             self._vectorizer_name = "tfidf"
         else:
             try:
@@ -174,6 +175,7 @@ class ASRSReportClassificationTrainer:
                 self._model_params = parameters.get("model_params", {})
                 self._trained_filtered_labels = parameters.get("trained_labels", {})
                 self._trained_texts = parameters.get("trained_texts", [])
+                self._has_default_class = parameters.get("has_default_class", {})
                 self._vectorizer_name = self._model_params.get("vectorizer_params", {}).get("vectorizer")
             except AttributeError:
                 raise ValueError("Corrupted parameters.json file")
@@ -183,12 +185,16 @@ class ASRSReportClassificationTrainer:
         if self._classifier is not None and parameters.get("model_params") is not None:
             self._restore_classifier_state(parameters)
 
-    def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None):
+    def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None, set_default: bool = False):
         """
-        :param texts_paths: The paths to the ASRS .csv files which are to be used as training examples sources.
+        :param texts_paths:    The paths to the ASRS .csv files which are to be used as training examples sources.
         :param label_to_train: The text classification topic label to be trained.
         :param label_filter:   List of values to be used as classification classes for given topic label classification.
+        :param set_default:    Boolean flag which specifies whether texts, which do not correspond to any of the value
+                               defined in label_values list should still be included in training dataset with target
+                               label "Other".
         """
+        self._has_default_class.update({label_to_train: set_default})
         labels_to_train, labels_values = self._set_classifiers_to_train(label_to_train, label_filter)
         labels_predictions, labels_targets = [], []
 
@@ -196,8 +202,9 @@ class ASRSReportClassificationTrainer:
         data, targets = self._preprocessor.extract_labeled_data(
             extractor,
             labels_to_train,
+            set_default=self._has_default_class,
             label_classes_filter=labels_values,
-            normalize=self._normalize_method,
+            normalize=self._normalize_method
         )
 
         for text_path in texts_paths:
@@ -232,6 +239,7 @@ class ASRSReportClassificationTrainer:
                 "trained_labels": self._trained_filtered_labels,
                 "trained_texts": self._trained_texts,
                 "vectorizer_params": self._preprocessor.vectorizer.get_params(),
+                "has_default_class": self._has_default_class
             }
 
             logger.info(f"MODEL: {classifier}")
@@ -240,7 +248,7 @@ class ASRSReportClassificationTrainer:
 
             get_train_predictions = True
             if get_train_predictions:
-                predictions = ASRSReportClassificationPredictor(extractor, ).get_model_predictions(classifier, train_data)
+                predictions = ASRSReportClassificationPredictor(extractor, self._vectorizer_name).get_model_predictions(classifier, train_data)
                 evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label), None)
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
                 visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label), model_dir_path)
@@ -281,7 +289,7 @@ class ASRSReportClassificationTrainer:
             json.dump(self._params, params_file, indent=4)
 
 
-def train_classification(models_paths: list, texts_paths: list, label: str, label_values: list, algorithm: str, normalization: str):
+def train_classification(models_paths: list, texts_paths: list, label: str, label_values: list, algorithm: str, normalization: str, set_default: bool, params_overrides: list):
     """
     Method which sequentially launches the training of multiple text classification models.
 
@@ -297,6 +305,10 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
                           training examples may have uneven distribution. Currently supported
                           normalization methods are undersampling and oversampling of training
                           examples.
+    :param set_default:   Boolean flag which specifies whether texts, which do not correspond to
+                          any of the value defined in label_values list should still be included
+                          in training dataset with target label "Other".
+    :param params_overrides:
     """
 
     if not models_paths:
@@ -308,7 +320,7 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             normalization=normalization
         )
 
-        _, _ = classifier.train_report_classification(texts_paths, label, label_values)
+        _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default)
         return
 
     for model_path in models_paths:
@@ -325,4 +337,4 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             algorithm=algorithm,
             normalization=normalization
         )
-        _, _ = classifier.train_report_classification(texts_paths, label, label_values)
+        _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default)

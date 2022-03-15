@@ -189,7 +189,8 @@ def choose_action(args: Namespace):
             label=args.label,
             label_values=args.filter,
             algorithm=args.algorithm,
-            normalization=args.normalize
+            normalization=args.normalize,
+            set_default=args.set_default_class
         ),
         "classifier_process": lambda: launch_classification(
             model_path=args.model,
@@ -199,7 +200,7 @@ def choose_action(args: Namespace):
             model_path=args.model,
             text_paths=args.paths,
             compare_baseline=args.compare_baseline,
-            show_curves=args.show_curves,
+            show_curves=args.show_curves
         )
     }
 

@@ -14,6 +14,7 @@ from spacy.training import Example
 
 # importing own modules
 from typing import List
+
 from util.data_extractor import get_entities, JsonDataExtractor
 
 logger = logging.getLogger("avisaf_logger")

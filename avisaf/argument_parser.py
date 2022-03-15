@@ -276,6 +276,12 @@ def add_classification_train_parser(subparsers):
         nargs="+",
         help="Trained model(s) to use (at least one is required)",
     )
+    parser.add_argument(
+        "--set_default_class",
+        action="store_true",
+        help="Sets default text target class as \"Other\". Ignored if --filter list is not defined.",
+        default=False
+    )
     return parser
 
 

@@ -38,7 +38,7 @@ class ASRSReportClassificationPredictor:
         self._data_extractor = data_extractor
         self._preprocessor = ASRSReportDataPreprocessor(vectorizer=vectorizer)
 
-    def get_evaluation_predictions(self, prediction_models: dict, trained_labels: dict) -> list:
+    def get_evaluation_predictions(self, prediction_models: dict, trained_labels: dict, set_default: dict) -> list:
 
         # only asrs csv files are currently supported
         asrs_extractor = CsvAsrsDataExtractor(self._data_extractor.file_paths)
@@ -46,7 +46,8 @@ class ASRSReportClassificationPredictor:
             asrs_extractor,
             labels_to_extract=list(trained_labels.keys()),
             label_classes_filter=list(trained_labels.values()),
-            normalize=None  # do NOT change data distribution in prediction mode
+            normalize=None,  # do NOT change data distribution in prediction mode
+            set_default=set_default
         )
 
         all_predictions = []

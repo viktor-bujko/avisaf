@@ -350,7 +350,7 @@ class ASRSReportDataPreprocessor:
         }
         self.vectorizer = VectorizerFactory.create_vectorizer(vectorizer)
 
-    def filter_texts_by_label(self, extracted_labels: dict, target_label_filters: list = None):
+    def filter_texts_by_label(self, extracted_labels: dict, target_label_filters: list,  set_default_class: dict):
         """
         :param target_label_filters: List of lists for each extracted topic. Each list inside target_label_filters
                                      list contains desired class names which should be filtered for classification.
@@ -360,6 +360,9 @@ class ASRSReportDataPreprocessor:
                                  array with target-class names annotations for each extracted text as values.
                                  The number of items contained in the dictionary equals the number of extracted
                                  topics, where each contains number_of_extracted_samples labels.
+        :param set_default_class: Boolean flag which specifies whether texts, which do not correspond to any of the
+                                  value defined in label_values list should still be included in training dataset
+                                  with target label "Other".
         :return: Array of ndarrays for each topic to be classified. Each ndarray contains in first column the indices
                  of texts with corresponding target class label. Since each text may contain several matching target
                  classes for given classification topic, a text index may appear multiple times - once for each match.
@@ -372,9 +375,9 @@ class ASRSReportDataPreprocessor:
         encoders = dict(zip(extracted_labels.keys(), [LabelEncoder()] * len(extracted_labels.keys())))
 
         for text_idx in range(target_labels.shape[1]):
-            text_labels_sets = target_labels[:, text_idx]
-
-            for idx, label_set in enumerate(text_labels_sets):  # iterating through different topics target classes
+            # iterating through texts
+            for idx, topic_label in enumerate(extracted_labels.keys()):  # iterating through different topics target classes
+                label_set = extracted_labels.get(topic_label)[text_idx]
                 class_filter_regexes = [re.compile(class_regex) for class_regex in target_label_filters[idx]]
                 # Some reports may be correspond to multiple target classes separated by ";"
                 # We want to use them all as possible outcomes
@@ -393,6 +396,8 @@ class ASRSReportDataPreprocessor:
                         matched_classes.append(class_regex.pattern)  # expecting only 1-item matched_regex list
                     if not matched_classes:
                         # target class did not match any desired filter item -> text will not be used for classification
+                        if set_default_class.get(topic_label, False):
+                            result_arrays[idx].append(np.array([text_idx, "Other"]))
                         continue
                     matched_class = max(matched_classes, key=len)  # taking longest matching pattern as target class
                     result_arrays[idx].append(np.array([text_idx, matched_class]))
@@ -400,7 +405,7 @@ class ASRSReportDataPreprocessor:
         for idx, (result_array, encoder) in enumerate(zip(result_arrays, encoders.values())):
             target_classes = np.array(result_array)[:, 1]
             encoded_classes = np.reshape(encoder.fit_transform(target_classes), (-1, 1))
-            result_arrays[idx] = np.concatenate((result_array, encoded_classes), axis=1)
+            result_arrays[idx] = np.concatenate([result_array, encoded_classes], axis=1)
 
         result_arrays = np.array([np.array(res_array) for res_array in result_arrays], dtype=object)
         self._label_encoders = encoders
@@ -495,7 +500,7 @@ class ASRSReportDataPreprocessor:
         else:
             return narratives
 
-    def extract_labeled_data(self, extractor, labels_to_extract: list, label_classes_filter: list = None, normalize: str = None):
+    def extract_labeled_data(self, extractor, labels_to_extract: list, set_default: dict, label_classes_filter: list = None, normalize: str = None):
 
         data = self.vectorize_texts(extractor)
 
@@ -505,7 +510,7 @@ class ASRSReportDataPreprocessor:
         logger.debug(labels_to_extract)
         logger.debug(label_classes_filter)
 
-        filtered_arrays = self.filter_texts_by_label(extracted_dict, label_classes_filter)
+        filtered_arrays = self.filter_texts_by_label(extracted_dict, label_classes_filter, set_default)
         extracted_data, targets = [], []
         for filtered_array in filtered_arrays:
             logger.debug(f"Filtered array shape: {filtered_array.shape}")
