@@ -22,6 +22,7 @@ from util.data_extractor import get_entities, CsvAsrsDataExtractor
 from classification.vectorizers import VectorizerFactory
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
+import scipy.sparse as sp
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -472,13 +473,16 @@ class ASRSReportDataPreprocessor:
             # randomly choose less present data and its label
             idxs = np.random.randint(0, labels_filtered.shape[0], size=to_add_class_count)
 
-            text_data = np.concatenate([text_data, texts_filtered_by_label[idxs]])
+            if type(text_data) == np.ndarray:
+                text_data = np.concatenate([text_data, texts_filtered_by_label[idxs]])
+            elif type(text_data) == sp.csr_matrix:
+                text_data = sp.vstack([text_data, texts_filtered_by_label[idxs]])
             target_labels = np.concatenate([target_labels.ravel(), labels_filtered[idxs]])
 
-        state = np.random.get_state()
-        np.random.shuffle(text_data)
-        np.random.set_state(state)
-        np.random.shuffle(target_labels)
+        rng = np.arange(text_data.shape[0])  # index-based reshuffling
+        np.random.shuffle(rng)
+        text_data = text_data[rng, :]
+        target_labels = target_labels[rng]
 
         return text_data, target_labels
 
