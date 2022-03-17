@@ -272,8 +272,8 @@ class ASRSReportClassificationTrainer:
                 predictions = ASRSReportClassificationPredictor(extractor, self._vectorizer_name).get_model_predictions(classifier, train_data)
                 evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label), None)
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
-                visualizer = Visualizer(topic_label, self._preprocessor.encoder(topic_label), model_dir_path)
-                visualizer.show_curves(predictions, train_targets, "train_data_model_prediction")
+                visualizer = Visualizer(model_dir_path)
+                visualizer.show_curves(predictions, train_targets, "train_data_model_prediction", topic_label=topic_label, label_encoder=self._preprocessor.encoder(topic_label))
                 visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict, "results_train")
 
         self.save_models(model_dir_path)

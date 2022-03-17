@@ -15,51 +15,68 @@ logger = logging.getLogger("avisaf_logger")
 
 class Visualizer:
 
-    def __init__(self, evaluated_label: str, label_encoder, model_dir: str = None):
-        self._topic_label = evaluated_label
-        self._label_encoder = label_encoder
+    def __init__(self, model_dir: str = None):
         self._model_dir = model_dir
+        self._open_files = {}
 
     def print_metrics(self, title: str, model_conf_matrix, model_results_dict: dict, filename: str):
 
         stdout = sys.stdout
         files_to_write = {stdout}  # results will always be written to stdout
         if self._model_dir is not None:
-            file_stream = open(Path(self._model_dir,  f"{filename}.txt"), "a")
+            if self._open_files.get(filename, 0) == 0:
+                # the file is accessed first time in this program run - rewriting the content
+                access = "w"
+                self._open_files[filename] = 1
+            else:
+                # accessing the same file multiple times during program run
+                access = "a"
+                assert self._open_files[filename] >= 1
+                self._open_files[filename] += 1
+            file_stream = open(Path(self._model_dir,  f"{filename}.txt"), access)
             files_to_write.add(file_stream)
 
         for f in files_to_write:
-            sys.stdout = f
-            print(title)
-            print(model_conf_matrix)
-            for metric_name, value in model_results_dict.items():
-                if isinstance(value, float):
-                    print(f"\t{metric_name}: %0.2f" % (value * 100))
-                elif isinstance(value, list) or isinstance(value, np.ndarray):
-                    formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
-                    print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
-                    print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
-                    print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
-                else:
-                    print(f"\t{metric_name}: {value}")
+            with f:
+                sys.stdout = f
+                print(title)
+                print(model_conf_matrix)
+                for metric_name, value in model_results_dict.items():
+                    if isinstance(value, float):
+                        print(f"\t{metric_name}: %0.2f" % (value * 100))
+                    elif isinstance(value, list) or isinstance(value, np.ndarray):
+                        formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
+                        print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
+                        print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
+                        print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
+                    else:
+                        print(f"\t{metric_name}: {value}")
         sys.stdout = stdout
 
-    def show_curves(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, model_type: str = "prediction_model", avg_method: str = None):
+    def show_curves(
+            self,
+            predictions_distribution: np.ndarray,
+            target_classes: np.ndarray,
+            model_type: str = "prediction_model",
+            avg_method: str = None,
+            topic_label: str = None,
+            label_encoder=None
+    ):
         roc_curves_data, prec_recall_data = [], []
         class_predictions = np.argmax(predictions_distribution, axis=1)
-        add_string = (f" for \"{self._topic_label}\" classes" if self._topic_label else "") + f" ({model_type})"
+        add_string = (f" for \"{topic_label}\" classes" if topic_label else "") + f" ({model_type})"
         roc_curves_title = "ROC Curve" + add_string
         prec_recall_title = "Precision-recall curve" + add_string
         precision = metrics.precision_score(target_classes, class_predictions, average=avg_method)
         for positive_class in np.unique(target_classes):
             # inverse_transforms returns the list of decoded labels - list now contains only 1 item
-            label = self._label_encoder.inverse_transform([positive_class])[0]
+            label = label_encoder.inverse_transform([positive_class])[0]
             fpr, tpr, thresholds = metrics.roc_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
             roc_curves_data.append((fpr, tpr, thresholds, label))
             prec, recall, thresholds = metrics.precision_recall_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
             prec_recall_data.append((prec, recall, precision[positive_class], label))
 
-        fname = f"{'_' + self._topic_label if self._topic_label else ''}_{model_type}.svg"
+        fname = f"{'_' + topic_label if topic_label else ''}_{model_type}.svg"
         self.plot_evaluation_curves(
             prec_recall_data,
             title=prec_recall_title,

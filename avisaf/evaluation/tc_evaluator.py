@@ -19,7 +19,7 @@ class ASRSReportClassificationEvaluator:
     def __init__(self, evaluated_label: str = None, label_encoder=None, model_dir: str = None):
         self._evaluated_topic_label = evaluated_label
         self._label_encoder = label_encoder
-        self._visualizer = Visualizer(evaluated_label, label_encoder, model_dir)
+        self._visualizer = Visualizer(model_dir)
 
     def evaluate_dummy_baseline(self, target_classes: np.ndarray):
         unique_targets_count = np.unique(target_classes).shape[0]
@@ -31,14 +31,16 @@ class ASRSReportClassificationEvaluator:
             self._visualizer.print_metrics(f"Baseline {self._evaluated_topic_label if self._evaluated_topic_label else ''} metrics: ", baseline_conf_matrix, baseline_results_dict, "results_dummy")
 
     def evaluate_random_predictions(self, target_classes: np.ndarray, show_curves: bool = False):
-        unique_targets_count = np.unique(target_classes).shape[0]
-        random_idxs = np.random.randint(0, unique_targets_count, size=target_classes.shape[0])
-        random_predictions = np.zeros((target_classes.shape[0], unique_targets_count))
+        unique_targets = np.unique(target_classes)
+        dist, _ = np.histogram(target_classes, bins=unique_targets.shape[0])
+        dist = dist / target_classes.shape[0]
+        random_idxs = np.random.choice(unique_targets, size=target_classes.shape[0], p=dist)
+        random_predictions = np.zeros((target_classes.shape[0], unique_targets.shape[0]))
         for idx, x in enumerate(random_idxs):
             random_predictions[idx, x] = 1
         random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes)
         if show_curves:
-            self._visualizer.show_curves(random_predictions, target_classes, model_type="random_predictions", avg_method=None)
+            self._visualizer.show_curves(random_predictions, target_classes, model_type="random_predictions", avg_method=None, topic_label=self._evaluated_topic_label, label_encoder=self._label_encoder)
         self._visualizer.print_metrics("Random metrics: ", random_conf_matrix, random_results_dict, "results_random")
 
     def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None) -> tuple:
@@ -69,15 +71,15 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
 
     extractor = CsvAsrsDataExtractor(text_paths)
     predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
+    visualizer = Visualizer(model_path)
 
-    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"), model_parameters.get("has_default_class"))
+    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"), model_parameters.get("has_default_class", {}))
     for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
         evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
-        visualizer = Visualizer(topic_label, label_encoder, model_path)
         visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
         if show_curves:
-            visualizer.show_curves(predictions, targets, avg_method=None)
+            visualizer.show_curves(predictions, targets, avg_method=None, topic_label=topic_label, label_encoder=label_encoder)
         if compare_baseline:
             # generate baseline predictions and evaluate them
             evaluator.evaluate_dummy_baseline(targets)
