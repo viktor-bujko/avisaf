@@ -16,10 +16,16 @@ logger = logging.getLogger("avisaf_logger")
 
 
 class ASRSReportClassificationEvaluator:
-    def __init__(self, evaluated_label: str = None, label_encoder=None, model_dir: str = None):
-        self._evaluated_topic_label = evaluated_label
-        self._label_encoder = label_encoder
+    def __init__(self, model_dir: str = None):
+        self._label_encoder = None
+        self._evaluated_topic_label = None
         self._visualizer = Visualizer(model_dir)
+
+    def set_evaluated_topic_label(self, evaluated_label: str):
+        self._evaluated_topic_label = evaluated_label
+
+    def set_label_encoder(self, label_encoder):
+        self._label_encoder = label_encoder
 
     def evaluate_dummy_baseline(self, target_classes: np.ndarray):
         unique_targets_count = np.unique(target_classes).shape[0]
@@ -70,12 +76,15 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
         model_parameters = json.load(model_parameters)
 
     extractor = CsvAsrsDataExtractor(text_paths)
-    predictor = ASRSReportClassificationPredictor(extractor, model_parameters.get("vectorizer_params", {}).get("vectorizer"))
+    predictor = ASRSReportClassificationPredictor(extractor)
+    evaluator = ASRSReportClassificationEvaluator(model_path)
     visualizer = Visualizer(model_path)
 
-    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters.get("trained_labels"), model_parameters.get("has_default_class", {}))
-    for (predictions, targets), topic_label, label_encoder in zip(predictions_targets, model_predictors.keys(), label_encoders):
-        evaluator = ASRSReportClassificationEvaluator(topic_label, label_encoder, model_path)
+    predictions_targets = predictor.get_evaluation_predictions(model_predictors, model_parameters)
+    for (predictions, targets), topic_label in zip(predictions_targets, model_predictors.keys()):
+        label_encoder = label_encoders.get(topic_label)
+        evaluator.set_evaluated_topic_label(topic_label)
+        evaluator.set_label_encoder(label_encoder)
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
         visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
         if show_curves:

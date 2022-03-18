@@ -37,20 +37,21 @@ class Visualizer:
             files_to_write.add(file_stream)
 
         for f in files_to_write:
-            with f:
-                sys.stdout = f
-                print(title)
-                print(model_conf_matrix)
-                for metric_name, value in model_results_dict.items():
-                    if isinstance(value, float):
-                        print(f"\t{metric_name}: %0.2f" % (value * 100))
-                    elif isinstance(value, list) or isinstance(value, np.ndarray):
-                        formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
-                        print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
-                        print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
-                        print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
-                    else:
-                        print(f"\t{metric_name}: {value}")
+            sys.stdout = f
+            print(title)
+            print(model_conf_matrix)
+            for metric_name, value in model_results_dict.items():
+                if isinstance(value, float):
+                    print(f"\t{metric_name}: %0.2f" % (value * 100))
+                elif isinstance(value, list) or isinstance(value, np.ndarray):
+                    formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
+                    print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
+                    print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
+                    print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
+                else:
+                    print(f"\t{metric_name}: {value}")
+            if f != stdout:
+                f.close()
         sys.stdout = stdout
 
     def show_curves(

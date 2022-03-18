@@ -101,7 +101,7 @@ class VectorizerFactory:
     @staticmethod
     def create_vectorizer(vect: str):
         default = Doc2VecAsrsReportVectorizer()
-        if not vect:
+        if not vect or vect == "default":
             return default
 
         available_vectorizers = {
@@ -117,7 +117,17 @@ class VectorizerFactory:
 
 
 class AsrsReportVectorizer:
-    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+
+    def vectorize_texts(self, extractor, return_vectors: bool = True):
+        narrative_label = "Report 1_Narrative"
+        narratives = extractor.extract_data([narrative_label])[narrative_label]
+
+        if return_vectors:
+            return self._build_feature_vectors(narratives)
+        else:
+            return narratives
+
+    def _build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         """
         :param texts:
         :type texts: np.ndarray
@@ -151,7 +161,7 @@ class AsrsReportVectorizer:
 
         return preprocessed
 
-    def get_params(self):
+    def get_params(self) -> dict:
         pass
 
 
@@ -173,7 +183,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             ("scaler", StandardScaler(with_mean=False))
         ])
 
-    def build_feature_vectors(self, texts: np.ndarray):
+    def _build_feature_vectors(self, texts: np.ndarray):
         logger.debug("Started vectorization")
 
         texts = self.preprocess(texts)
@@ -253,7 +263,7 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
 
         return model
 
-    def build_feature_vectors(self, texts: type(np.ndarray)):
+    def _build_feature_vectors(self, texts: type(np.ndarray)):
 
         try:
             model = Doc2Vec.load(self._model_path, mmap="r")
@@ -296,7 +306,7 @@ class Word2VecAsrsReportVectorizer(AsrsReportVectorizer):
         self._nlp = spacy.load("en_core_web_md")
         self._vectors = vectors
 
-    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+    def _build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         logger.debug("Started vectorization")
 
         texts = self.preprocess(texts)
@@ -417,7 +427,7 @@ class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
         self._model_path = str(Path("vectors", "fasttext_vectors", "fasttext.model"))
         super().__init__(vectors=self._vectors)
 
-    def build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+    def _build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
         logger.debug("Started vectorization")
 
         try:
