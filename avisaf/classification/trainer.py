@@ -123,6 +123,7 @@ class ASRSReportClassificationTrainer:
         encoders: [list, None],
         parameters: [dict, None],
         algorithm,
+        vectorizer_type: str,
         normalization: str
     ):
         """
@@ -135,6 +136,7 @@ class ASRSReportClassificationTrainer:
         :param parameters: Dictionary of model parameters for better accessibility from ASRSTrainer.
         :param algorithm:  Text classification algorithm to be used.
         :param normalization: Training samples normalization method.
+        :param vectorizer_type:
         """
         if not parameters:
             parameters = {}
@@ -142,15 +144,20 @@ class ASRSReportClassificationTrainer:
         self._algorithm = algorithm
         self._normalize_method = normalization
         self._classifier = self._set_classification_algorithm(algorithm)
-        self._preprocessor = ASRSReportDataPreprocessor(vectorizer="tfidf", encoders=encoders)
         assert self._classifier is not None
 
         if not models:
             self._parameter_dicts = {}
             self._models = {}
+            if not vectorizer_type:
+                vectorizer_type = "d2v"
         else:
             self._parameter_dicts = parameters
             self._models = models
+            if not vectorizer_type:
+                # taking first predictor's vectorizer name
+                vectorizer_type = list(parameters.values())[0].get("vectorizer_params", {}).get("vectorizer", None)
+        self._preprocessor = ASRSReportDataPreprocessor(vectorizer=vectorizer_type, encoders=encoders)
         assert self._models.keys() == self._parameter_dicts.keys()
 
     def train_report_classification(self, texts_paths: list, label_to_train: str, label_filter: list = None, set_default: bool = False, params_overrides: list = None):
@@ -221,7 +228,9 @@ class ASRSReportClassificationTrainer:
             get_train_predictions = True
             if get_train_predictions:
                 predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, train_data)
-                evaluator = ASRSReportClassificationEvaluator(topic_label, self._preprocessor.encoder(topic_label), None)
+                evaluator = ASRSReportClassificationEvaluator(None)
+                evaluator.set_evaluated_topic_label(topic_label)
+                evaluator.set_label_encoder(self._preprocessor.encoder(topic_label))
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
                 visualizer = Visualizer(model_dir_path)
                 visualizer.show_curves(predictions, train_targets, "train_data_model_prediction", topic_label=topic_label, label_encoder=self._preprocessor.encoder(topic_label))
@@ -254,7 +263,7 @@ class ASRSReportClassificationTrainer:
             json.dump(self._parameter_dicts, params_file, indent=4)
 
 
-def train_classification(models_paths: list, texts_paths: list, label: str, label_values: list, algorithm: str, normalization: str, set_default: bool, params_overrides: list):
+def train_classification(models_paths: list, texts_paths: list, label: str, label_values: list, algorithm: str, normalization: str, set_default: bool, params_overrides: list, vectorizer_type: str):
     """
     Method which sequentially launches the training of multiple text classification models.
 
@@ -274,6 +283,7 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
                           any of the value defined in label_values list should still be included
                           in training dataset with target label "Other".
     :param params_overrides:
+    :param vectorizer_type:
     """
 
     if not models_paths:
@@ -282,6 +292,7 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             encoders=None,
             parameters=None,
             algorithm=algorithm,
+            vectorizer_type=vectorizer_type,
             normalization=normalization
         )
 
@@ -300,6 +311,7 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             encoders=encoders,
             parameters=parameters,
             algorithm=algorithm,
+            vectorizer_type=vectorizer_type,
             normalization=normalization
         )
         _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default, params_overrides)
