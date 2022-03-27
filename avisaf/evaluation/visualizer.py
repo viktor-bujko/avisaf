@@ -58,8 +58,7 @@ class Visualizer:
             self,
             predictions_distribution: np.ndarray,
             target_classes: np.ndarray,
-            model_type: str = "prediction_model",
-            avg_method: str = None,
+            model_type: str,
             topic_label: str = None,
             label_encoder=None
     ):
@@ -68,7 +67,7 @@ class Visualizer:
         add_string = (f" for \"{topic_label}\" classes" if topic_label else "") + f" ({model_type})"
         roc_curves_title = "ROC Curve" + add_string
         prec_recall_title = "Precision-recall curve" + add_string
-        precision = metrics.precision_score(target_classes, class_predictions, average=avg_method)
+        precision = metrics.precision_score(target_classes, class_predictions, average=None)
         for positive_class in np.unique(target_classes):
             # inverse_transforms returns the list of decoded labels - list now contains only 1 item
             label = label_encoder.inverse_transform([positive_class])[0]

@@ -46,7 +46,7 @@ class ASRSReportClassificationEvaluator:
             random_predictions[idx, x] = 1
         random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes)
         if show_curves:
-            self._visualizer.show_curves(random_predictions, target_classes, model_type="random_predictions", avg_method=None, topic_label=self._evaluated_topic_label, label_encoder=self._label_encoder)
+            self._visualizer.show_curves(random_predictions, target_classes, "random_predictions", topic_label=self._evaluated_topic_label, label_encoder=self._label_encoder)
         self._visualizer.print_metrics(f"Random {self._evaluated_topic_label if self._evaluated_topic_label else ''} metrics: ", random_conf_matrix, random_results_dict, "results_random")
 
     def evaluate(self, predictions_distribution: np.ndarray, target_classes: np.ndarray, avg_method: [str, None] = None) -> tuple:
@@ -88,7 +88,7 @@ def evaluate_classification(model_path: str, text_paths: list, show_curves: bool
         model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, targets)
         visualizer.print_metrics(f"Evaluating '{topic_label}' predictor:", model_conf_matrix, model_results_dict, "results_eval")
         if show_curves:
-            visualizer.show_curves(predictions, targets, avg_method=None, topic_label=topic_label, label_encoder=label_encoder)
+            visualizer.show_curves(predictions, targets, "prediction_model", topic_label=topic_label, label_encoder=label_encoder)
         if compare_baseline:
             # generate baseline predictions and evaluate them
             evaluator.evaluate_dummy_baseline(targets)
