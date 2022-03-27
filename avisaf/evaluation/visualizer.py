@@ -37,28 +37,28 @@ class Visualizer:
             files_to_write.add(file_stream)
 
         for f in files_to_write:
-            with f:
-                sys.stdout = f
-                print(title)
-                print(model_conf_matrix)
-                for metric_name, value in model_results_dict.items():
-                    if isinstance(value, float):
-                        print(f"\t{metric_name}: %0.2f" % (value * 100))
-                    elif isinstance(value, list) or isinstance(value, np.ndarray):
-                        formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
-                        print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
-                        print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
-                        print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
-                    else:
-                        print(f"\t{metric_name}: {value}")
+            sys.stdout = f
+            print(title)
+            print(model_conf_matrix)
+            for metric_name, value in model_results_dict.items():
+                if isinstance(value, float):
+                    print(f"\t{metric_name}: %0.2f" % (value * 100))
+                elif isinstance(value, list) or isinstance(value, np.ndarray):
+                    formatted_floats_list = [("| %0.2f |" % (fl_number * 100)) for fl_number in value]
+                    print(f"\t{metric_name}: {''.join(formatted_floats_list)}")
+                    print(f"\tAverage {metric_name}: {'%0.2f' % (np.mean(value) * 100)}")
+                    print(f"\tStd dev of {metric_name}: {'%0.2f' % (np.std(value) * 100)}")
+                else:
+                    print(f"\t{metric_name}: {value}")
+            if f != stdout:
+                f.close()
         sys.stdout = stdout
 
     def show_curves(
             self,
             predictions_distribution: np.ndarray,
             target_classes: np.ndarray,
-            model_type: str = "prediction_model",
-            avg_method: str = None,
+            model_type: str,
             topic_label: str = None,
             label_encoder=None
     ):
@@ -67,14 +67,14 @@ class Visualizer:
         add_string = (f" for \"{topic_label}\" classes" if topic_label else "") + f" ({model_type})"
         roc_curves_title = "ROC Curve" + add_string
         prec_recall_title = "Precision-recall curve" + add_string
-        precision = metrics.precision_score(target_classes, class_predictions, average=avg_method)
+        precision = metrics.precision_score(target_classes, class_predictions, average=None)
         for positive_class in np.unique(target_classes):
             # inverse_transforms returns the list of decoded labels - list now contains only 1 item
             label = label_encoder.inverse_transform([positive_class])[0]
             fpr, tpr, thresholds = metrics.roc_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
             roc_curves_data.append((fpr, tpr, thresholds, label))
             prec, recall, thresholds = metrics.precision_recall_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
-            prec_recall_data.append((prec, recall, precision[positive_class], label))
+            prec_recall_data.append((prec, recall, None, label))
 
         fname = f"{'_' + topic_label if topic_label else ''}_{model_type}.svg"
         self.plot_evaluation_curves(
@@ -82,7 +82,6 @@ class Visualizer:
             title=prec_recall_title,
             xlabel="Recall",
             ylabel="Precision",
-            label="AP",
             model_type=model_type,
             model_dir=self._model_dir,
             filename="precision_recall" + fname
@@ -107,19 +106,26 @@ class Visualizer:
         for fpr, tpr, value, predicted_class_name in curves_data:
             if kwargs.get("label_method"):
                 value = kwargs.get("label_method")(fpr, tpr)
-            plt.plot(fpr, tpr, label=kwargs.get("label", "") + (f" ({predicted_class_name}) = %0.2f" % value))
+            if not value:
+                label_value = f" {predicted_class_name}"
+            else:
+                label_value = (f" ({predicted_class_name}) = %0.2f" % value)
+            plt.plot(fpr, tpr, label=kwargs.get("label", "") + label_value)
         if kwargs.get("show_diagonal", False):
             plt.plot([0, 1], [0, 1], "r--")
-        label_plot = plt.subplot()
-        box = label_plot.get_position()
+        # label_plot = plt.subplot()
+        # box = label_plot.get_position()
         # label_plot.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-        label_plot.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        label_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
-        # plt.legend(loc="lower right")
+        # label_plot.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        # label_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
+        plt.legend(loc="best")
+        plt.grid(visible=True, linestyle='--', alpha=0.4)
         plt.xlim([0, 1])
         plt.ylim([0, 1])
         plt.ylabel(kwargs.get("ylabel", ""))
         plt.xlabel(kwargs.get("xlabel", ""))
+        plt.xticks(np.arange(0, 1.05, 0.1))
+        plt.yticks(np.arange(0, 1.05, 0.1))
         plt.tight_layout()
         default_filename = "avisaf_classification_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg"
         model_dir = kwargs.get("model_dir", ".")

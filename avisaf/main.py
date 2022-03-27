@@ -191,6 +191,7 @@ def choose_action(args: Namespace):
             algorithm=args.algorithm,
             normalization=args.normalize,
             set_default=args.set_default_class,
+            vectorizer_type=args.vectorizer,
             params_overrides=args.params_overrides
         ),
         "classifier_process": lambda: launch_classification(
@@ -208,7 +209,7 @@ def choose_action(args: Namespace):
     try:
         functions.get(args.dest, lambda: logger.error(f"Desired function \"{args.dest}\" is not supported."))()
     except AttributeError as ex:
-        logger.error(ex.with_traceback(sys.exc_info()[0]))
+        logger.error(ex, exc_info=ex)
     except OSError as e:
         logger.error(e.with_traceback(sys.exc_info()[2]))
 
