@@ -19,7 +19,7 @@ class Visualizer:
         self._model_dir = model_dir
         self._open_files = {}
 
-    def print_metrics(self, title: str, model_conf_matrix, model_results_dict: dict, filename: str):
+    def print_metrics(self, title: str, classes: list, model_conf_matrix, model_results_dict: dict, filename: str):
 
         stdout = sys.stdout
         files_to_write = {stdout}  # results will always be written to stdout
@@ -39,6 +39,7 @@ class Visualizer:
         for f in files_to_write:
             sys.stdout = f
             print(title)
+            print(f"Classes order: { ' | '.join(classes)}")
             print(model_conf_matrix)
             for metric_name, value in model_results_dict.items():
                 if isinstance(value, float):
