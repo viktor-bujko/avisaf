@@ -139,26 +139,34 @@ class AsrsReportVectorizer:
         pass
 
     @staticmethod
-    def preprocess(texts):
+    def preprocess(texts: np.ndarray):
         logger.debug("Started preprocessing")
         preprocessed = []
-        for text in texts:
-            text = re.sub(r" [A-Z]{5} ", " waypoint ", text)  # replacing uppercase 5-letter words - most probably waypoints
-            text = text.lower()
-            text = re.sub(r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", text)  # ; separated numbers - usually altitude
-            text = re.sub(r"fl[0-9]{2,3}", "flight level", text)  # flight level representation
-            text = re.sub(r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", text)  # runway identifiers
-            text = re.sub(r"([a-z]*)[?!\-.]([a-z]*)", r"\1 \2", text)  # "word[?!/-.]word" -> "word word"
-            text = re.sub(r"(z){3,}[0-9]*", r"airport", text)  # anonymized "zzz" airports
-            text = re.sub(r"tx?wys?", "taxiway", text)
-            text = re.sub(r"twrs?[^a-z]", "tower", text)
-            text = re.sub("tcas", "traffic collision avoidance system", text)
-            text = re.sub(r"([a-z0-9]+\.){2,}[a-z0-9]*", "", text)  # removing words with several dots
-            text = re.sub(r"(air)?spds?", "speed", text)
-            text = re.sub(r"qnh", "pressure", text)
-            text = re.sub(r"lndgs?", "landing", text)
-            preprocessed.append(text)
+        nlp = spacy.load("en_core_web_md")
+        texts = map(lambda txt: str(txt), texts)
 
+        for doc in nlp.pipe(texts, batch_size=512, disable=["tok2vec", "parser", "ner"]):
+            lemmas = []
+            for token in doc:
+                lemmas.append(token.lemma_)
+            lemmatized = " ".join(lemmas)
+
+            lemmatized = re.sub(r" [A-Z]{5} ", " waypoint ", lemmatized)  # replacing uppercase 5-letter words - most probably waypoints
+            lemmatized = lemmatized.lower()
+            lemmatized = re.sub(r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", lemmatized)  # ; separated numbers - usually altitude
+            lemmatized = re.sub(r"fl[0-9]{2,3}", "flight level", lemmatized)  # flight level representation
+            lemmatized = re.sub(r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", lemmatized)  # runway identifiers
+            lemmatized = re.sub(r"([a-z]*)[?!\-.]([a-z]*)", r"\1 \2", lemmatized)  # "word[?!/-.]word" -> "word word"
+            lemmatized = re.sub(r"(z){3,}[0-9]*", r"airport", lemmatized)  # anonymized "zzz" airports
+            lemmatized = re.sub(r"tx?wys?", "taxiway", lemmatized)
+            lemmatized = re.sub(r"twrs?[^a-z]", "tower", lemmatized)
+            lemmatized = re.sub("tcas", "traffic collision avoidance system", lemmatized)
+            lemmatized = re.sub(r"([a-z0-9]+\.){2,}[a-z0-9]*", "", lemmatized)  # removing words with several dots
+            lemmatized = re.sub(r"(air)?spds?", "speed", lemmatized)
+            lemmatized = re.sub(r"qnh", "pressure", lemmatized)
+            lemmatized = re.sub(r"lndgs?", "landing", lemmatized)
+
+            preprocessed.append(lemmatized)
         logger.debug("Ended preprocessing")
 
         return preprocessed
