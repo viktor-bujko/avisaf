@@ -150,7 +150,7 @@ class ASRSReportClassificationTrainer:
             self._parameter_dicts = {}
             self._models = {}
             if not vectorizer_type:
-                vectorizer_type = "d2v"
+                vectorizer_type = "tfidf"
         else:
             self._parameter_dicts = parameters
             self._models = models
@@ -228,13 +228,15 @@ class ASRSReportClassificationTrainer:
             get_train_predictions = True
             if get_train_predictions:
                 predictions = ASRSReportClassificationPredictor(extractor).get_model_predictions(classifier, train_data)
+                label_encoder = self._preprocessor.encoder(topic_label)
                 evaluator = ASRSReportClassificationEvaluator(None)
                 evaluator.set_evaluated_topic_label(topic_label)
-                evaluator.set_label_encoder(self._preprocessor.encoder(topic_label))
+                evaluator.set_label_encoder(label_encoder)
                 model_conf_matrix, model_results_dict = evaluator.evaluate(predictions, train_targets)
                 visualizer = Visualizer(model_dir_path)
                 visualizer.show_curves(predictions, train_targets, "train_data_model_prediction", topic_label=topic_label, label_encoder=self._preprocessor.encoder(topic_label))
-                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", model_conf_matrix, model_results_dict, "results_train")
+                classes = label_encoder.inverse_transform(np.unique(train_targets))
+                visualizer.print_metrics(f"Evaluating '{topic_label}' predictor on train data:", classes, model_conf_matrix, model_results_dict, "results_train")
 
         self.save_models(model_dir_path)
 
