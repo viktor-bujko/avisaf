@@ -31,7 +31,7 @@ class ASRSReportClassificationEvaluator:
         unique_targets_count = np.unique(target_classes).shape[0]
         for baseline_mockup in range(unique_targets_count):
             mockup_predictions = np.zeros((target_classes.shape[0], unique_targets_count))
-            mockup_predictions[:, baseline_mockup] = 1
+            mockup_predictions[np.arange(target_classes.shape[0]), baseline_mockup] = 1
             baseline_conf_matrix, baseline_results_dict = self.evaluate(mockup_predictions, target_classes)
             # self._visualizer.show_curves(mockup_predictions, target_classes, model_type="dummy_" + str(baseline_mockup), label_encoder=self._label_encoder)
             classes = self._label_encoder.inverse_transform(np.unique(target_classes))
@@ -43,8 +43,7 @@ class ASRSReportClassificationEvaluator:
         dist = dist / target_classes.shape[0]
         random_idxs = np.random.choice(unique_targets, size=target_classes.shape[0], p=dist)
         random_predictions = np.zeros((target_classes.shape[0], unique_targets.shape[0]))
-        for idx, x in enumerate(random_idxs):
-            random_predictions[idx, x] = 1
+        random_predictions[np.arange(target_classes.shape[0]), random_idxs] = 1
         random_conf_matrix, random_results_dict = self.evaluate(random_predictions, target_classes)
         if show_curves:
             self._visualizer.show_curves(random_predictions, target_classes, "random_predictions", topic_label=self._evaluated_topic_label, label_encoder=self._label_encoder)
