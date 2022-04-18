@@ -145,7 +145,9 @@ class AsrsReportVectorizer:
         nlp = spacy.load("en_core_web_md")
         texts = map(lambda txt: str(txt), texts)
 
-        for doc in nlp.pipe(texts, batch_size=512, disable=["tok2vec", "parser", "ner"]):
+        for idx, doc in enumerate(nlp.pipe(texts, batch_size=1024, disable=["tok2vec", "parser", "ner"], n_process=4)):
+            if idx % 1024 == 0:
+                logger.debug(f"Lemmatized { (idx + 1) } texts.")
             lemmas = []
             for token in doc:
                 lemmas.append(token.lemma_)
