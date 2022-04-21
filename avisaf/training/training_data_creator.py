@@ -429,7 +429,10 @@ class ASRSReportDataPreprocessor:
             # iterating through texts
             for idx, topic_label in enumerate(extracted_labels.keys()):  # iterating through different topics target classes
                 label_set = extracted_labels.get(topic_label)[text_idx]
-                class_filter_regexes = [re.compile(class_regex) for class_regex in target_label_filters[idx]]
+                class_filter_regexes = []
+                if target_label_filters:
+                    # override default empty list
+                    class_filter_regexes = [re.compile(class_regex) for class_regex in target_label_filters[idx]]
                 # Some reports may be correspond to multiple target classes separated by ";"
                 # We want to use them all as possible outcomes
                 labels = label_set.split(";")
