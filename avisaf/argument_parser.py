@@ -263,6 +263,12 @@ def add_classification_train_parser(subparsers):
         choices={"knn", "svm", "mlp", "forest", "gauss", "mnb", "regression"},
     )
     parser.add_argument(
+        "--params_overrides",
+        nargs="+",
+        help="Override default algorithm hyper-parameters. Use \"param_key=param_value\" from scikit documentation (>= 1 \"=\" character required per pair)",
+        default=[]
+    )
+    parser.add_argument(
         "--normalize",
         "-n",
         choices={"undersample", "oversample"},
@@ -275,6 +281,18 @@ def add_classification_train_parser(subparsers):
         default=[],
         nargs="+",
         help="Trained model(s) to use (at least one is required)",
+    )
+    parser.add_argument(
+        "-v",
+        "--vectorizer",
+        choices={"tfidf", "spacyw2v", "googlew2v", "d2v", "fasttext"},
+        default=None
+    )
+    parser.add_argument(
+        "--set_default_class",
+        action="store_true",
+        help="Sets default text target class as \"Other\". Ignored if --filter list is not defined.",
+        default=False
     )
     return parser
 

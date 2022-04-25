@@ -16,12 +16,17 @@ from pathlib import Path
 # importing own modules
 from training.new_entity_trainer import train_spacy_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
-from classification.classifier import train_classification, launch_classification, evaluate_classification
+from classification.trainer import train_classification
+from evaluation.tc_evaluator import evaluate_classification
+from classification.predictor_decoder import launch_classification
 from evaluation.ner_evaluator import evaluate_spacy_ner
 from util.data_extractor import get_entities
 
 logger = logging.getLogger("avisaf_logger")
-logging.basicConfig(format=f"[%(levelname)s - %(asctime)s]: %(message)s")
+logging.basicConfig(
+    format=f"[%(levelname)s - %(asctime)s]: %(message)s",
+    filename="log_avisaf.log"
+)
 
 
 def test_spacy_ner(
@@ -191,7 +196,10 @@ def choose_action(args: Namespace):
             label=args.label,
             label_values=args.filter,
             algorithm=args.algorithm,
-            normalization=args.normalize
+            normalization=args.normalize,
+            set_default=args.set_default_class,
+            vectorizer_type=args.vectorizer,
+            params_overrides=args.params_overrides
         ),
         "classifier_process": lambda: launch_classification(
             model_path=args.model,
@@ -201,14 +209,14 @@ def choose_action(args: Namespace):
             model_path=args.model,
             text_paths=args.paths,
             compare_baseline=args.compare_baseline,
-            show_curves=args.show_curves,
+            show_curves=args.show_curves
         )
     }
 
     try:
         functions.get(args.dest, lambda: logger.error(f"Desired function \"{args.dest}\" is not supported."))()
     except AttributeError as ex:
-        logger.error(ex.with_traceback(sys.exc_info()[0]))
+        logger.error(ex, exc_info=ex)
     except OSError as e:
         logger.error(e.with_traceback(sys.exc_info()[2]))
 

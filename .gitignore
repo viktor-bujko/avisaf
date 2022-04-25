@@ -31,6 +31,11 @@ stop_words.txt
 *.vec
 learning_curve.png
 report*.model
-doc2vec*.model
+doc2vec*
+spacy_config.cfg
+remove_overlaps.py
+examples.json
+annotation_script.sh
+create_training_data.py
 spacy3_env/
 *.spacy

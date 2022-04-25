@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-import logging
 import numpy as np
+import logging
 from pathlib import Path
 import spacy
 from util.data_extractor import find_file_by_path, get_entities
