@@ -14,12 +14,12 @@ from argument_parser import parse_args
 from pathlib import Path
 
 # importing own modules
-from training.new_entity_trainer import train_spacy_ner
+from training.entity_trainer import train_ner
 from training.training_data_creator import ner_auto_annotation_handler, ner_man_annotation_handler
 from classification.trainer import train_classification
 from evaluation.tc_evaluator import evaluate_classification
 from classification.predictor_decoder import launch_classification
-from evaluation.ner_evaluator import evaluate_spacy_ner
+from evaluation.ner_evaluator import evaluate_ner
 from util.data_extractor import get_entities
 
 logger = logging.getLogger("avisaf_logger")
@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 
 
-def test_spacy_ner(
+def test_ner(
     model="en_core_web_md",
     text_path=None,
     cli_result: bool = False,
@@ -107,6 +107,7 @@ def test_spacy_ner(
         print()  # separate output text
 
         def print_highlighted_entity(tkn):
+            # TODO: použi tkn.ent_iob namiesto ent_type_ pre rozpoznanie viactokenových entít
             if not tkn.ent_type_:
                 print(f"{tkn.text} ", end="")
             else:
@@ -114,6 +115,7 @@ def test_spacy_ner(
                 print(f"\x1b[{color}m[{tkn.text}: {tkn.ent_type_}]\033[0m ", end="")
 
         for token in document:
+            # TODO: použi nejaký decorator na poskytovanie rôznych vypisovaní
             print_highlighted_entity(token)
         print()  # to end the text
         return
@@ -154,14 +156,14 @@ def choose_action(args: Namespace):
     """
 
     functions = {
-        "train_ner": lambda: train_spacy_ner(
+        "train_ner": lambda: train_ner(
             iter_number=args.iterations,
             model=args.model,
             new_model_name=args.name,
             train_data_srcfiles=args.data,
             batch_size=args.batch_size
         ),
-        "test_ner": lambda: test_spacy_ner(
+        "test_ner": lambda: test_ner(
             model=args.model,
             cli_result=args.print,
             visualize=args.render,
@@ -169,7 +171,7 @@ def choose_action(args: Namespace):
             html_result_file=args.save,
             port=args.port,
         ),
-        "eval_ner": lambda: evaluate_spacy_ner(
+        "eval_ner": lambda: evaluate_ner(
             model=args.model,
             texts_file=args.texts
         ),
