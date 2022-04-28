@@ -3,16 +3,15 @@
 and improving an existing Named Entity Recognition model. The module uses
 train_spaCy_model function which updates the model using spaCy.
 """
-import logging
 import spacy
+import logging
+from typing import List
 from datetime import datetime
 from pathlib import Path
 from spacy.tokens import DocBin
 from spacy.cli.train import train
-
+from spacy.training.example import Example
 # importing own modules
-from typing import List
-
 from util.data_extractor import get_entities, JsonDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
@@ -52,6 +51,22 @@ class ASRSNamedEntityRecognizer:
             ner.add_label(label)
 
         return ner
+
+    @staticmethod
+    @spacy.registry.readers("train_data_stream")
+    def stream_data(data_source: list):
+        logger.debug(f"Training data source files list: {data_source}")
+        extractor = JsonDataExtractor(data_source)
+        # data_to_stream =
+
+        def stream(nlp):
+            for annotated_texts in extractor.get_ner_training_data():
+                for text, ents in annotated_texts:
+                    doc = nlp.make_doc(text)
+                    example = Example.from_dict(doc, ents)
+                    yield example
+
+        return stream
 
     def convert_to_spacy_docbin(self, json_data: list, output_path: str = None) -> DocBin:
         docbin = DocBin()  # creating binary serialization representation of Docs collection
@@ -124,15 +139,16 @@ def train_ner(
     else:
         model_path = Path(new_model_name).resolve()
 
-    extractor = JsonDataExtractor(train_data_srcfiles)
-    training_data = extractor.get_ner_training_data()
+    # extractor = JsonDataExtractor(train_data_srcfiles)
+    # training_data = extractor.get_ner_training_data()
 
-    converted = ent_recognizer.convert_to_spacy_docbin(training_data, "test_data_11.spacy")
+    # converted = ent_recognizer.convert_to_spacy_docbin(training_data, "test_data_11.spacy")
 
     overrides = {
-            "paths.train": None,
-            "paths.dev": None,
-            "nlp.batch_size": batch_size
+            "corpora.train.data_source": train_data_srcfiles,
+            "paths.dev": "dev_data_10.spacy",
+            "nlp.batch_size": batch_size,
+            "training.max_epochs": iter_number
     }
 
     train(

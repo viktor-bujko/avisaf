@@ -2,10 +2,11 @@
 from pathlib import Path
 
 import spacy
+import logging
 from spacy import displacy as displacy
-
-from main import logger
 from util.data_extractor import get_entities
+
+logger = logging.getLogger("avisaf_logger")
 
 
 def test_ner(

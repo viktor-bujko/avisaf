@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import numpy as np
-import spacy
-import sys
 import re
+import sys
+import json
+import spacy
 import logging
+import numpy as np
 from pathlib import Path
 from spacy.language import Doc
 import matplotlib.pyplot as plt
@@ -143,29 +144,43 @@ class AsrsReportVectorizer:
         logger.debug("Started preprocessing")
         preprocessed = []
         nlp = spacy.load("en_core_web_md")
-        texts = map(lambda txt: str(txt), texts)
+        # TODO: replace by used NER model
+        texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
-        for idx, doc in enumerate(nlp.pipe(texts, batch_size=1024, disable=["tok2vec", "parser", "ner"], n_process=1)):
+        with Path("aviation_glossary.json").open("r") as glossary_file:
+            abbreviations_glossary = dict(json.load(glossary_file))
+
+        for idx, doc in enumerate(nlp.pipe(
+                texts,
+                batch_size=1024,
+                disable=["tok2vec", "parser"],
+                n_process=1)
+        ):
             if idx % 1024 == 0:
                 logger.debug(f"Lemmatized { (idx + 1) } texts.")
-            lemmas = []
+            doc_lemmas = []
             for token in doc:
-                lemmas.append(token.lemma_)
-            lemmatized = " ".join(lemmas)
+                token_base_form = token.lemma_
+                if token.text.startswith("ZZZ"):
+                    token_base_form = "airport"
+                if token.ent_type_ == "ABBREVIATION":
+                    # searching for full version of abbreviation in the glossary
+                    abbr_explained = abbreviations_glossary.get(token.text, {"full": token.text})
+                    # get full version of abbreviation if exists, otherwise use abbreviation without change
+                    token_base_form = abbr_explained.get("full")
 
-            lemmatized = re.sub(r" [A-Z]{5} ", " waypoint ", lemmatized)  # replacing uppercase 5-letter words - most probably waypoints
-            lemmatized = lemmatized.lower()
+                # replacing token text by its lemma while preserving original whitespace
+                doc_lemmas.append(token_base_form.lower() + token.whitespace_)
+            lemmatized = " ".join(doc_lemmas)
+
+            # lemmatized = re.sub(r" [A-Z]{5} ", " waypoint ", lemmatized)  # replacing uppercase 5-letter words - most probably waypoints
             lemmatized = re.sub(r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", lemmatized)  # ; separated numbers - usually altitude
-            lemmatized = re.sub(r"fl[0-9]{2,3}", "flight level", lemmatized)  # flight level representation
+            lemmatized = re.sub(r"fl;?[0-9]{2,3}", "flight level", lemmatized)  # flight level representation
             lemmatized = re.sub(r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", lemmatized)  # runway identifiers
-            lemmatized = re.sub(r"([a-z]*)[?!\-.]([a-z]*)", r"\1 \2", lemmatized)  # "word[?!/-.]word" -> "word word"
-            lemmatized = re.sub(r"(z){3,}[0-9]*", r"airport", lemmatized)  # anonymized "zzz" airports
             lemmatized = re.sub(r"tx?wys?", "taxiway", lemmatized)
             lemmatized = re.sub(r"twrs?[^a-z]", "tower", lemmatized)
-            lemmatized = re.sub("tcas", "traffic collision avoidance system", lemmatized)
             lemmatized = re.sub(r"([a-z0-9]+\.){2,}[a-z0-9]*", "", lemmatized)  # removing words with several dots
             lemmatized = re.sub(r"(air)?spds?", "speed", lemmatized)
-            lemmatized = re.sub(r"qnh", "pressure", lemmatized)
             lemmatized = re.sub(r"lndgs?", "landing", lemmatized)
 
             preprocessed.append(lemmatized)

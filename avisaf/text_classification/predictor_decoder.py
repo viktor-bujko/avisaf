@@ -7,9 +7,8 @@ import json
 import lzma
 import pickle
 import logging
-from pathlib import Path
-
 import numpy as np
+from pathlib import Path
 
 from ner.annotator import ASRSReportDataPreprocessor
 from util.vectorizers import VectorizerFactory

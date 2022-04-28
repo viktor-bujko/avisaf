@@ -3,11 +3,11 @@
 training data used by other modules.
 """
 
-import pandas as pd
 import json
 import logging
-from pathlib import Path
 import numpy as np
+import pandas as pd
+from pathlib import Path
 from typing import Union
 
 logger = logging.getLogger("avisaf_logger")
@@ -55,7 +55,9 @@ class JsonDataExtractor(DataExtractor):
             with training_data_file_path.open(mode="r") as tr_data_file:
                 training_data += json.load(tr_data_file)
 
-        return training_data
+            yield training_data
+
+        # return training_data
 
 
 def get_entities(entities_file_path: Union[str, Path] = None) -> dict:

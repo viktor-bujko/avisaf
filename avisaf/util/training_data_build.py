@@ -25,10 +25,10 @@ def fetch_and_sort_annotations(file_path: Path):
 
     file_path = file_path.resolve()
     extractor = JsonDataExtractor([file_path])
-    training_data = extractor.get_ner_training_data()
+    # training_data = extractor.get_ner_training_data()
     sorted_training_data = []
 
-    for text, annotation in training_data:
+    for text, annotation in extractor.get_ner_training_data():
         annot_list = annotation["entities"]  # get entities list from "entities" key in the annotation dictionary
         sorted_list = sorted(annot_list)  # , key=lambda tple: (tple[0], tple[1], tple[2])
         # sort entities
