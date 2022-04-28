@@ -19,7 +19,7 @@ from spacy.matcher import PhraseMatcher, Matcher
 from util.indexing import get_spans_indexes, entity_trimmer
 import util.training_data_build as train
 from util.data_extractor import get_entities, CsvAsrsDataExtractor
-from classification.vectorizers import VectorizerFactory
+from util.vectorizers import VectorizerFactory
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import scipy.sparse as sp
@@ -48,7 +48,7 @@ def get_current_texts_and_ents(train_data_file: Path, extract_texts: bool):
     return texts, entities
 
 
-def ner_auto_annotation_handler(
+def auto_annotation_handler(
         patterns_file_path: str,
         label_text: str,
         training_src_file: str,
@@ -205,7 +205,7 @@ def launch_auto_annotation(
     return train_data_with_overlaps
 
 
-def ner_man_annotation_handler(
+def manual_annotation_handler(
         file_path: str,
         labels_path: [str, list] = None,
         lines: int = -1,

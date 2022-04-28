@@ -135,16 +135,14 @@ class CsvAsrsDataExtractor(DataExtractor):
 
         try:
             narratives1 = report_df["Report 1_Narrative"].values.tolist()
-            calls1 = report_df["Report 1_Callback"].values.tolist()
             narratives2 = report_df["Report 2_Narrative"].values.tolist()
-            calls2 = report_df["Report 2_Callback"].values.tolist()
 
         except KeyError:
             logger.error("No such key was found")
             return None
 
         length = len(narratives1)
-        lists = [narratives1, calls1, narratives2, calls2]
+        lists = [narratives1, narratives2]
 
         end_index = start_index + lines_count
 

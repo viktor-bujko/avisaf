@@ -10,7 +10,7 @@ from util.data_extractor import find_file_by_path, get_entities
 logger = logging.getLogger("avisaf_logger")
 
 
-def evaluate_spacy_ner(model: str, texts_file: str):
+def evaluate_ner(model: str, texts_file: str):
 
     if not model:
         logger.error("Model has to be defined")
