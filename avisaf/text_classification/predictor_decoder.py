@@ -11,8 +11,8 @@ from pathlib import Path
 
 import numpy as np
 
-from training.training_data_creator import ASRSReportDataPreprocessor
-from classification.vectorizers import VectorizerFactory
+from ner.annotator import ASRSReportDataPreprocessor
+from util.vectorizers import VectorizerFactory
 from util.data_extractor import DataExtractor, CsvAsrsDataExtractor
 
 logger = logging.getLogger("avisaf_logger")

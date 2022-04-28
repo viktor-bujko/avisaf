@@ -129,7 +129,7 @@ class Visualizer:
         plt.yticks(np.arange(0, 1.05, 0.1))
         plt.tight_layout()
         default_filename = "avisaf_classification_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg"
-        model_dir = kwargs.get("model_dir", ".")
+        model_dir = kwargs.get("model_dir", "../evaluation")
         fname = Path(model_dir, kwargs.get("filename", default_filename))
         non_gui_backend = matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']
         if non_gui_backend:
