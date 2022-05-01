@@ -207,7 +207,7 @@ def launch_auto_annotation(
 
 def manual_annotation_handler(
         file_path: str,
-        labels_path: [str, list] = None,
+        labels_path: str,
         lines: int = -1,
         start_index: int = 0,
         save: bool = True
@@ -232,16 +232,12 @@ def manual_annotation_handler(
     :return:
     """
     file_path = Path(file_path)
-    if not isinstance(labels_path, list):
-        labels_path = Path(labels_path)
+    labels_path = Path(labels_path)
 
     assert file_path is not None, "file_path is None"
     assert labels_path is not None, "labels_path is None"
 
-    if isinstance(labels_path, list):
-        labels = labels_path
-    else:
-        labels = list(get_entities(labels_path).keys())
+    labels = list(get_entities(labels_path).keys())
 
     try:
         if file_path.exists():

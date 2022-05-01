@@ -10,9 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from spacy.tokens import DocBin
 from spacy.cli.train import train
-from spacy.training.example import Example
 # importing own modules
-from util.data_extractor import get_entities, JsonDataExtractor
+from util.data_extractor import get_entities
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -51,22 +50,6 @@ class ASRSNamedEntityRecognizer:
             ner.add_label(label)
 
         return ner
-
-    @staticmethod
-    @spacy.registry.readers("train_data_stream")
-    def stream_data(data_source: list):
-        logger.debug(f"Training data source files list: {data_source}")
-        extractor = JsonDataExtractor(data_source)
-        # data_to_stream =
-
-        def stream(nlp):
-            for annotated_texts in extractor.get_ner_training_data():
-                for text, ents in annotated_texts:
-                    doc = nlp.make_doc(text)
-                    example = Example.from_dict(doc, ents)
-                    yield example
-
-        return stream
 
     def convert_to_spacy_docbin(self, json_data: list, output_path: str = None) -> DocBin:
         docbin = DocBin()  # creating binary serialization representation of Docs collection
@@ -152,7 +135,7 @@ def train_ner(
     }
 
     train(
-        "spacy_ner.cfg",
+        Path("config", "spacy_ner.cfg"),
         model_path,
         overrides=overrides
     )

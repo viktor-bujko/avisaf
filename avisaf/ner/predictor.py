@@ -48,7 +48,7 @@ def test_ner(
 
     if text_path is None:
         # use sample text
-        with open("sample_text.txt", mode="r") as sample_text_file:
+        with Path("config", "sample_text.txt").open("r") as sample_text_file:
             text = sample_text_file.read()
     else:
         # extract the text

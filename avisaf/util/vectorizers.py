@@ -147,7 +147,7 @@ class AsrsReportVectorizer:
         # TODO: replace by used NER model
         texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
-        with Path("aviation_glossary.json").open("r") as glossary_file:
+        with Path("config", "aviation_glossary.json").open("r") as glossary_file:
             abbreviations_glossary = dict(json.load(glossary_file))
 
         for idx, doc in enumerate(nlp.pipe(
@@ -161,8 +161,14 @@ class AsrsReportVectorizer:
             doc_lemmas = []
             for token in doc:
                 token_base_form = token.lemma_
+                if token.is_stop:
+                    # skipping / ignoring stop words
+                    continue
                 if token.text.startswith("ZZZ"):
                     token_base_form = "airport"
+                if token.ent_type_ == "NAV_WAYPOINT" \
+                   or re.match(r"[A-Z]{5}", token.text):
+                    token_base_form = "waypoint"
                 if token.ent_type_ == "ABBREVIATION":
                     # searching for full version of abbreviation in the glossary
                     abbr_explained = abbreviations_glossary.get(token.text, {"full": token.text})
@@ -197,9 +203,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         self.transformer_name = "tfidf"
         self._transformer = TfidfVectorizer(
             stop_words="english",
-            lowercase=True,
-            ngram_range=(1, 4),
-            analyzer="word",
+            ngram_range=(1, 3),
             max_features=300_000,
         )
         self._model_dir = Path("vectors", self.transformer_name)
@@ -219,8 +223,6 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             if not self._model_dir.exists():
                 self._model_dir.mkdir(parents=True, exist_ok=True)
             logger.debug("tfidf training started")
-            # texts_vectors = self._transformer.fit_transform(texts)
-            # logger.debug("dimension reduction, scaling")
             texts_vectors = self._pipeline.fit_transform(texts)
             logger.debug("tfidf training finished")
 
@@ -229,7 +231,6 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         else:
             with lzma.open(self._model_path, "rb") as pipe:
                 self._pipeline = pickle.load(pipe)
-            # texts_vectors = self._transformer.transform(texts)
             texts_vectors = self._pipeline.transform(texts)
 
         logger.debug("Ended vectorization")

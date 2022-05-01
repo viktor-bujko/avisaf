@@ -1,0 +1,3486 @@
+{
+    "A/C": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/D": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/FD": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/O": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/P": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/S": {
+        "full": "n/a",
+        "description": null
+    },
+    "A/T": {
+        "full": "n/a",
+        "description": null
+    },
+    "AAA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AAE": {
+        "full": "n/a",
+        "description": null
+    },
+    "AAIB": {
+        "full": "Air Accident Investigation Branch of the Department of Transportation of the United Kingdom.",
+        "description": "Its role is to investigate air accidents. The letters AAIB also refer to equivalent organizations in Iceland, Singapore and Switzerland, among others. In the United States, the NTSB plays that role."
+    },
+    "AAO": {
+        "full": "n/a",
+        "description": null
+    },
+    "AAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AB": {
+        "full": "Air Base",
+        "description": "More often used when describing a military airport."
+    },
+    "AC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACAM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACFT": {
+        "full": "aircraft",
+        "description": "Aircraft abbreviation."
+    },
+    "ACI": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACL": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACMS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACN": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACP": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ACU": {
+        "full": "n/a",
+        "description": null
+    },
+    "AD": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADAHRS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADD": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADELT": {
+        "full": "Automatically Deployable Emergency Locator Transmitter.",
+        "description": "See ELT."
+    },
+    "ADF": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADI": {
+        "full": "Attitude Deviation Indicator.",
+        "description": "Enhanced artificial horizon with pitch and roll information. It is part of a flight director system."
+    },
+    "ADIZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADJ": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADO": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADSU": {
+        "full": "n/a",
+        "description": null
+    },
+    "ADT": {
+        "full": "Approved Departure Time",
+        "description": null
+    },
+    "ADV": {
+        "full": "n/a",
+        "description": null
+    },
+    "AEA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFB": {
+        "full": "Air Force Base",
+        "description": null
+    },
+    "AFCS": {
+        "full": "Automatic Flight Control System",
+        "description": "It is an advanced autopilot."
+    },
+    "AFDS": {
+        "full": "Autopilot and Flight Director System",
+        "description": null
+    },
+    "AFE": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFIS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFM": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFT": {
+        "full": "n/a",
+        "description": null
+    },
+    "AFTN": {
+        "full": "n/a",
+        "description": null
+    },
+    "AGA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AGB": {
+        "full": "n/a",
+        "description": null
+    },
+    "AGL": {
+        "full": "Above Ground Level",
+        "description": null
+    },
+    "AHRS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIDC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIM": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIP": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIRAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIRC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIREP": {
+        "full": "n/a",
+        "description": null
+    },
+    "AIRMET": {
+        "full": "Aircraft\u2019s Meteorological Information",
+        "description": "A type of weather advisory regarding certain weather conditions (turbulence, icing, low visiblity) which could pose a threat to only smaller types of aircraft. SIGMET is a more inclusive type of advisory."
+    },
+    "ALA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ALI": {
+        "full": "n/a",
+        "description": null
+    },
+    "ALRS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ALS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ALT": {
+        "full": "n/a",
+        "description": null
+    },
+    "ALUM": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMDT": {
+        "full": "n/a",
+        "description": null
+    },
+    "AME": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMM": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMO": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMP": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMSL": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMSS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AMT": {
+        "full": "n/a",
+        "description": null
+    },
+    "ANCS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ANPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "ANS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ANSOG": {
+        "full": "n/a",
+        "description": null
+    },
+    "ANSP": {
+        "full": "n/a",
+        "description": null
+    },
+    "AOA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AOC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AOG": {
+        "full": "n/a",
+        "description": null
+    },
+    "AOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "AP": {
+        "full": "n/a",
+        "description": null
+    },
+    "APN": {
+        "full": "n/a",
+        "description": null
+    },
+    "APP": {
+        "full": "Approach control",
+        "description": null
+    },
+    "APPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "APPROX": {
+        "full": "n/a",
+        "description": null
+    },
+    "APT": {
+        "full": "n/a",
+        "description": null
+    },
+    "APV": {
+        "full": "n/a",
+        "description": null
+    },
+    "AR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARINC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARO": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARP": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARQ": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARST": {
+        "full": "n/a",
+        "description": null
+    },
+    "ARTCC": {
+        "full": "n/a",
+        "description": null
+    },
+    "AS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASDA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASE": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASI": {
+        "full": "Airspeed Indicator",
+        "description": null
+    },
+    "ASL": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASLO": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ASPH": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATA": {
+        "full": "Actual Time of Arrival",
+        "description": null
+    },
+    "ATCC": {
+        "full": "Air Traffic Control Centre",
+        "description": null
+    },
+    "ATD": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATF": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATFM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATIS": {
+        "full": "Automatic Terminal Information Service",
+        "description": "Automatically recorded message transmitted on a particular frequency, containing current weather conditions, QNH setting, active runways, etc., provided at the major airports."
+    },
+    "ATM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATN": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATO": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATP": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATQP": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ATZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "AVAIL": {
+        "full": "n/a",
+        "description": null
+    },
+    "AVGAS": {
+        "full": "Aviation Gasoline",
+        "description": "Usually followed by the octane rating. Used by piston-engined aircraft."
+    },
+    "AVTUR": {
+        "full": "Aviation Turbine fuel (kerosene)",
+        "description": "Used by turboprops and jet aircraft."
+    },
+    "AWBS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWG": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWIS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWOS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWTA": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "AWY": {
+        "full": "n/a",
+        "description": null
+    },
+    "AZM": {
+        "full": "n/a",
+        "description": null
+    },
+    "B/P": {
+        "full": "n/a",
+        "description": null
+    },
+    "BA": {
+        "full": "n/a",
+        "description": null
+    },
+    "BC": {
+        "full": "n/a",
+        "description": null
+    },
+    "BCAA": {
+        "full": "n/a",
+        "description": null
+    },
+    "BDC": {
+        "full": "n/a",
+        "description": null
+    },
+    "BFL": {
+        "full": "n/a",
+        "description": null
+    },
+    "BHP": {
+        "full": "n/a",
+        "description": null
+    },
+    "BITE": {
+        "full": "n/a",
+        "description": null
+    },
+    "BL": {
+        "full": "n/a",
+        "description": null
+    },
+    "BME": {
+        "full": "n/a",
+        "description": null
+    },
+    "BOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "BPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "BRG": {
+        "full": "Bearing",
+        "description": "Horizontal direction to/from a point, expressed in degrees (for example: 000 or 360 is North, 090 is East)."
+    },
+    "BTV": {
+        "full": "n/a",
+        "description": null
+    },
+    "BVID": {
+        "full": "n/a",
+        "description": null
+    },
+    "BVR": {
+        "full": "n/a",
+        "description": null
+    },
+    "BWC": {
+        "full": "n/a",
+        "description": null
+    },
+    "CA": {
+        "full": "Captain",
+        "description": null
+    },
+    "CAA": {
+        "full": "Civil Aviation Authority",
+        "description": "An organization in charge of defining aviation safety standards. The United Kingdom and New Zealand, among others, have organizations with that exact name and role. In the United States, CAA stood for the Civil Aeronautics Administration, a fore-runner of today\u2019s FAA."
+    },
+    "CAB": {
+        "full": "Civil Aeronautics Board",
+        "description": "Former government agency of the United States responsible, among other things, of investigating air accidents (duties taken over by the NTSB) and controlling which routes the airlines could fly and what fares they could charge (prior to the Airline Deregulation Act)."
+    },
+    "CAM": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAME": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAMO": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAMP": {
+        "full": "n/a",
+        "description": null
+    },
+    "CANSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "CARS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CARs": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAS": {
+        "full": "Calibrated Airspeed",
+        "description": "IAS corrected for air density and compressibility."
+    },
+    "CASS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "CAW": {
+        "full": "n/a",
+        "description": null
+    },
+    "CBT": {
+        "full": "n/a",
+        "description": null
+    },
+    "CCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "CCRs": {
+        "full": "n/a",
+        "description": null
+    },
+    "CD": {
+        "full": "n/a",
+        "description": null
+    },
+    "CDCCL": {
+        "full": "n/a",
+        "description": null
+    },
+    "CDI": {
+        "full": "Course Deviation Indicator",
+        "description": "The vertical needle of a VOR indicator which shows the aircraft\u2019s position relative to the selected radial."
+    },
+    "CDL": {
+        "full": "n/a",
+        "description": null
+    },
+    "CDN": {
+        "full": "n/a",
+        "description": null
+    },
+    "CDU": {
+        "full": "n/a",
+        "description": null
+    },
+    "CFB": {
+        "full": "Canadian Forces Base",
+        "description": ""
+    },
+    "CFG": {
+        "full": "n/a",
+        "description": null
+    },
+    "CFIT": {
+        "full": "n/a",
+        "description": null
+    },
+    "CFR": {
+        "full": "n/a",
+        "description": null
+    },
+    "CG": {
+        "full": "n/a",
+        "description": null
+    },
+    "CGL": {
+        "full": "n/a",
+        "description": null
+    },
+    "CH": {
+        "full": "n/a",
+        "description": null
+    },
+    "CHDO": {
+        "full": "n/a",
+        "description": null
+    },
+    "CHG": {
+        "full": "n/a",
+        "description": null
+    },
+    "CHT": {
+        "full": "n/a",
+        "description": null
+    },
+    "CI": {
+        "full": "n/a",
+        "description": null
+    },
+    "CIDIN": {
+        "full": "n/a",
+        "description": null
+    },
+    "CL": {
+        "full": "n/a",
+        "description": null
+    },
+    "CMC": {
+        "full": "n/a",
+        "description": null
+    },
+    "CMM": {
+        "full": "n/a",
+        "description": null
+    },
+    "CMO": {
+        "full": "n/a",
+        "description": null
+    },
+    "CMPA": {
+        "full": "n/a",
+        "description": null
+    },
+    "CMV": {
+        "full": "n/a",
+        "description": null
+    },
+    "COMAT": {
+        "full": "Company Material",
+        "description": "Non-revenue cargo, such as aircraft spare parts."
+    },
+    "COP": {
+        "full": "n/a",
+        "description": null
+    },
+    "COTS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CPDLC": {
+        "full": "n/a",
+        "description": null
+    },
+    "CPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "CPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "CRC": {
+        "full": "n/a",
+        "description": null
+    },
+    "CRD": {
+        "full": "n/a",
+        "description": null
+    },
+    "CRES": {
+        "full": "n/a",
+        "description": null
+    },
+    "CRT": {
+        "full": "Cathode Ray Tube",
+        "description": "Television-like screens used in flight decks of new-generation aircraft, replacing the conventional instruments. See also EFIS."
+    },
+    "CS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CSCT": {
+        "full": "n/a",
+        "description": null
+    },
+    "CSD": {
+        "full": "n/a",
+        "description": null
+    },
+    "CSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "CSS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CST": {
+        "full": "See Coast track",
+        "description": "CST may also stand for Central Standard Time."
+    },
+    "CSU": {
+        "full": "n/a",
+        "description": null
+    },
+    "CTAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "CTAM": {
+        "full": "n/a",
+        "description": null
+    },
+    "CTC": {
+        "full": "n/a",
+        "description": null
+    },
+    "CTR": {
+        "full": "n/a",
+        "description": null
+    },
+    "CW": {
+        "full": "n/a",
+        "description": null
+    },
+    "CWR": {
+        "full": "Color Weather Radar",
+        "description": null
+    },
+    "CWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "CofA": {
+        "full": "n/a",
+        "description": null
+    },
+    "DA": {
+        "full": "n/a",
+        "description": null
+    },
+    "DAH": {
+        "full": "n/a",
+        "description": null
+    },
+    "DBER": {
+        "full": "n/a",
+        "description": null
+    },
+    "DCD": {
+        "full": "n/a",
+        "description": null
+    },
+    "DCS": {
+        "full": "n/a",
+        "description": null
+    },
+    "DCT": {
+        "full": "Direct",
+        "description": null
+    },
+    "DE": {
+        "full": "n/a",
+        "description": null
+    },
+    "DER": {
+        "full": "n/a",
+        "description": null
+    },
+    "DEU": {
+        "full": "n/a",
+        "description": null
+    },
+    "DFTI": {
+        "full": "n/a",
+        "description": null
+    },
+    "DG": {
+        "full": "n/a",
+        "description": null
+    },
+    "DGPS": {
+        "full": "n/a",
+        "description": null
+    },
+    "DGR": {
+        "full": "n/a",
+        "description": null
+    },
+    "DH": {
+        "full": "Decision Height",
+        "description": "Height on a precision approach at which the pilot must have the runway approach lights in sight to continue descent, or if not, initiate a go-around."
+    },
+    "DI": {
+        "full": "Direction Indicator",
+        "description": "A gyro instrument which indicates the magnetic heading of an aircraft. The DI, also known as the directional gyro (DG), is free of the turning errors associated with magnetic compasses but is prone to precession (wander) and must be reset against the magnetic compass at intervals."
+    },
+    "DIA": {
+        "full": "n/a",
+        "description": null
+    },
+    "DLA": {
+        "full": "n/a",
+        "description": null
+    },
+    "DLR": {
+        "full": "n/a",
+        "description": null
+    },
+    "DME": {
+        "full": "Distance-Measuring Equipment",
+        "description": "A combination of ground and airborne equipment which gives a continuous slant range distance-from-station readout by measuring time-lapse of a signal transmitted by the aircraft to the station and responded back. DMEs can also provide groundspeed and time-to-station readouts by differentiation."
+    },
+    "DMI": {
+        "full": "n/a",
+        "description": null
+    },
+    "DO": {
+        "full": "n/a",
+        "description": null
+    },
+    "DOA": {
+        "full": "n/a",
+        "description": null
+    },
+    "DODAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "DOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "DOW": {
+        "full": "n/a",
+        "description": null
+    },
+    "DP": {
+        "full": "n/a",
+        "description": null
+    },
+    "DR": {
+        "full": "n/a",
+        "description": null
+    },
+    "DSB": {
+        "full": "n/a",
+        "description": null
+    },
+    "DTW": {
+        "full": "n/a",
+        "description": null
+    },
+    "DUATS": {
+        "full": "n/a",
+        "description": null
+    },
+    "DUPE": {
+        "full": "n/a",
+        "description": null
+    },
+    "DVOR": {
+        "full": "Doppler VOR",
+        "description": ""
+    },
+    "DW": {
+        "full": "n/a",
+        "description": null
+    },
+    "E-LSA": {
+        "full": "n/a",
+        "description": null
+    },
+    "EA": {
+        "full": "n/a",
+        "description": null
+    },
+    "EADI": {
+        "full": "n/a",
+        "description": null
+    },
+    "EAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EASA": {
+        "full": "n/a",
+        "description": null
+    },
+    "EAT": {
+        "full": "Estimated (or expected) Approach Time",
+        "description": null
+    },
+    "EBOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "EBU": {
+        "full": "n/a",
+        "description": null
+    },
+    "EC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ECET": {
+        "full": "n/a",
+        "description": null
+    },
+    "ECR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ECS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EDR": {
+        "full": "n/a",
+        "description": null
+    },
+    "EDTO": {
+        "full": "n/a",
+        "description": null
+    },
+    "EEC": {
+        "full": "n/a",
+        "description": null
+    },
+    "EET": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFB": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFC": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFFRA": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFIS": {
+        "full": "Electronic Flight Instrument System, in which multi-function CRT displays replace traditional instruments for providing flight, navigation and aircraft systems information, forming a so-called \u201cglass cockpit\u201d",
+        "description": ""
+    },
+    "EFP": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EFTO": {
+        "full": "n/a",
+        "description": null
+    },
+    "EGPWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EGT": {
+        "full": "Exhaust Gas Temperature",
+        "description": "One of the flight deck\u2019s engine gauges."
+    },
+    "EHF": {
+        "full": "n/a",
+        "description": null
+    },
+    "EHM": {
+        "full": "n/a",
+        "description": null
+    },
+    "EHSI": {
+        "full": "n/a",
+        "description": null
+    },
+    "ELAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "ELB": {
+        "full": "Emergency Locator Beacon",
+        "description": "See ELT (below)."
+    },
+    "ELBA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ELOS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ELT": {
+        "full": "Emergency Locator Transmitter",
+        "description": "Small radio transmitter fixed on the aircraft\u2019s structure, automatically activated by impact or water immersion, transmitting a code enabling SAR satellites or search units equipped with Direction Finders to locate the aircraft\u2019s crash site. Also called ADELT or ELB."
+    },
+    "EMAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EMDP": {
+        "full": "n/a",
+        "description": null
+    },
+    "END": {
+        "full": "n/a",
+        "description": null
+    },
+    "EOBT": {
+        "full": "n/a",
+        "description": null
+    },
+    "EPA": {
+        "full": "n/a",
+        "description": null
+    },
+    "EPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ER": {
+        "full": "Extended Range",
+        "description": "Suffix used by some aircraft models (for example: Boeing 767-300ER)"
+    },
+    "ERM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ESA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ETA": {
+        "full": "Estimated Time of Arrival",
+        "description": null
+    },
+    "ETD": {
+        "full": "Estimated Time of Departure",
+        "description": null
+    },
+    "ETE": {
+        "full": "Estimated Time Enroute",
+        "description": null
+    },
+    "ETOPS": {
+        "full": "Extended-range Twin Operations",
+        "description": "Certification given to two-engine aircraft for long overwater flights."
+    },
+    "ETSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "EUROCAE": {
+        "full": "n/a",
+        "description": null
+    },
+    "EVAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "EW": {
+        "full": "n/a",
+        "description": null
+    },
+    "F/A": {
+        "full": "Flight Attendant",
+        "description": "Also known as Air Hostess in the UK, formerly known as Steward(ess) in North America."
+    },
+    "F/E": {
+        "full": "Flight Engineer",
+        "description": "Also known as Second Officer."
+    },
+    "F/O": {
+        "full": "First Officer",
+        "description": "Also known as Co-Pilot."
+    },
+    "FAA": {
+        "full": "Federal Aviation Administration",
+        "description": "A national aviation authority in charge of defining aviation safety standards in the United States. In some countries, such as the United Kingdom, an equivalent organization is called the CAA."
+    },
+    "FAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FADEC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "FANS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "FAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "FAR/AIM": {
+        "full": "n/a",
+        "description": null
+    },
+    "FAROS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FATO": {
+        "full": "n/a",
+        "description": null
+    },
+    "FB": {
+        "full": "n/a",
+        "description": null
+    },
+    "FBO": {
+        "full": "Fixed-Base Operator",
+        "description": "Supplier of fuel, maintenance, aircraft rental or sale, flight training, etc, at the airport."
+    },
+    "FBW": {
+        "full": "Fly-By-Wire",
+        "description": "Aircraft controls where the pilot\u2019s commands (bank, yaw\u2026) are transmitted to control surfaces electronically or via fiber optics, instead of mechanical linkage. Also called FBL (Fly-By-Light)."
+    },
+    "FC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FCF": {
+        "full": "n/a",
+        "description": null
+    },
+    "FCOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "FCT": {
+        "full": "n/a",
+        "description": null
+    },
+    "FCTM": {
+        "full": "n/a",
+        "description": null
+    },
+    "FD": {
+        "full": "n/a",
+        "description": null
+    },
+    "FDM": {
+        "full": "n/a",
+        "description": null
+    },
+    "FDR": {
+        "full": "Flight Data Recorder",
+        "description": "One of the so-called \u201cblack boxes\u201d. It is actually painted bright orange to be easily identified among aircraft debris, and records various parameters such as altitude, heading, airspeed, engine statistics, etc\u2026 It is used to investigate in the case of an accident."
+    },
+    "FDTL": {
+        "full": "n/a",
+        "description": null
+    },
+    "FEP": {
+        "full": "n/a",
+        "description": null
+    },
+    "FFDZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "FFS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FIC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FIDO": {
+        "full": "n/a",
+        "description": null
+    },
+    "FIDS": {
+        "full": "Flight Information Display System",
+        "description": "Real-time flight arrival and departure data for an airport, either as a board inside or near the airport terminal or a virtual version on a website or teletext."
+    },
+    "FIKI": {
+        "full": "n/a",
+        "description": null
+    },
+    "FIR": {
+        "full": "n/a",
+        "description": null
+    },
+    "FIS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FISA": {
+        "full": "n/a",
+        "description": null
+    },
+    "FISE": {
+        "full": "n/a",
+        "description": null
+    },
+    "FL": {
+        "full": "Flight Level",
+        "description": "Altitude at barometric setting of 1013.2 millibars or 29.92 inches of mercury, expressed in rounds hundreds of feet. This is usual mostly above 18,000 feet. FL350 is 35,000 feet."
+    },
+    "FLT": {
+        "full": "n/a",
+        "description": null
+    },
+    "FLTCK": {
+        "full": "n/a",
+        "description": null
+    },
+    "FM": {
+        "full": "n/a",
+        "description": null
+    },
+    "FMA": {
+        "full": "n/a",
+        "description": null
+    },
+    "FMC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FMGC": {
+        "full": "n/a",
+        "description": null
+    },
+    "FMS": {
+        "full": "Flight Management System",
+        "description": null
+    },
+    "FN": {
+        "full": "Fleet Number",
+        "description": "Internal number, for the use of the airline, identifying a particular aircraft within the fleet."
+    },
+    "FNPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "FO": {
+        "full": "First, Officer",
+        "description": null
+    },
+    "FOD": {
+        "full": "n/a",
+        "description": null
+    },
+    "FOO": {
+        "full": "n/a",
+        "description": null
+    },
+    "FOQA": {
+        "full": "n/a",
+        "description": null
+    },
+    "FPA": {
+        "full": "n/a",
+        "description": null
+    },
+    "FPL": {
+        "full": "Filed Flight Plan",
+        "description": null
+    },
+    "FPM": {
+        "full": "Feet Per Minute",
+        "description": "Unit of measure of an aircraft\u2019s rate of climb or descent."
+    },
+    "FRONT": {
+        "full": "n/a",
+        "description": null
+    },
+    "FSDO": {
+        "full": "n/a",
+        "description": null
+    },
+    "FSF": {
+        "full": "n/a",
+        "description": null
+    },
+    "FSIMS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FSS": {
+        "full": "n/a",
+        "description": null
+    },
+    "FTL": {
+        "full": "n/a",
+        "description": null
+    },
+    "FVU": {
+        "full": "n/a",
+        "description": null
+    },
+    "G/A": {
+        "full": "n/a",
+        "description": null
+    },
+    "G/A/G": {
+        "full": "n/a",
+        "description": null
+    },
+    "G/S": {
+        "full": "n/a",
+        "description": null
+    },
+    "GA": {
+        "full": "n/a",
+        "description": null
+    },
+    "GAMET": {
+        "full": "n/a",
+        "description": null
+    },
+    "GBST": {
+        "full": "n/a",
+        "description": null
+    },
+    "GCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "GCU": {
+        "full": "n/a",
+        "description": null
+    },
+    "GEA": {
+        "full": "n/a",
+        "description": null
+    },
+    "GLOC": {
+        "full": "n/a",
+        "description": null
+    },
+    "GM": {
+        "full": "n/a",
+        "description": null
+    },
+    "GMM": {
+        "full": "n/a",
+        "description": null
+    },
+    "GND": {
+        "full": "Ground",
+        "description": null
+    },
+    "GNSS": {
+        "full": "n/a",
+        "description": null
+    },
+    "GP": {
+        "full": "n/a",
+        "description": null
+    },
+    "GPP": {
+        "full": "n/a",
+        "description": null
+    },
+    "GPS": {
+        "full": "n/a",
+        "description": null
+    },
+    "GRIB": {
+        "full": "n/a",
+        "description": null
+    },
+    "GS": {
+        "full": "Glideslope",
+        "description": "Vertical guidance, part of an ILS, establishing the safe glidepath to a runway. A standard ILS glideslope is 3 degrees."
+    },
+    "GSE": {
+        "full": "n/a",
+        "description": null
+    },
+    "HAPI": {
+        "full": "n/a",
+        "description": null
+    },
+    "HAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "HAZMAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "HBCS": {
+        "full": "n/a",
+        "description": null
+    },
+    "HDF": {
+        "full": "n/a",
+        "description": null
+    },
+    "HDG": {
+        "full": "Heading",
+        "description": "The direction in which an aircraft\u2019s nose points in flight in the horizontal plane, expressed in compass degrees (for example: 000 or 360 is North, 090 is East)."
+    },
+    "HDI": {
+        "full": "n/a",
+        "description": null
+    },
+    "HFE": {
+        "full": "n/a",
+        "description": null
+    },
+    "HFES": {
+        "full": "n/a",
+        "description": null
+    },
+    "HIGE": {
+        "full": "n/a",
+        "description": null
+    },
+    "HIRL": {
+        "full": "n/a",
+        "description": null
+    },
+    "HIRO": {
+        "full": "n/a",
+        "description": null
+    },
+    "HIRTA": {
+        "full": "n/a",
+        "description": null
+    },
+    "HIWAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "HL": {
+        "full": "n/a",
+        "description": null
+    },
+    "HLD": {
+        "full": "n/a",
+        "description": null
+    },
+    "HMG": {
+        "full": "n/a",
+        "description": null
+    },
+    "HMU": {
+        "full": "n/a",
+        "description": null
+    },
+    "HOGE": {
+        "full": "n/a",
+        "description": null
+    },
+    "HPA": {
+        "full": "n/a",
+        "description": null
+    },
+    "HPC": {
+        "full": "n/a",
+        "description": null
+    },
+    "HPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "HPTACC": {
+        "full": "n/a",
+        "description": null
+    },
+    "HSI": {
+        "full": "Horizontal Situation Indicator",
+        "description": "A cockpit navigation display, usually part of a flight-director system, which combines navigation and heading."
+    },
+    "HUD": {
+        "full": "n/a",
+        "description": null
+    },
+    "HUM": {
+        "full": "n/a",
+        "description": null
+    },
+    "HW": {
+        "full": "n/a",
+        "description": null
+    },
+    "HYD": {
+        "full": "n/a",
+        "description": null
+    },
+    "HYDIM": {
+        "full": "n/a",
+        "description": null
+    },
+    "I/C": {
+        "full": "In Charge",
+        "description": ""
+    },
+    "IAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "IAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "IAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "IAS": {
+        "full": "Indicated Airspeed",
+        "description": "Airspeed indicated by the Airspeed Indicator, without correction for position error, altitude, or outside air temperature."
+    },
+    "IATA": {
+        "full": "International Air Transport Association",
+        "description": ""
+    },
+    "IB": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICAO": {
+        "full": "International Civil Aviation Organization",
+        "description": ""
+    },
+    "ICAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICD": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICE": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICO": {
+        "full": "n/a",
+        "description": null
+    },
+    "ICTS": {
+        "full": "n/a",
+        "description": null
+    },
+    "IDENT": {
+        "full": "Squawk function of a transponder",
+        "description": "When the \u201cIdent\u201d button is activated, an aircraft will briefly appear more distinctly on a radar scope. Used for identification or acknowledgement purposes."
+    },
+    "IDG": {
+        "full": "n/a",
+        "description": null
+    },
+    "IDT": {
+        "full": "n/a",
+        "description": null
+    },
+    "IEPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "IETM": {
+        "full": "n/a",
+        "description": null
+    },
+    "IF": {
+        "full": "n/a",
+        "description": null
+    },
+    "IFA": {
+        "full": "n/a",
+        "description": null
+    },
+    "IFATCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "IFE": {
+        "full": "n/a",
+        "description": null
+    },
+    "IFP": {
+        "full": "n/a",
+        "description": null
+    },
+    "IFR": {
+        "full": "Instrument Flight Rules",
+        "description": "Rules prescribed for the operation of aircraft in instrument meteorological conditions"
+    },
+    "IFSD": {
+        "full": "n/a",
+        "description": null
+    },
+    "IGV": {
+        "full": "n/a",
+        "description": null
+    },
+    "ILS": {
+        "full": "Instrument Landing System",
+        "description": "Consists of the localizer, the glideslope and marker radio beacons (Outer, Middle, Inner). It provides horizontal and vertical guidance for the approach."
+    },
+    "IML": {
+        "full": "n/a",
+        "description": null
+    },
+    "IMPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "INBD": {
+        "full": "n/a",
+        "description": null
+    },
+    "INPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "INS": {
+        "full": "Inertial Navigation System",
+        "description": "It uses gyroscopes and other electronic tracking systems to detect acceleration and deceleration, and computes an aircraft\u2019s position in latitude and longitude. Its accuracy, however, declines on long flights. Also called IRS, or Inertial Reference System."
+    },
+    "IPC": {
+        "full": "n/a",
+        "description": null
+    },
+    "IR": {
+        "full": "n/a",
+        "description": null
+    },
+    "IREX": {
+        "full": "n/a",
+        "description": null
+    },
+    "IRS": {
+        "full": "n/a",
+        "description": null
+    },
+    "IRT": {
+        "full": "n/a",
+        "description": null
+    },
+    "IRVR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ISA": {
+        "full": "n/a",
+        "description": null
+    },
+    "ISFD": {
+        "full": "n/a",
+        "description": null
+    },
+    "ISIS": {
+        "full": "n/a",
+        "description": null
+    },
+    "ITAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ITT": {
+        "full": "n/a",
+        "description": null
+    },
+    "KCAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "KIAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "KRE": {
+        "full": "n/a",
+        "description": null
+    },
+    "KTAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "LAHSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "LAME": {
+        "full": "n/a",
+        "description": null
+    },
+    "LATCC": {
+        "full": "London Area and Terminal Control Centre at West Drayton, near London\u2019s Heathrow Airport",
+        "description": ""
+    },
+    "LCC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LCG": {
+        "full": "n/a",
+        "description": null
+    },
+    "LCN": {
+        "full": "n/a",
+        "description": null
+    },
+    "LDA": {
+        "full": "n/a",
+        "description": null
+    },
+    "LDI": {
+        "full": "n/a",
+        "description": null
+    },
+    "LF": {
+        "full": "n/a",
+        "description": null
+    },
+    "LHO": {
+        "full": "n/a",
+        "description": null
+    },
+    "LIR": {
+        "full": "n/a",
+        "description": null
+    },
+    "LNAV": {
+        "full": "n/a",
+        "description": null
+    },
+    "LOA": {
+        "full": "n/a",
+        "description": null
+    },
+    "LOC": {
+        "full": "Localizer",
+        "description": "The azimuth guidance portion of an instrument landing system."
+    },
+    "LOFT": {
+        "full": "n/a",
+        "description": null
+    },
+    "LOM": {
+        "full": "n/a",
+        "description": null
+    },
+    "LORAN": {
+        "full": "Long-Range low-frequency Radio Navigation",
+        "description": "Its range is about 1,200 nm by day, and 2,300 nm by night."
+    },
+    "LOTC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LPC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "LPTACC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LPV": {
+        "full": "n/a",
+        "description": null
+    },
+    "LRC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LROPS": {
+        "full": "Long Range Operational Performance Standards",
+        "description": "Certification intended to replace ETOPS as it would include all types of aircraft (not just twin-engine)."
+    },
+    "LRU": {
+        "full": "n/a",
+        "description": null
+    },
+    "LSAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "LSAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "LTC": {
+        "full": "n/a",
+        "description": null
+    },
+    "LTP": {
+        "full": "n/a",
+        "description": null
+    },
+    "LVP": {
+        "full": "n/a",
+        "description": null
+    },
+    "LW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "MAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "MATS": {
+        "full": "n/a",
+        "description": null
+    },
+    "MBC": {
+        "full": "n/a",
+        "description": null
+    },
+    "MCAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "MCC": {
+        "full": "n/a",
+        "description": null
+    },
+    "MCH": {
+        "full": "n/a",
+        "description": null
+    },
+    "MCP": {
+        "full": "n/a",
+        "description": null
+    },
+    "MCT": {
+        "full": "n/a",
+        "description": null
+    },
+    "MDA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MDDR": {
+        "full": "n/a",
+        "description": null
+    },
+    "MDH": {
+        "full": "n/a",
+        "description": null
+    },
+    "MDM": {
+        "full": "n/a",
+        "description": null
+    },
+    "ME": {
+        "full": "n/a",
+        "description": null
+    },
+    "MEA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MEDEVAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "MEF": {
+        "full": "n/a",
+        "description": null
+    },
+    "MEL": {
+        "full": "n/a",
+        "description": null
+    },
+    "MEP": {
+        "full": "n/a",
+        "description": null
+    },
+    "MET": {
+        "full": "n/a",
+        "description": null
+    },
+    "METAR": {
+        "full": "Aviation routine weather report",
+        "description": "Format for shorthand weather information reporting using a standardized set of codes and abbreviations (for example: BKN broken clouds, OVC overcast, CAVOK ceiling and visibility okay, etc.) Acronym possibly comes from the French \u201cM\u00e9t\u00e9orologie Aviation R\u00e9guli\u00e8re\u201d (routine aviation weather)."
+    },
+    "MFD": {
+        "full": "n/a",
+        "description": null
+    },
+    "MFRA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MH": {
+        "full": "n/a",
+        "description": null
+    },
+    "ML": {
+        "full": "n/a",
+        "description": null
+    },
+    "MLDW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MLG": {
+        "full": "n/a",
+        "description": null
+    },
+    "MLS": {
+        "full": "Microwave Landing System",
+        "description": "A microwave-based instrument approach system intended to replace ILS in the 1990s and claimed to offer a number of advantages such as the ability to fly segmented and curved precision approaches."
+    },
+    "MM": {
+        "full": "n/a",
+        "description": null
+    },
+    "MMEL": {
+        "full": "n/a",
+        "description": null
+    },
+    "MNT": {
+        "full": "n/a",
+        "description": null
+    },
+    "MOCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MOD": {
+        "full": "n/a",
+        "description": null
+    },
+    "MOE": {
+        "full": "n/a",
+        "description": null
+    },
+    "MORA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MP": {
+        "full": "n/a",
+        "description": null
+    },
+    "MPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "MPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "MRB": {
+        "full": "n/a",
+        "description": null
+    },
+    "MRO": {
+        "full": "n/a",
+        "description": null
+    },
+    "MROT": {
+        "full": "n/a",
+        "description": null
+    },
+    "MRP": {
+        "full": "n/a",
+        "description": null
+    },
+    "MRW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MSA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MSDS": {
+        "full": "n/a",
+        "description": null
+    },
+    "MSL": {
+        "full": "Mean Sea Level",
+        "description": null
+    },
+    "MSLW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MSN": {
+        "full": "Manufacturer Serial Number",
+        "description": "Internal number, for the use of the manufacturer, identifying a particular aircraft within the same model."
+    },
+    "MSTOW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MSZFW": {
+        "full": "n/a",
+        "description": null
+    },
+    "MTOW": {
+        "full": "Maximum Take-Off Weight",
+        "description": null
+    },
+    "MVA": {
+        "full": "n/a",
+        "description": null
+    },
+    "MX": {
+        "full": "n/a",
+        "description": null
+    },
+    "MZFW": {
+        "full": "n/a",
+        "description": null
+    },
+    "NADP": {
+        "full": "n/a",
+        "description": null
+    },
+    "NDB": {
+        "full": "Non-Directional Beacon",
+        "description": "A medium-frequency navigational aid which transmits non-directional signals, superimposed with a Morse code identifier and received by an aircraft\u2019s ADF."
+    },
+    "NDT": {
+        "full": "n/a",
+        "description": null
+    },
+    "NGS": {
+        "full": "n/a",
+        "description": null
+    },
+    "NHA": {
+        "full": "n/a",
+        "description": null
+    },
+    "NIST": {
+        "full": "n/a",
+        "description": null
+    },
+    "NLG": {
+        "full": "n/a",
+        "description": null
+    },
+    "NLR": {
+        "full": "n/a",
+        "description": null
+    },
+    "NM": {
+        "full": "Nautical Miles",
+        "description": ""
+    },
+    "NNC": {
+        "full": "n/a",
+        "description": null
+    },
+    "NORDO": {
+        "full": "No radio",
+        "description": "Aircraft without a radio or experiencing a radio failure."
+    },
+    "NOTAM": {
+        "full": "Notices To Airmen",
+        "description": "Issued by the country\u2019s aviation authority to inform pilots of new or changed aeronautical facilities, services, procedures, or hazards, temporary or permanent."
+    },
+    "NOTAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "NPA": {
+        "full": "n/a",
+        "description": null
+    },
+    "NPRM": {
+        "full": "n/a",
+        "description": null
+    },
+    "NRR": {
+        "full": "n/a",
+        "description": null
+    },
+    "NRTC": {
+        "full": "n/a",
+        "description": null
+    },
+    "NTSB": {
+        "full": "National Transportation Safety Board",
+        "description": "A United States government organisation in charge of investigating in the case of an accident. In many countries, an AAIB fulfills that role."
+    },
+    "NTZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "NVED": {
+        "full": "n/a",
+        "description": null
+    },
+    "OAT": {
+        "full": "Outside Air Temperature",
+        "description": null
+    },
+    "OBE": {
+        "full": "n/a",
+        "description": null
+    },
+    "OBS": {
+        "full": "n/a",
+        "description": null
+    },
+    "OCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "OCCM": {
+        "full": "n/a",
+        "description": null
+    },
+    "OCH": {
+        "full": "n/a",
+        "description": null
+    },
+    "OEI": {
+        "full": "n/a",
+        "description": null
+    },
+    "OEM": {
+        "full": "n/a",
+        "description": null
+    },
+    "OGV": {
+        "full": "n/a",
+        "description": null
+    },
+    "OHM": {
+        "full": "n/a",
+        "description": null
+    },
+    "OIS": {
+        "full": "n/a",
+        "description": null
+    },
+    "OM": {
+        "full": "n/a",
+        "description": null
+    },
+    "OML": {
+        "full": "n/a",
+        "description": null
+    },
+    "ONAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "ONS": {
+        "full": "n/a",
+        "description": null
+    },
+    "OPC": {
+        "full": "n/a",
+        "description": null
+    },
+    "OPS/CHK": {
+        "full": "n/a",
+        "description": null
+    },
+    "OTS": {
+        "full": "n/a",
+        "description": null
+    },
+    "OW": {
+        "full": "n/a",
+        "description": null
+    },
+    "PA": {
+        "full": "Public Announcement",
+        "description": null
+    },
+    "PAH": {
+        "full": "n/a",
+        "description": null
+    },
+    "PANS-OPS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PAOG": {
+        "full": "n/a",
+        "description": null
+    },
+    "PAPI": {
+        "full": "n/a",
+        "description": null
+    },
+    "PAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "PATWAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PAX": {
+        "full": "Passengers",
+        "description": null
+    },
+    "PBCS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PBD": {
+        "full": "n/a",
+        "description": null
+    },
+    "PBE": {
+        "full": "n/a",
+        "description": null
+    },
+    "PBN": {
+        "full": "n/a",
+        "description": null
+    },
+    "PCN": {
+        "full": "n/a",
+        "description": null
+    },
+    "PDA": {
+        "full": "n/a",
+        "description": null
+    },
+    "PDAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PDC": {
+        "full": "n/a",
+        "description": null
+    },
+    "PDG": {
+        "full": "n/a",
+        "description": null
+    },
+    "PDU": {
+        "full": "n/a",
+        "description": null
+    },
+    "PET": {
+        "full": "n/a",
+        "description": null
+    },
+    "PF": {
+        "full": "n/a",
+        "description": null
+    },
+    "PFAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "PFD": {
+        "full": "n/a",
+        "description": null
+    },
+    "PIC": {
+        "full": "n/a",
+        "description": null
+    },
+    "PICUS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PIO": {
+        "full": "n/a",
+        "description": null
+    },
+    "PIP": {
+        "full": "n/a",
+        "description": null
+    },
+    "PIREP": {
+        "full": "Pilot report",
+        "description": "Weather observations reported by a pilot in flight."
+    },
+    "PJE": {
+        "full": "n/a",
+        "description": null
+    },
+    "PM": {
+        "full": "n/a",
+        "description": null
+    },
+    "PMA": {
+        "full": "n/a",
+        "description": null
+    },
+    "PMG": {
+        "full": "n/a",
+        "description": null
+    },
+    "PN": {
+        "full": "n/a",
+        "description": null
+    },
+    "PNF": {
+        "full": "n/a",
+        "description": null
+    },
+    "PNR": {
+        "full": "Passenger Name Record",
+        "description": "Another word for Reservation."
+    },
+    "POA": {
+        "full": "n/a",
+        "description": null
+    },
+    "POB": {
+        "full": "Number of Persons On Board",
+        "description": "Also SOB, Souls On Board."
+    },
+    "POF": {
+        "full": "n/a",
+        "description": null
+    },
+    "POH": {
+        "full": "Pilot\u2019s Operating Handbook",
+        "description": "It is the aircraft\u2019s \u201cowner\u2019s manual\u201d."
+    },
+    "PPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "PPR": {
+        "full": "n/a",
+        "description": null
+    },
+    "PS": {
+        "full": "n/a",
+        "description": null
+    },
+    "PSR": {
+        "full": "n/a",
+        "description": null
+    },
+    "PSU": {
+        "full": "n/a",
+        "description": null
+    },
+    "PTCU": {
+        "full": "n/a",
+        "description": null
+    },
+    "PTF": {
+        "full": "n/a",
+        "description": null
+    },
+    "PTT": {
+        "full": "n/a",
+        "description": null
+    },
+    "PYLD": {
+        "full": "n/a",
+        "description": null
+    },
+    "QAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "QCM": {
+        "full": "n/a",
+        "description": null
+    },
+    "QDR": {
+        "full": "magnetic bearing from the station",
+        "description": ""
+    },
+    "QEC": {
+        "full": "n/a",
+        "description": null
+    },
+    "QFE": {
+        "full": "atmospheric pressure at aerodrome elevation",
+        "description": "With its sub-scale set to the aerodrome QFE an altimeter will indicate height above that airfield."
+    },
+    "QFU": {
+        "full": "magnetic orientation of runway in use",
+        "description": ""
+    },
+    "QNE": {
+        "full": "reading in feet on an altimeter set to 1013",
+        "description": "2 millibars (standard pressure) when the aircraft is at aerodrome elevation."
+    },
+    "QNH": {
+        "full": "altitude above mean sea level based on local station pressure",
+        "description": ""
+    },
+    "QRA": {
+        "full": "n/a",
+        "description": null
+    },
+    "QRH": {
+        "full": "Quick Reference Handbook",
+        "description": null
+    },
+    "QTE": {
+        "full": "true line of position from a direction-finding station",
+        "description": ""
+    },
+    "QUJ": {
+        "full": "true bearing",
+        "description": null
+    },
+    "RA": {
+        "full": "Resolution Advisory (see TCAS)",
+        "description": "When an RA is issued, pilots are expected to respond immediately to the RA unless doing so would jeopardize the safe operation of the flight."
+    },
+    "RAAS": {
+        "full": "Runway Awareness and Advisory System",
+        "description": "An electronic detection system that notifies aircraft flight crews on the ground of their position relative to their allocated runway."
+    },
+    "RAF": {
+        "full": "Royal Air Force",
+        "description": "Is also used as a prefix for a Royal Air Force base (for example: RAF Mildenhall)"
+    },
+    "RAIM": {
+        "full": "n/a",
+        "description": null
+    },
+    "RAREPS": {
+        "full": "n/a",
+        "description": null
+    },
+    "RAS": {
+        "full": "Rectified Airspeed",
+        "description": "IAS corrected for instrument position error."
+    },
+    "RAT": {
+        "full": "Ram Air Turbine",
+        "description": "A small turbine that is installed in an aircraft and used as an alternate or emergency hydraulic or electrical power source."
+    },
+    "RCO": {
+        "full": "n/a",
+        "description": null
+    },
+    "RDH": {
+        "full": "n/a",
+        "description": null
+    },
+    "RDO": {
+        "full": "Radio",
+        "description": null
+    },
+    "REO": {
+        "full": "n/a",
+        "description": null
+    },
+    "REV": {
+        "full": "n/a",
+        "description": null
+    },
+    "RFF": {
+        "full": "n/a",
+        "description": null
+    },
+    "RFI": {
+        "full": "n/a",
+        "description": null
+    },
+    "RGB": {
+        "full": "n/a",
+        "description": null
+    },
+    "RIA": {
+        "full": "n/a",
+        "description": null
+    },
+    "RII": {
+        "full": "n/a",
+        "description": null
+    },
+    "RLA": {
+        "full": "n/a",
+        "description": null
+    },
+    "RMI": {
+        "full": "Radio Magnetic Indicator",
+        "description": "A navigation aid which combines DI, VOR and/or ADF display and will indicate bearings to stations, together with aircraft heading."
+    },
+    "RMP": {
+        "full": "n/a",
+        "description": null
+    },
+    "RMT": {
+        "full": "n/a",
+        "description": null
+    },
+    "RNAV": {
+        "full": "Area Navigation",
+        "description": "A system of radio navigation which permits direct point-to-point off-airways navigation by means of an on-board computer creating phantom VOR/DME transmitters termed waypoints."
+    },
+    "RNP": {
+        "full": "n/a",
+        "description": null
+    },
+    "RON": {
+        "full": "Remain Overnight",
+        "description": "Aircraft remaining overnight at the airport, either at the gate, remote parking stand or hangar. Airlines take advantage of RONs to perform maintenance, cleaning, etc. on the aircraft."
+    },
+    "RPL": {
+        "full": "n/a",
+        "description": null
+    },
+    "RPM": {
+        "full": "n/a",
+        "description": null
+    },
+    "RPT": {
+        "full": "n/a",
+        "description": null
+    },
+    "RQR": {
+        "full": "n/a",
+        "description": null
+    },
+    "RSA": {
+        "full": "n/a",
+        "description": null
+    },
+    "RSR": {
+        "full": "n/a",
+        "description": null
+    },
+    "RT": {
+        "full": "n/a",
+        "description": null
+    },
+    "RTB": {
+        "full": "n/a",
+        "description": null
+    },
+    "RTF": {
+        "full": "n/a",
+        "description": null
+    },
+    "RTL": {
+        "full": "n/a",
+        "description": null
+    },
+    "RTO": {
+        "full": "n/a",
+        "description": null
+    },
+    "RTOW": {
+        "full": "n/a",
+        "description": null
+    },
+    "RVDT": {
+        "full": "n/a",
+        "description": null
+    },
+    "RVR": {
+        "full": "Runway Visual Range",
+        "description": "A horizontal measurement of visibility along a runway."
+    },
+    "RVSM": {
+        "full": "n/a",
+        "description": null
+    },
+    "RW": {
+        "full": "n/a",
+        "description": null
+    },
+    "RWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "RWY": {
+        "full": "Runway",
+        "description": "Runway abbreviation."
+    },
+    "Roger": {
+        "full": "Instruction received / understood.",
+        "description": "Also, to roger is to read back and acknowledge an instrction."
+    },
+    "SAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "SARPs": {
+        "full": "n/a",
+        "description": null
+    },
+    "SARWATCH": {
+        "full": "n/a",
+        "description": null
+    },
+    "SAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "SAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "SB": {
+        "full": "n/a",
+        "description": null
+    },
+    "SC": {
+        "full": "n/a",
+        "description": null
+    },
+    "SCAP": {
+        "full": "n/a",
+        "description": null
+    },
+    "SCCM": {
+        "full": "n/a",
+        "description": null
+    },
+    "SCT": {
+        "full": "See SOCAL (below)",
+        "description": ""
+    },
+    "SDF": {
+        "full": "n/a",
+        "description": null
+    },
+    "SELCAL": {
+        "full": "Selective Calling",
+        "description": "A high-frequency system enabling air traffic control to alert a particular aircraft, by means of flashing light or aural signal in the cockpit, for receipt of a message without the crew having to maintain a listening watch. Used on long-haul over-ocean airline routes and by intercontinental business jets."
+    },
+    "SEP": {
+        "full": "n/a",
+        "description": null
+    },
+    "SESAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "SESMA": {
+        "full": "n/a",
+        "description": null
+    },
+    "SFCC": {
+        "full": "n/a",
+        "description": null
+    },
+    "SFO": {
+        "full": "n/a",
+        "description": null
+    },
+    "SFOC": {
+        "full": "n/a",
+        "description": null
+    },
+    "SID": {
+        "full": "Standard Instrument Departure",
+        "description": "A standard IFR departure route enabling air traffic controllers to issue abbreviated clearances and thus speed the flow of traffic."
+    },
+    "SIG": {
+        "full": "n/a",
+        "description": null
+    },
+    "SIGMET": {
+        "full": "Significant Meteorological Information",
+        "description": "A type of weather advisory regarding severe weather conditions (thunderstorms, turbulence, icing, volcanic ash, etc.) which could pose a threat to all types of aircraft. AIRMET is a less inclusive type of advisory."
+    },
+    "SLPC": {
+        "full": "n/a",
+        "description": null
+    },
+    "SM": {
+        "full": "n/a",
+        "description": null
+    },
+    "SMM": {
+        "full": "n/a",
+        "description": null
+    },
+    "SMOH": {
+        "full": "n/a",
+        "description": null
+    },
+    "SMR": {
+        "full": "n/a",
+        "description": null
+    },
+    "SMT": {
+        "full": "n/a",
+        "description": null
+    },
+    "SN": {
+        "full": "n/a",
+        "description": null
+    },
+    "SOB": {
+        "full": "Souls (persons) On Board",
+        "description": "Also POB, Persons on Board."
+    },
+    "SOC": {
+        "full": "n/a",
+        "description": null
+    },
+    "SOCAL": {
+        "full": "Southern California TRACON, the busiest approach control in the world, located in San Diego",
+        "description": "Controls most arrivals for commercial, general aviation, or military airfields in Southern California. Also known as SCT for short."
+    },
+    "SODPRO": {
+        "full": "n/a",
+        "description": null
+    },
+    "SOG": {
+        "full": "n/a",
+        "description": null
+    },
+    "SOP": {
+        "full": "Standard Operating Procedures",
+        "description": null
+    },
+    "SOW": {
+        "full": "n/a",
+        "description": null
+    },
+    "SR": {
+        "full": "n/a",
+        "description": null
+    },
+    "SRM": {
+        "full": "n/a",
+        "description": null
+    },
+    "SS": {
+        "full": "n/a",
+        "description": null
+    },
+    "SSR": {
+        "full": "Secondary Surveillance Radar",
+        "description": "A radar system comprising a ground-based transmitter/receiver which interrogates a compatible unit in the aircraft (the transponder), providing instant radar identification without having to manoeuvre. Assigned four-digit transponder codes are referred to as squawk (see above) codes."
+    },
+    "STAR": {
+        "full": "Standard Terminal Arrival Route",
+        "description": "For inbound IFR traffic"
+    },
+    "STC": {
+        "full": "n/a",
+        "description": null
+    },
+    "STOL": {
+        "full": "Short Take-Off and Landing",
+        "description": ""
+    },
+    "STOVL": {
+        "full": "Short Take-Off and Vertical Landing",
+        "description": null
+    },
+    "STS": {
+        "full": "n/a",
+        "description": null
+    },
+    "Squawk": {
+        "full": "An assigned code to transmit via a transponder.",
+        "description": "To transmit the assigned code."
+    },
+    "TA": {
+        "full": "Traffic Advisory (see TCAS)",
+        "description": "When a TA is issued, pilots are instructed to initiate a visual search for the traffic causing the TA."
+    },
+    "TAA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAAM": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "TACAN": {
+        "full": "Tactical Air Navigation system",
+        "description": "An ultra-high frequency electronic navigation aid which provides suitably-equipped aircraft with a continuous indication of bearing and distance to the selected Tacan station. The distance element can be received by civilian DME equipment, but otherwise Tacan is principally a military navaid."
+    },
+    "TAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAI": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAM": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAR": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAS": {
+        "full": "True Airspeed",
+        "description": "Rectified airspeed corrected for altitude and outside air temperature."
+    },
+    "TAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "TAWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TBO": {
+        "full": "n/a",
+        "description": null
+    },
+    "TBV": {
+        "full": "n/a",
+        "description": null
+    },
+    "TC": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCA": {
+        "full": "Terminal Control Area",
+        "description": ""
+    },
+    "TCAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCDS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCH": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCI": {
+        "full": "n/a",
+        "description": null
+    },
+    "TCU": {
+        "full": "n/a",
+        "description": null
+    },
+    "TDZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "TERPS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TFC": {
+        "full": "n/a",
+        "description": null
+    },
+    "TFR": {
+        "full": "n/a",
+        "description": null
+    },
+    "TGB": {
+        "full": "n/a",
+        "description": null
+    },
+    "TGL": {
+        "full": "n/a",
+        "description": null
+    },
+    "TH": {
+        "full": "n/a",
+        "description": null
+    },
+    "THLD": {
+        "full": "n/a",
+        "description": null
+    },
+    "THR": {
+        "full": "n/a",
+        "description": null
+    },
+    "THS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TIT": {
+        "full": "n/a",
+        "description": null
+    },
+    "TLB": {
+        "full": "n/a",
+        "description": null
+    },
+    "TLD": {
+        "full": "n/a",
+        "description": null
+    },
+    "TLS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TLW": {
+        "full": "n/a",
+        "description": null
+    },
+    "TMA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TMG": {
+        "full": "n/a",
+        "description": null
+    },
+    "TML": {
+        "full": "n/a",
+        "description": null
+    },
+    "TMZ": {
+        "full": "n/a",
+        "description": null
+    },
+    "TO/GA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOC": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOD": {
+        "full": "n/a",
+        "description": null
+    },
+    "TODA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOGA": {
+        "full": "Take-off/Go Around",
+        "description": "An autopilot setting activating take-off or go-around thrust."
+    },
+    "TOP": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOR": {
+        "full": "n/a",
+        "description": null
+    },
+    "TORA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOW": {
+        "full": "n/a",
+        "description": null
+    },
+    "TOWS": {
+        "full": "n/a",
+        "description": null
+    },
+    "TP": {
+        "full": "n/a",
+        "description": null
+    },
+    "TR": {
+        "full": "n/a",
+        "description": null
+    },
+    "TRA": {
+        "full": "n/a",
+        "description": null
+    },
+    "TRACON": {
+        "full": "Terminal Radar Approach Control",
+        "description": "ATC for departures and approaches."
+    },
+    "TRE": {
+        "full": "n/a",
+        "description": null
+    },
+    "TRP": {
+        "full": "n/a",
+        "description": null
+    },
+    "TSB": {
+        "full": "Transportation Safety Board of Canada",
+        "description": "Agency that investigates accidents, in a similar fashion to the NTSB in the United States or an AAIB in other countries."
+    },
+    "TSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "TTAF": {
+        "full": "n/a",
+        "description": null
+    },
+    "TTSN": {
+        "full": "n/a",
+        "description": null
+    },
+    "TTSO": {
+        "full": "n/a",
+        "description": null
+    },
+    "TWB": {
+        "full": "n/a",
+        "description": null
+    },
+    "TWC": {
+        "full": "n/a",
+        "description": null
+    },
+    "TWLU": {
+        "full": "n/a",
+        "description": null
+    },
+    "TWR": {
+        "full": "Tower",
+        "description": null
+    },
+    "TWY": {
+        "full": "Taxiway",
+        "description": null
+    },
+    "UAS": {
+        "full": "n/a",
+        "description": null
+    },
+    "UAV": {
+        "full": "n/a",
+        "description": null
+    },
+    "UHF": {
+        "full": "Ultra-High Frequency",
+        "description": "Radio frequencies in the 300-3,000 MHz band."
+    },
+    "UIR": {
+        "full": "n/a",
+        "description": null
+    },
+    "UM": {
+        "full": "Unaccompanied Minor",
+        "description": "Underage passenger (typically 5-15 years old) travelling without a parent, guardian or trusted adult. An UM is under the constant supervision of airline staff from the departure gate until he or she is picked up at the arrival airport."
+    },
+    "UNICOM": {
+        "full": "privately-operated advisory air-to-ground radio service at uncontrolled airfields, in the United States",
+        "description": ""
+    },
+    "UTC": {
+        "full": "Co-ordinated Universal Time, formerly Greenwich Mean Time",
+        "description": null
+    },
+    "V&V": {
+        "full": "n/a",
+        "description": null
+    },
+    "V/STOL": {
+        "full": "Vertical and Short Take-Off and Landing",
+        "description": ""
+    },
+    "V1": {
+        "full": "decision speed, up to which it should be possible to abort a take-off and stop safely within the remaining runway length",
+        "description": "After reaching V1 the take-off must be continued."
+    },
+    "VA": {
+        "full": "design manoeuvring speed",
+        "description": "The speed below which abrupt and extreme control movements are possible (though not advised) without exceeding the airframe\u2019s limiting load factors."
+    },
+    "VASI": {
+        "full": "n/a",
+        "description": null
+    },
+    "VASIS": {
+        "full": "Visual Approach Slope Indicator System",
+        "description": "A colored light system providing visual guidance to the glidepath of a runway."
+    },
+    "VBV": {
+        "full": "n/a",
+        "description": null
+    },
+    "VCR": {
+        "full": "n/a",
+        "description": null
+    },
+    "VCS": {
+        "full": "n/a",
+        "description": null
+    },
+    "VDP": {
+        "full": "n/a",
+        "description": null
+    },
+    "VFE": {
+        "full": "maximum flap extension speed (top of white arc on ASI)",
+        "description": ""
+    },
+    "VFR": {
+        "full": "Visual Flight Rules",
+        "description": "Prescribed for the operation of aircraft in visual meteorological conditions (VMC). VMC is generally defined as 5 miles visibility or more and 1,000 feet vertical and one nautical mile horizontal clearance from cloud, but variations apply to aircraft operating below 3,000 feet AMSL. Special VFR (SVFR) clearances are granted at the discretion of ATC for VFR flight through some controlled airspace where IFR usually apply."
+    },
+    "VG": {
+        "full": "n/a",
+        "description": null
+    },
+    "VGM": {
+        "full": "n/a",
+        "description": null
+    },
+    "VHF": {
+        "full": "Very High Frequency",
+        "description": "Radio frequencies in the 30-300 MHz band, used for most civil air-to-ground communication."
+    },
+    "VID": {
+        "full": "n/a",
+        "description": null
+    },
+    "VIGV": {
+        "full": "n/a",
+        "description": null
+    },
+    "VIS": {
+        "full": "Visibility",
+        "description": null
+    },
+    "VMCA": {
+        "full": "minimum control speed (air)",
+        "description": "The minimum speed at which control of a twin-engined aircraft can be maintained after failure of one engine."
+    },
+    "VMO": {
+        "full": "maximum operating speed",
+        "description": "Also Mmo, Mach limit maximum operating speed."
+    },
+    "VNAV": {
+        "full": "Vertical Navigation",
+        "description": null
+    },
+    "VNC": {
+        "full": "n/a",
+        "description": null
+    },
+    "VNE": {
+        "full": "never-exceed speed, \u2018redline speed\u2019 denoted by a red radial on an ASI",
+        "description": ""
+    },
+    "VNO": {
+        "full": "normal operating speed",
+        "description": "The maximum structural cruising speed allowable for normal operating conditions (top of green arc on ASI)."
+    },
+    "VOLMET": {
+        "full": "n/a",
+        "description": null
+    },
+    "VOR": {
+        "full": "Very high frequency Omnidirectional Range",
+        "description": "A radio navigation aid operating in the 108-118 MHz band. A VOR ground station transmits a two-phase directional signal through 360\u00b0. the aircraft\u2019s VOR receiver enables a pilot to identify his radial or bearing from/to the ground station. VOR is the most commonly used radio navigation aid in private flying. Increased accuracy is available in DVOR which have replaced some VORs in the UK system. Also VORTAC, combined VOR and TACAN, and VOT (VOR test facility)."
+    },
+    "VR": {
+        "full": "Rotation speed at which to raise the nose for take-off",
+        "description": ""
+    },
+    "VSCF": {
+        "full": "n/a",
+        "description": null
+    },
+    "VSI": {
+        "full": "Vertical Speed Indicator",
+        "description": null
+    },
+    "VSO": {
+        "full": "Stalling speed at MTWA",
+        "description": "in landing configuration with flaps and landing gear down, at sea level, ISA conditions (bottom of white arc on ASI)."
+    },
+    "VSV": {
+        "full": "n/a",
+        "description": null
+    },
+    "VTA": {
+        "full": "n/a",
+        "description": null
+    },
+    "VTOL": {
+        "full": "Vertical Take-Off and Landing",
+        "description": ""
+    },
+    "VVI": {
+        "full": "n/a",
+        "description": null
+    },
+    "VX": {
+        "full": "Best angle of climb speed on all engines",
+        "description": ""
+    },
+    "VXSE": {
+        "full": "Best engine-out angle of climb speed",
+        "description": ""
+    },
+    "VY": {
+        "full": "Best rate of climb speed on all engines",
+        "description": ""
+    },
+    "VYSE": {
+        "full": "Best engine-out rate of climb speed",
+        "description": "\u2018blueline speed\u2019 (blue radial on ASIs of light twin aircraft)"
+    },
+    "W&B": {
+        "full": "n/a",
+        "description": null
+    },
+    "WAC": {
+        "full": "n/a",
+        "description": null
+    },
+    "WAT": {
+        "full": "n/a",
+        "description": null
+    },
+    "WCA": {
+        "full": "n/a",
+        "description": null
+    },
+    "WDM": {
+        "full": "n/a",
+        "description": null
+    },
+    "WEF": {
+        "full": "n/a",
+        "description": null
+    },
+    "WOCL": {
+        "full": "n/a",
+        "description": null
+    },
+    "WOFW": {
+        "full": "n/a",
+        "description": null
+    },
+    "WONW": {
+        "full": "n/a",
+        "description": null
+    },
+    "WS": {
+        "full": "n/a",
+        "description": null
+    },
+    "WTC": {
+        "full": "n/a",
+        "description": null
+    },
+    "Wx": {
+        "full": "n/a",
+        "description": null
+    },
+    "XC": {
+        "full": "n/a",
+        "description": null
+    },
+    "XMIT": {
+        "full": "n/a",
+        "description": null
+    },
+    "XMSN": {
+        "full": "Transmission",
+        "description": null
+    },
+    "XPDR": {
+        "full": "Transponder",
+        "description": null
+    },
+    "XPNDR": {
+        "full": "n/a",
+        "description": null
+    },
+    "ZFT": {
+        "full": "n/a",
+        "description": null
+    },
+    "ZFW": {
+        "full": "n/a",
+        "description": null
+    },
+    "ZULU": {
+        "full": "n/a",
+        "description": null
+    },
+    "Zulu": {
+        "full": "UTC time",
+        "description": null
+    },
+    "kts": {
+        "full": "Standard unit of speed in aviation and marine transportation, equivalent to one nautical mile per hour",
+        "description": "One knot equals 1.1515 mph, and one nautical mile equals 6,080 feet. The word \u201cknot\u201d replaces \u201cnautical miles per hour\u201d, and one should never say for example \u201c60 knots per hour\u201d."
+    },
+    "psi": {
+        "full": "Pounds per Square Inch",
+        "description": "Unit of measure for pressure."
+    },
+    "rpm": {
+        "full": "Revolutions Per Minute",
+        "description": ""
+    }
+}

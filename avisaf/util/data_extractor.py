@@ -72,7 +72,7 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     :return: Returns the list of available entity labels.
     """
     if entities_file_path is None:
-        entities_file_path = find_file_by_path("entities_labels.json")
+        entities_file_path = find_file_by_path(Path("config", "entities_labels.json"))
         if entities_file_path is None:
             raise FileNotFoundError()
 
@@ -160,8 +160,6 @@ class CsvAsrsDataExtractor(DataExtractor):
         """
 
         :param field_names:
-        :param lines_count:
-        :param start_index:
         :return:
         """
 

@@ -208,11 +208,11 @@ def add_manual_annotator_parser(subparsers):
         "-l",
         "--labels",
         help="Path to the file containing entity labels used for annotation.",
-        default=Path("entities_labels.json"),
+        default=str(Path("data_files", "entities_labels.json"))
     )
     parser.add_argument(
         "-s",
-        "--start-index",
+        "--start_index",
         type=int,
         help="The index of the first text to be annotated.",
         default=0,
@@ -373,6 +373,11 @@ def parse_args() -> tuple:
         action="count",
         default=0,
         help="Verbosity level setting. More -v occurrences increase the number of printed messages."
+    )
+    main_parser.add_argument(
+        "--log_file",
+        default=None,
+        help="A string which defines the log file path."
     )
     subparser = main_parser.add_subparsers(help="Possible operations to perform.")
 

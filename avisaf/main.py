@@ -20,10 +20,6 @@ from text_classification.evaluator import evaluate_classification
 from text_classification.predictor_decoder import launch_classification
 
 logger = logging.getLogger("avisaf_logger")
-logging.basicConfig(
-    format=f"[%(levelname)s - %(asctime)s]: %(message)s",
-    filename="log_avisaf.log"
-)
 
 
 def choose_action(args: Namespace):
@@ -120,12 +116,17 @@ def main():
 
     args = main_parser.parse_args()
 
+    logging.basicConfig(
+        format=f"[%(levelname)s - %(asctime)s]: %(message)s",
+        filename=args.log_file
+    )
+
     if not args.verbose or args.verbose == 0:
-        logging.getLogger("avisaf_logger").setLevel(logging.WARNING)
+        logger.setLevel(logging.WARNING)
     elif args.verbose == 1:
-        logging.getLogger("avisaf_logger").setLevel(logging.INFO)
+        logger.setLevel(logging.INFO)
     else:
-        logging.getLogger("avisaf_logger").setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
 
     if args.dest == "ner_test":
         visualization_not_available = not args.print and not args.render and args.save is None
