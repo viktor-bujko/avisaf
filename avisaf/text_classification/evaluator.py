@@ -58,6 +58,7 @@ class ASRSReportClassificationEvaluator:
             "Precision": metrics.precision_score(target_classes, class_predictions, average=avg_method, zero_division=0),
             "Recall": metrics.recall_score(target_classes, class_predictions, average=avg_method, zero_division=0),
             "F1 score": metrics.f1_score(target_classes, class_predictions, average=avg_method, zero_division=0),
+            "Matthews correlation coefficient": metrics.matthews_corrcoef(target_classes, class_predictions),
             "ROC AUC macro ovr": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovr", average="macro"),
             "ROC AUC weighted ovr": metrics.roc_auc_score(target_classes, predictions_distribution, multi_class="ovr", average="weighted")
         }

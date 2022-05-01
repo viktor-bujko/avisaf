@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import utils
 import gensim.downloader as dwnldr
@@ -210,6 +211,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
         self._model_path = Path(self._model_dir, "tfidf_pipeline.model")
         self._pipeline = Pipeline([
             ("tfidf", self._transformer),
+            ("chi", SelectKBest(chi2, k=300)),
             # ("reductor", TruncatedSVD(n_components=300)),
             ("scaler", StandardScaler(with_mean=False))
         ])
