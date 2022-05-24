@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 from spacy.language import Doc
 import matplotlib.pyplot as plt
+from spacy.lang.en import STOP_WORDS
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -16,7 +17,7 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import utils
 import gensim.downloader as dwnldr
-from gensim.models import Doc2Vec, KeyedVectors  # , Word2Vec,
+from gensim.models import Doc2Vec, KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
 # from gensim.models.fasttext import FastText
 
@@ -201,9 +202,16 @@ class AsrsReportVectorizer:
 
 class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
+
+        # words which could play an important role in vector representation
+        stops_overrides = ["above", "below", "first"]
+
+        for not_stop_word in stops_overrides:
+            STOP_WORDS.remove(not_stop_word)
+
         self.transformer_name = "tfidf"
         self._transformer = TfidfVectorizer(
-            stop_words="english",
+            stop_words=list(STOP_WORDS),
             ngram_range=(1, 3),
             max_features=300_000,
         )
@@ -269,9 +277,11 @@ class Doc2VecAsrsReportVectorizer(AsrsReportVectorizer):
             vector_size=300,
             epochs=40,
             min_count=5,
-            dm=0,
-            dbow_words=1,
-            negative=5,
+            dm=1,
+            dm_mean=0,
+            dm_concat=0,
+            dbow_words=0,
+            negative=8,
             workers=3,
             window=4,
             alpha=0.001,
