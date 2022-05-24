@@ -16,39 +16,32 @@ def add_ner_trainer_parser(subparsers):
 
     parser.set_defaults(dest="train_ner")
     parser.add_argument(
-        "-d",
-        "--data",
-        metavar="PATH",
-        nargs="+",
-        help="File path(s) to the file with annotated training data.",
-        default=[Path("data_files", "ner", "train_data", "annotated_data_01.json")],
-        required=True,
+        "config_path",
+        type=str,
+        default=str(Path("config", "spacy_ner.cfg")),
+        help="Path to the spaCy configuration file (see https://spacy.io/api/data-formats#config)."
     )
     parser.add_argument(
-        "-i",
-        "--iterations",
-        metavar="INT",
-        type=int,
-        default=20,
-        help="The number of iterations to perform for entity training.",
+        "-d",
+        "--data",
+        metavar="DATA_PATH",
+        nargs="+",
+        help="Path to the files with annotated JSON training data.",
+        default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))],
+        required=True,
     )
     parser.add_argument(
         "-m",
         "--model",
-        metavar="PATH/NAME",
+        metavar="MODEL_PATH",
         help="File path to an existing spaCy model or existing spaCy model name to be trained.",
         default=None,
     )
     parser.add_argument(
         "-n", "--name",
-        metavar="STRING",
-        help="Name of the new model.", default=None
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=256,
-        help="Batch size."
+        metavar="NEW_MODEL_NAME",
+        help="Name of the new model. Will be generated if not provided.",
+        default=None
     )
 
     return parser

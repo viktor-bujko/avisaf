@@ -12,6 +12,7 @@ from spacy.tokens import DocBin
 from spacy.cli.train import train
 # importing own modules
 from util.data_extractor import get_entities
+from ner.data_stream_registry import stream_data
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -49,7 +50,7 @@ class ASRSNamedEntityRecognizer:
         for label in list(get_entities().keys()):
             ner.add_label(label)
 
-        return ner
+        return nlp, ner
 
     def convert_to_spacy_docbin(self, json_data: list, output_path: str = None) -> DocBin:
         docbin = DocBin()  # creating binary serialization representation of Docs collection
@@ -80,37 +81,34 @@ class ASRSNamedEntityRecognizer:
 
 
 def train_ner(
-    iter_number: int = 20,
+    config_file_path: str,
     model=None,
     new_model_name: str = None,
-    train_data_srcfiles: List[Path] = None,
-    batch_size: int = 256
+    train_data_srcfiles: List[Path] = None
 ):
     """SpaCy NER model training function. The function iterates given number of
     times over the given data in order to create an appropriate statistical
     entity prediction model.
 
+    :param config_file_path:
+    :type config_file_path: Union[str, Path]
     :type train_data_srcfiles: List[Union[Path, str]]
     :param train_data_srcfiles: A path to the files containing training data based
         based on which the spaCy model will be updated.
-    :type iter_number: int
-    :param iter_number: Number of iterations for NER model updating.
-    :type model: str, Path
+    :type model: Union[str, Path]
     :param model: The string representation of a spaCy model. Either existing
         pre-downloaded spaCy model or a path to a local directory.
     :type new_model_name: str
     :param new_model_name: New spaCy NER model will be saved under this name.
         This parameter also makes part of the path where the model will be
         saved.
-    :type batch_size: int
-    :param batch_size: Batch size to be used.
 
     :return: Returns created NLP spaCy model.
     """
 
     ent_recognizer = ASRSNamedEntityRecognizer()
 
-    ent_recognizer.setup_ner_pipeline(model)
+    nlp, ner = ent_recognizer.setup_ner_pipeline(model)
 
     if not train_data_srcfiles:
         logger.error("Missing training data path argument")
@@ -127,15 +125,14 @@ def train_ner(
 
     # converted = ent_recognizer.convert_to_spacy_docbin(training_data, "test_data_11.spacy")
 
-    overrides = {
-            "corpora.train.data_source": train_data_srcfiles,
-            "paths.dev": "dev_data_10.spacy",
-            "nlp.batch_size": batch_size,
-            "training.max_epochs": iter_number
-    }
+    overrides = {"corpora.train.data_source": train_data_srcfiles}
+
+    if model is not None:
+        config_file_path = str(Path("config", "spacy_ner_continue.cfg"))
+        overrides.update({"components.ner.source": model})
 
     train(
-        Path("config", "spacy_ner.cfg"),
+        Path(config_file_path),
         model_path,
         overrides=overrides
     )

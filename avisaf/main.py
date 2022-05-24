@@ -32,11 +32,10 @@ def choose_action(args: Namespace):
 
     functions = {
         "train_ner": lambda: train_ner(
-            iter_number=args.iterations,
+            config_file_path=args.config_path,
             model=args.model,
             new_model_name=args.name,
             train_data_srcfiles=args.data,
-            batch_size=args.batch_size
         ),
         "test_ner": lambda: test_ner(
             model=args.model,
