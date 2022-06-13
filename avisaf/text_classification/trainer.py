@@ -54,7 +54,6 @@ class ASRSReportClassificationTrainer:
             ),
             "knn": KNeighborsClassifier(n_neighbors=20, weights="distance"),
             "gauss": GaussianNB(),
-            "mnb": MultinomialNB(),
             "regression": LogisticRegression(),
         }
 

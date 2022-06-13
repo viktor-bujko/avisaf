@@ -29,6 +29,11 @@ import lzma
 import pickle
 
 logger = logging.getLogger("avisaf_logger")
+# words which could play an important role in vector representation
+stops_overrides = ["above", "below", "first"]
+
+for not_stop_word in stops_overrides:
+    STOP_WORDS.remove(not_stop_word)
 
 
 def show_vector_space_3d(vectors, targets):
@@ -144,22 +149,36 @@ class AsrsReportVectorizer:
     @staticmethod
     def preprocess(texts: np.ndarray):
         logger.debug("Started preprocessing")
+
+        preprocessed_file = Path("lemmatized_texts.json")
+        if preprocessed_file.exists():
+            with preprocessed_file.open("r") as lemms:
+                preprocessed = list(json.load(lemms))
+
+            logger.debug("Loaded lemmatized texts from file")
+            return preprocessed
+
         preprocessed = []
+        logger.debug("Loading language model")
         nlp = spacy.load("en_core_web_md")
+        logger.debug("Loading done")
         # TODO: replace by used NER model
         texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
         with Path("config", "aviation_glossary.json").open("r") as glossary_file:
+            logger.debug("Loading terminology glossary")
             abbreviations_glossary = dict(json.load(glossary_file))
+            logger.debug("Glossary loaded")
 
+        batch_size = 1024
         for idx, doc in enumerate(nlp.pipe(
                 texts,
-                batch_size=1024,
+                batch_size=batch_size,
                 disable=["tok2vec", "parser"],
-                n_process=1)
+                n_process=4)
         ):
-            if idx % 1024 == 0:
-                logger.debug(f"Lemmatized { (idx + 1) } texts.")
+            if idx > 0 and idx % batch_size == 0:
+                logger.debug(f"Lemmatized { (idx / batch_size) * batch_size } texts.")
             doc_lemmas = []
             for token in doc:
                 token_base_form = token.lemma_
@@ -168,8 +187,7 @@ class AsrsReportVectorizer:
                     continue
                 if token.text.startswith("ZZZ"):
                     token_base_form = "airport"
-                if token.ent_type_ == "NAV_WAYPOINT" \
-                   or re.match(r"[A-Z]{5}", token.text):
+                if token.ent_type_ == "NAV_WAYPOINT":
                     token_base_form = "waypoint"
                 if token.ent_type_ == "ABBREVIATION":
                     # searching for full version of abbreviation in the glossary
@@ -179,19 +197,25 @@ class AsrsReportVectorizer:
 
                 # replacing token text by its lemma while preserving original whitespace
                 doc_lemmas.append(token_base_form.lower() + token.whitespace_)
-            lemmatized = " ".join(doc_lemmas)
+            lemmatized = "".join(doc_lemmas)
 
-            # lemmatized = re.sub(r" [A-Z]{5} ", " waypoint ", lemmatized)  # replacing uppercase 5-letter words - most probably waypoints
-            lemmatized = re.sub(r"([0-9]{1,2});([0-9]{1,3})", r"\1,\2", lemmatized)  # ; separated numbers - usually altitude
-            lemmatized = re.sub(r"fl;?[0-9]{2,3}", "flight level", lemmatized)  # flight level representation
-            lemmatized = re.sub(r"runway|rwy [0-9]{1,2}[rcl]?", r"runway", lemmatized)  # runway identifiers
+            lemmatized = re.sub(r"(\d{1,2});(\d{1,3})", r"\1,\2", lemmatized)  # ; separated numbers - usually altitude
+            lemmatized = re.sub(r"fl;?\d{2,3}", "flight level", lemmatized)  # flight level representation
+            lemmatized = re.sub(r"runway|rwy \d{1,2}[rcl]?", r"runway", lemmatized)  # runway identifiers
             lemmatized = re.sub(r"tx?wys?", "taxiway", lemmatized)
             lemmatized = re.sub(r"twrs?[^a-z]", "tower", lemmatized)
-            lemmatized = re.sub(r"([a-z0-9]+\.){2,}[a-z0-9]*", "", lemmatized)  # removing words with several dots
+            lemmatized = re.sub(r"([a-z\d]+\.){2,}[a-z\d]*", "", lemmatized)  # removing words with several dots
             lemmatized = re.sub(r"(air)?spds?", "speed", lemmatized)
             lemmatized = re.sub(r"lndgs?", "landing", lemmatized)
 
             preprocessed.append(lemmatized)
+
+        #if not preprocessed_file.exists():
+        #    logger.debug("dumping lemmatized")
+        #    with preprocessed_file.open("x") as lemms:
+        #        json.dump(preprocessed, lemms, indent=4)
+        #    logger.debug("dumped") 
+
         logger.debug("Ended preprocessing")
 
         return preprocessed
@@ -203,25 +227,18 @@ class AsrsReportVectorizer:
 class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
     def __init__(self):
 
-        # words which could play an important role in vector representation
-        stops_overrides = ["above", "below", "first"]
-
-        for not_stop_word in stops_overrides:
-            STOP_WORDS.remove(not_stop_word)
-
         self.transformer_name = "tfidf"
         self._transformer = TfidfVectorizer(
             stop_words=list(STOP_WORDS),
-            ngram_range=(1, 3),
-            max_features=300_000,
+            ngram_range=(1, 2),
+            max_features=100_000,
         )
         self._model_dir = Path("vectors", self.transformer_name)
         self._model_path = Path(self._model_dir, "tfidf_pipeline.model")
         self._pipeline = Pipeline([
             ("tfidf", self._transformer),
-            ("chi", SelectKBest(chi2, k=300)),
-            # ("reductor", TruncatedSVD(n_components=300)),
-            ("scaler", StandardScaler(with_mean=False))
+            ("scaler", StandardScaler(with_mean=False)),
+            ("reductor", TruncatedSVD(n_components=300)),
         ])
 
     def _build_feature_vectors(self, texts: np.ndarray):
@@ -237,7 +254,9 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             logger.debug("tfidf training finished")
 
             with lzma.open(self._model_path, "wb") as pipe:
+                logger.info("Serializing tfidf pipeline")
                 pickle.dump(self._pipeline, pipe)
+                logger.info("Serialization successful")
         else:
             with lzma.open(self._model_path, "rb") as pipe:
                 self._pipeline = pickle.load(pipe)
@@ -251,8 +270,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             "name": "TfIdfVectorizer",
             "vectorizer": self.transformer_name,
             "encoding": self._transformer.encoding,
-            "decode_error": self._transformer.decode_error,
-            "stop_words": self._transformer.stop_words,
+            "decode_error": self._transformer.decode_error, # "stop_words": self._transformer.stop_words,
             "lowercase": self._transformer.lowercase,
             "ngram_range": self._transformer.ngram_range,
             "max_features": self._transformer.max_features,
