@@ -168,13 +168,13 @@ class Evaluator:
 
         print(f"Average performance per {self._annotated_count} texts:")
         for metric in self._used_metrics:
-            print("\t{}: {:.3f}".format(metric, self._used_metrics[metric]))
+            print("\t{}: {:.4f}".format(metric, self._used_metrics[metric]))
         for idx, ent_type in enumerate(self._available_entities):
             print(
                 f"\t{ent_type}",
-                "\t\tPrecision: {:.3f}".format(entity_class_metrics[idx, 0] * 100),
-                "\t\tRecall: {:.3f}".format(entity_class_metrics[idx, 1] * 100),
-                "\t\tF1 Score: {:.3f}".format(entity_class_metrics[idx, 2] * 100),
+                "\t\tPrecision: {:.4f}".format(entity_class_metrics[idx, 0] * 100),
+                "\t\tRecall: {:.4f}".format(entity_class_metrics[idx, 1] * 100),
+                "\t\tF1 Score: {:.4f}".format(entity_class_metrics[idx, 2] * 100),
                 sep="\n"
             )
 
@@ -340,9 +340,9 @@ class StrictEvaluator(Evaluator):
             acc = np.nan
 
         if include_accuracy:
-            logger.debug("{:.3f} | {:.3f} | {:.3f} | {:.3f}".format(precision, recall, acc, f1_score))
+            logger.debug("{:.4f} | {:.4f} | {:.4f} | {:.4f}".format(precision, recall, acc, f1_score))
         else:
-            logger.debug("{:.3f} | {:.3f} | {} | {:.3f}".format(precision, recall, " " * 5, f1_score))
+            logger.debug("{:.4f} | {:.4f} | {} | {:.4f}".format(precision, recall, " " * 5, f1_score))
 
         result_scores = [precision, recall, acc, f1_score] if include_accuracy else [precision, recall, f1_score]
         for score in result_scores:

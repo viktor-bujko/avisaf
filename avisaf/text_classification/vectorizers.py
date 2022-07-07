@@ -3,30 +3,23 @@
 import re
 import sys
 import json
+import lzma
 import spacy
+import pickle
 import logging
 import numpy as np
 from pathlib import Path
 from spacy.language import Doc
-import matplotlib.pyplot as plt
 from spacy.lang.en import STOP_WORDS
-from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import utils
 import gensim.downloader as dwnldr
 from gensim.models import Doc2Vec, KeyedVectors
 from gensim.models.doc2vec import TaggedDocument
-# from gensim.models.fasttext import FastText
 
-import fasttext
-import fasttext.util
-import tempfile
-
-import lzma
-import pickle
 
 logger = logging.getLogger("avisaf_logger")
 # words which could play an important role in vector representation
@@ -34,75 +27,6 @@ stops_overrides = ["above", "below", "first"]
 
 for not_stop_word in stops_overrides:
     STOP_WORDS.remove(not_stop_word)
-
-
-def show_vector_space_3d(vectors, targets):
-
-    assert vectors.shape[0] == targets.shape[0]
-
-    pca = PCA(n_components=3)
-    components = pca.fit_transform(vectors)
-
-    plt.figure(figsize=(5, 5))
-    ax = plt.axes(projection="3d")
-    ax.patch.set_alpha(0.5)
-    ax.grid()
-    plt.xlim(-10, 10)
-    plt.ylim(-10, 10)
-
-    unique_targets = np.unique(targets)
-    ax.legend(unique_targets)
-    colors = ["r", "g", "b"]
-
-    for target, color in zip(unique_targets, colors):
-        ax.scatter(
-            components[targets == target][:, 0],
-            components[targets == target][:, 1],
-            components[targets == target][:, 2],
-            c=color,
-            s=50,
-        )
-
-    plt.xlabel("PC 1", size=15)
-    plt.ylabel("PC 2", size=15)
-    plt.title("Word embedding space", size=20)
-
-    plt.show()
-    plt.savefig(fname="figure_3D", format="svg")
-    show_vector_space_2d(vectors, targets)
-
-
-def show_vector_space_2d(vectors, targets):
-
-    assert vectors.shape[0] == targets.shape[0]
-
-    pca = PCA(n_components=2)
-    components = pca.fit_transform(vectors)
-
-    fig = plt.figure(figsize=(5, 5))
-    ax = fig.add_subplot()
-    ax.patch.set_alpha(0.5)
-    ax.grid()
-    plt.xlim(-4, 20)
-    plt.ylim(-7, 20)
-
-    unique_targets = np.unique(targets)
-    ax.legend(unique_targets)
-    colors = ["r", "g", "b"]
-
-    for target, color in zip(unique_targets, colors):
-        ax.scatter(
-            components[targets == target][:, 0],
-            components[targets == target][:, 1],
-            c=color,
-            s=50,
-        )
-
-    plt.xlabel("PC 1", size=15)
-    plt.ylabel("PC 2", size=15)
-    plt.title("Word embedding space", size=20)
-
-    plt.show()
 
 
 class VectorizerFactory:
@@ -117,8 +41,7 @@ class VectorizerFactory:
             "tfidf": lambda: default,
             "spacyw2v": lambda: SpaCyWord2VecAsrsReportVectorizer(),
             "googlew2v": lambda: GoogleNewsWord2VecAsrsReportVectorizer(),
-            "d2v": lambda: Doc2VecAsrsReportVectorizer(),
-            "fasttext": lambda: FastTextAsrsReportVectorizer()
+            "d2v": lambda: Doc2VecAsrsReportVectorizer()
         }
 
         vectorizer = available_vectorizers.get(vect, default)()
@@ -149,20 +72,10 @@ class AsrsReportVectorizer:
     @staticmethod
     def preprocess(texts: np.ndarray):
         logger.debug("Started preprocessing")
-
-        preprocessed_file = Path("lemmatized_texts.json")
-        if preprocessed_file.exists():
-            with preprocessed_file.open("r") as lemms:
-                preprocessed = list(json.load(lemms))
-
-            logger.debug("Loaded lemmatized texts from file")
-            return preprocessed
-
         preprocessed = []
         logger.debug("Loading language model")
-        nlp = spacy.load("en_core_web_md")
+        nlp = spacy.load("./models/ner/ner_avisaf.model")
         logger.debug("Loading done")
-        # TODO: replace by used NER model
         texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
         with Path("config", "aviation_glossary.json").open("r") as glossary_file:
@@ -174,11 +87,11 @@ class AsrsReportVectorizer:
         for idx, doc in enumerate(nlp.pipe(
                 texts,
                 batch_size=batch_size,
-                disable=["tok2vec", "parser"],
+                disable=[],
                 n_process=4)
         ):
             if idx > 0 and idx % batch_size == 0:
-                logger.debug(f"Lemmatized { (idx / batch_size) * batch_size } texts.")
+                logger.debug(f"Lemmatized { int((idx / batch_size) * batch_size) } texts.")
             doc_lemmas = []
             for token in doc:
                 token_base_form = token.lemma_
@@ -209,13 +122,6 @@ class AsrsReportVectorizer:
             lemmatized = re.sub(r"lndgs?", "landing", lemmatized)
 
             preprocessed.append(lemmatized)
-
-        #if not preprocessed_file.exists():
-        #    logger.debug("dumping lemmatized")
-        #    with preprocessed_file.open("x") as lemms:
-        #        json.dump(preprocessed, lemms, indent=4)
-        #    logger.debug("dumped") 
-
         logger.debug("Ended preprocessing")
 
         return preprocessed
@@ -270,7 +176,7 @@ class TfIdfAsrsReportVectorizer(AsrsReportVectorizer):
             "name": "TfIdfVectorizer",
             "vectorizer": self.transformer_name,
             "encoding": self._transformer.encoding,
-            "decode_error": self._transformer.decode_error, # "stop_words": self._transformer.stop_words,
+            "decode_error": self._transformer.decode_error,
             "lowercase": self._transformer.lowercase,
             "ngram_range": self._transformer.ngram_range,
             "max_features": self._transformer.max_features,
@@ -452,7 +358,8 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
 class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
         logger.debug(Path().absolute())
-        self._model_path = Path("vectors", "gensim-data", "GoogleNews-vectors-negative300.bin")
+        self._model_path = Path(".", "vectors", "gensim-data", "word2vec-google-news-300", "word2vec-google-news-300.gz")  # Path("vectors", "gensim-data", "GoogleNews-vectors-negative300.bin")
+        print(self._model_path)
         if not self._model_path.exists():
             logger.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
             if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) ").lower() == "y":
@@ -472,88 +379,66 @@ class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def get_params(self):
         return {
             "name": "GoogleNewsWord2Vec",
-            "vectorizer": "google_w2v",
+            "vectorizer": "googlew2v",
             "model_path": str(self._model_path)
         }
 
 
-class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
-    def __init__(self):
-        model_name = "cc.en.300.bin"
-        self._nlp = spacy.load("en_core_web_md")
-        self._vectors = fasttext.load_model(model_name)
-        self._model_path = str(Path("vectors", "fasttext_vectors", "fasttext.model"))
-        super().__init__(vectors=self._vectors)
-
-    def _build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
-        logger.debug("Started vectorization")
-
-        try:
-            model = fasttext.load_model(self._model_path)
-        except ValueError:
-            model = None
-
-        texts = self.preprocess(texts)
-
-        if model is None:
-            _, filename = tempfile.mkstemp(text=True)
-            with open(filename, "w") as f:
-                print(*texts, sep="\n", file=f)
-            model = fasttext.train_unsupervised(filename, model="skipgram", dim=300, ws=8, epoch=25, minCount=3)
-
-            self._vectors = model
-            model.save_model(self._model_path)
-
-        doc_vectors = []
-        for doc_vector_batch in self._generate_vectors(texts, model, 256):
-            doc_vectors.append(doc_vector_batch)
-            print("===========================")
-
-        result = np.concatenate(doc_vectors, axis=0)
-        logger.debug(f"Vectorized {result.shape[0]} texts")
-
-        return result
-
-    def _generate_vectors(self, texts, vectors, batch: int = 100):
-        doc_vectors = []
-        for doc in self._nlp.pipe(texts, disable=["ner"], batch_size=batch):
-            lemmas = []
-            for token in doc:
-                lemmas.append(vectors[token.text])
-
-            doc_vector = self._get_doc_vector(np.array(lemmas))
-            doc_vectors.append(doc_vector)
-
-        yield np.array(doc_vectors)
-
-    def _get_doc_vector(self, lemmas):
-        return np.mean(lemmas * (len(lemmas) / 500), axis=0)
-
-    def get_params(self):
-        return {
-            "name": "Fasttext",
-            "vectorizer":
-            "fasttext",
-            "model_path": self._model_path
-        }
-
-
-"""
-if __name__ == "__main__":
-    x = Word2VecAsrsReportVectorizer()
-    # x = GoogleNewsWord2VecAsrsReportVectorizer()
-    result = x.build_feature_vectors(
-        np.array(
-            [
-                "on approach; captain (pilot flying) called for flaps 8; and i positioned flap lever to 8 position. an amber eicas message 'flaps fail' annunciated with a master caution with the flaps failed at the 0 degree position.",
-                "during climb to 17;000 feet the first officer noticed subtle propeller fluctuations.",
-                "i was conducting ojt with a developmental that has 1 r-side and all d-sides.",
-                "ocean west and offshore west/central were combined.",
-                "during climb to 17;000 ft the first officer noticed subtle propeller fluctuations.",
-            ]
-        ),
-        4,
-    )
-
-    print(result)
-"""
+# class FastTextAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
+#     def __init__(self):
+#         model_name = "cc.en.300.bin"
+#         self._nlp = spacy.load("en_core_web_md")
+#         self._vectors = fasttext.load_model(model_name)
+#         self._model_path = str(Path("vectors", "fasttext_vectors", "fasttext.model"))
+#         super().__init__(vectors=self._vectors)
+#
+#     def _build_feature_vectors(self, texts: np.ndarray) -> np.ndarray:
+#         logger.debug("Started vectorization")
+#
+#         try:
+#             model = fasttext.load_model(self._model_path)
+#         except ValueError:
+#             model = None
+#
+#         texts = self.preprocess(texts)
+#
+#         if model is None:
+#             _, filename = tempfile.mkstemp(text=True)
+#             with open(filename, "w") as f:
+#                 print(*texts, sep="\n", file=f)
+#             model = fasttext.train_unsupervised(filename, model="skipgram", dim=300, ws=8, epoch=25, minCount=3)
+#
+#             self._vectors = model
+#             model.save_model(self._model_path)
+#
+#         doc_vectors = []
+#         for doc_vector_batch in self._generate_vectors(texts, model, 256):
+#             doc_vectors.append(doc_vector_batch)
+#             print("===========================")
+#
+#         result = np.concatenate(doc_vectors, axis=0)
+#         logger.debug(f"Vectorized {result.shape[0]} texts")
+#
+#         return result
+#
+#     def _generate_vectors(self, texts, vectors, batch: int = 100):
+#         doc_vectors = []
+#         for doc in self._nlp.pipe(texts, disable=["ner"], batch_size=batch):
+#             lemmas = []
+#             for token in doc:
+#                 lemmas.append(vectors[token.text])
+#
+#             doc_vector = self._get_doc_vector(np.array(lemmas))
+#             doc_vectors.append(doc_vector)
+#
+#         yield np.array(doc_vectors)
+#
+#     def _get_doc_vector(self, lemmas):
+#         return np.mean(lemmas * (len(lemmas) / 500), axis=0)
+#
+#     def get_params(self):
+#         return {
+#             "name": "Fasttext",
+#             "vectorizer": "fasttext",
+#             "model_path": self._model_path
+#         }

@@ -115,6 +115,7 @@ def train_ner(
         return
 
     models_basedir = Path("models", "ner")
+    models_basedir.mkdir(parents=True, exist_ok=True)
     if new_model_name is None:
         model_path = Path(models_basedir,  f"model_{datetime.today().strftime('%Y%m%d%H%M%S')}")
     else:

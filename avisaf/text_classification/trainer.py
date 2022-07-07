@@ -12,14 +12,14 @@ from datetime import datetime
 from pathlib import Path
 from sklearn.base import clone
 from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB, GaussianNB
-from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import LinearSVC, SVC
 
-from text_classification.predictor_decoder import ASRSReportClassificationPredictor, build_default_class_dict, set_classifiers_to_train
-from ner.annotator import ASRSReportDataPreprocessor
+from text_classification.predictor_decoder import ASRSReportClassificationPredictor, build_default_class_dict
+from text_classification.data_preprocessor import ASRSReportDataPreprocessor
 from text_classification.evaluator import ASRSReportClassificationEvaluator
 from text_classification.visualizer import Visualizer
 from util.data_extractor import CsvAsrsDataExtractor
@@ -44,7 +44,8 @@ class ASRSReportClassificationTrainer:
                 early_stopping=True,
                 n_iter_no_change=20,
             ),
-            "svm": SVC(probability=True, class_weight="balanced", verbose=True, max_iter=5000),
+            # "svm": SVC(probability=True, class_weight="balanced", verbose=True, max_iter=5000),
+            "svm": LinearSVC(dual=False, class_weight="balanced", verbose=5),
             "forest": RandomForestClassifier(
                 n_estimators=150,
                 criterion="entropy",
@@ -316,3 +317,43 @@ def train_classification(models_paths: list, texts_paths: list, label: str, labe
             normalization=normalization
         )
         _, _ = classifier.train_report_classification(texts_paths, label, label_values, set_default, params_overrides)
+
+
+def set_classifiers_to_train(label_to_train: str = None, label_filter: list = None, parameter_dicts: dict = None):
+    """
+    Chooses the classifiers to be trained based on the given arguments. By default, all previously
+    trained classifiers with saved classification classes are set to be trained again.
+
+    :param label_to_train: Text classification topic label. This argument specifies the topic to
+                           be trained by overriding the value to be returned.
+    :param label_filter:   Values which represent possible classification classes for given
+                           label_to_train.
+    :param parameter_dicts:
+    :return:               Tuple containing the list of topic labels based on which the
+                           classifiers will be trained and the list containing corresponding
+                           number of lists with classification classes for each item in labels_to_train list.
+    """
+
+    if not label_to_train:
+        # setting default training values
+        labels_to_train = list(parameter_dicts.keys())  # all text classification topic labels
+        labels_values = []
+        for topic_parameters in parameter_dicts.values():
+            trained_labels = topic_parameters.get("trained_labels", [])
+            labels_values.append(trained_labels)  # topic classification classes
+
+        if not labels_to_train:
+            raise ValueError("Nothing to train - please make sure at least one category is specified.")
+
+        assert len(labels_to_train) == len(labels_values)
+        return labels_to_train, labels_values
+
+    # overriding label training settings
+    assert label_to_train is not None
+    if label_filter:
+        return [label_to_train], [label_filter]
+
+    # label_filter is not defined - trying to get previously saved label filter for given label_to_train
+    labels_values = parameter_dicts.get(label_to_train, {}).get("trained_labels", [])
+
+    return [label_to_train], labels_values

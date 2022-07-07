@@ -1,17 +1,98 @@
 #!/usr/bin/env python3
+import sys
 from pathlib import Path
 
 import spacy
 import logging
+import numpy as np
 from spacy import displacy as displacy
-from util.data_extractor import get_entities
+import util.data_extractor as de
 
 logger = logging.getLogger("avisaf_logger")
 
 
-def test_ner(
+def get_options():
+    ents_colors_dict = de.get_entities()
+
+    options = {
+        "ents": list(ents_colors_dict.keys()),
+        "colors": dict(
+            zip(
+                ents_colors_dict.keys(),
+                map(lambda color_list: color_list[0], ents_colors_dict.values()),
+            )
+        ),
+    }
+
+    return options
+
+
+def print_to_console(document):
+    ents_colors_dict = de.get_entities()
+
+    print()  # separate output text
+
+    def print_highlighted_entity(tkn):
+        if not tkn.ent_type_:
+            print(f"{tkn.text} ", end="")
+        else:
+            color = ents_colors_dict.get(tkn.ent_type_)[1]
+            print(f"\x1b[{color}m[{tkn.text}: {tkn.ent_type_}]\033[0m ", end="")
+
+    for token in document:
+        print_highlighted_entity(token)
+    print()  # to end the text
+
+
+def render_to_html(document, html_result_file):
+    options = get_options()
+
+    if html_result_file and not html_result_file.endswith(".html"):
+        html_result_file += ".html"
+    result_file_path = Path(html_result_file)
+    result_file_path.touch(exist_ok=True)
+    with result_file_path.open(mode="w") as file:
+        html = displacy.render(document, style="ent", options=options)
+        file.write(html)
+
+
+def extract_text_to_process(text_path) -> str:
+    if text_path is None:
+        sample_text_path = str(Path("config", "sample_text.txt"))
+        txt_ext = de.TextFileExtractor([sample_text_path])
+    else:
+        # extract the text
+        text_path = Path(text_path)
+        if not text_path.exists():
+            logger.error(f"Requested file \"{str(text_path)}\" does not exist.")
+
+        # file exists
+        suffix = text_path.suffix
+        suffix_extractor = {
+            ".txt": de.TextFileExtractor,
+            ".csv": de.CsvAsrsDataExtractor,
+            ".json": de.JsonDataExtractor,
+        }
+        extractor = suffix_extractor.get(suffix)
+        if not extractor:
+            logger.error(f"Please make sure given file uses one of the following formats: {list(suffix_extractor.keys())}")
+            return None
+
+        txt_ext = extractor([text_path])
+
+    texts = txt_ext.extract_data(["Report 1_Narrative"]).get("Report 1_Narrative")
+    texts = np.array(texts)  # unification of lists format
+    if texts.shape[0] == 0:
+        logger.error("An error occured during report narrative extraction.")
+        return None
+    else:
+        return texts.tolist()
+
+
+def process_ner(
     model="en_core_web_md",
     text_path=None,
+    text: str = None,
     cli_result: bool = False,
     visualize: bool = False,
     html_result_file: str = None,
@@ -28,8 +109,11 @@ def test_ner(
         pre-downloaded spaCy model or a path to a local directory., defaults to
         'en_core_web_md'
     :type text_path: str
-    :param text_path: String representing either a path to the file with the
-        text to be inspected or the text itself., defaults to None
+    :param text_path: String representing a path to the file with the
+        text to have named entities extracted.
+    :type text: str
+    :param text: String representing a narrative text, which will have its named
+        entities extracted.
     :type cli_result: bool
     :param cli_result: A flag which will cause the result to be printed to the
         stdout., defaults to False
@@ -46,32 +130,21 @@ def test_ner(
         is defined.
     """
 
-    if text_path is None:
-        # use sample text
-        with Path("config", "sample_text.txt").open("r") as sample_text_file:
-            text = sample_text_file.read()
+    if text is None:
+        texts = extract_text_to_process(text_path)
     else:
-        # extract the text
-        try:
-            text_path = Path(text_path).resolve()
-            text = text_path
-            if text_path.exists():
-                # in case the argument is the path to the file containing the text
-                with text_path.open(mode="r") as file:
-                    text = file.read()
-        except OSError:
-            # if the text is passed as argument
-            text = text_path
+        texts = [text]
+
+    if texts is None:
+        logger.error("A suitable report narrative could not be extracted.")
+        return
 
     # create new nlp object
     if model.startswith("en_core_web"):
         logger.info("Using a default english language model!")
-    try:
-        # trying to load either the pre-trained spaCy model or a model in current directory
-        nlp = spacy.load(model)
-    except OSError:
-        model_path = str(Path(model).resolve())
-        nlp = spacy.load(model_path)
+
+    # loading either the pre-trained spaCy model or a model in given directory
+    nlp = spacy.load(model)
 
     if not nlp.has_pipe("ner"):
         logger.error(f"The model '{model}' is not available or does not contain required components.")
@@ -79,49 +152,25 @@ def test_ner(
 
     # create doc object nlp(text)
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-    document = nlp(text, disable=other_pipes)
 
-    ents_colors_dict = get_entities()
-    # identify entities
-    if cli_result:
-        print()  # separate output text
+    for document in nlp.pipe(texts, disable=other_pipes):
 
-        def print_highlighted_entity(tkn):
-            # TODO: použi tkn.ent_iob namiesto ent_type_ pre rozpoznanie viactokenových entít
-            if not tkn.ent_type_:
-                print(f"{tkn.text} ", end="")
-            else:
-                color = ents_colors_dict.get(tkn.ent_type_)[1]
-                print(f"\x1b[{color}m[{tkn.text}: {tkn.ent_type_}]\033[0m ", end="")
+        # identify entities
+        if cli_result or len(texts) > 1:
+            print_to_console(document)
+            continue
 
-        for token in document:
-            # TODO: použi nejaký decorator na poskytovanie rôznych vypisovaní
-            print_highlighted_entity(token)
-        print()  # to end the text
-        return
+        if html_result_file is None and not visualize:
+            logger.warning("Named-entity recognition output method is not defined. Please use --help to get info about possible output visualizations.")
+            break
 
-    if html_result_file is None and not visualize:
-        logger.warning("Named-entity recognition output method is not defined. Please use --help to get info about possible output visualizations.")
-        return
-
-    options = {
-        "ents": list(ents_colors_dict.keys()),
-        "colors": dict(
-            zip(
-                ents_colors_dict.keys(),
-                map(lambda color_list: color_list[0], ents_colors_dict.values()),
+        if html_result_file is None:
+            displacy.serve(
+                document,
+                style="ent",
+                options=get_options(),
+                port=port,
+                host="localhost"
             )
-        ),
-    }
-
-    if html_result_file is None:
-        displacy.serve(document, style="ent", options=options, port=port, host="localhost")
-        return
-
-    if html_result_file and not html_result_file.endswith(".html"):
-        html_result_file += ".html"
-    result_file_path = Path(html_result_file)
-    result_file_path.touch(exist_ok=True)
-    with result_file_path.open(mode="w") as file:
-        html = displacy.render(document, style="ent", options=options)
-        file.write(html)
+        else:
+            render_to_html(document, html_result_file)

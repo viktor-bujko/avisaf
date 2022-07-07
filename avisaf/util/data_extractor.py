@@ -5,6 +5,8 @@ training data used by other modules.
 
 import json
 import logging
+import sys
+
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -201,3 +203,33 @@ class CsvAsrsDataExtractor(DataExtractor):
             label_data_dict[field_name] = np.array(extracted_values)
 
         return label_data_dict
+
+
+class TextFileExtractor(DataExtractor):
+    def __init__(self, file_paths: list):
+        super().__init__(file_paths)
+
+    def extract_data(self, field_names: list, **kwargs) -> dict:
+
+        extracted_texts = []
+
+        for path in self.file_paths:
+            file_path = Path(path)
+            try:
+                with file_path.open("r") as f:
+                    texts = f.readlines()
+                    extracted_texts += texts
+            except FileNotFoundError:
+                logger.error(f"File \"{path}\" has not been found. Returning text as is.")
+                extracted_texts += [path]
+
+        return {"Report 1_Narrative": extracted_texts}
+
+
+class PlainTextExtractor(DataExtractor):
+    def __init__(self, text: str):
+        super().__init__([])
+        self._text = text
+
+    def extract_data(self, field_names: list, **kwargs) -> dict:
+        return {"Report 1_Narrative": [self._text]}

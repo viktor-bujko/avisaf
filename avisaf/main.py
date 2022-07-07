@@ -11,7 +11,7 @@ from argparse import Namespace
 from argument_parser import parse_args
 
 # importing own modules
-from ner.predictor import test_ner
+from ner.predictor import process_ner
 from ner.trainer import train_ner
 from ner.annotator import auto_annotation_handler, manual_annotation_handler
 from ner.evaluator import evaluate_ner
@@ -37,11 +37,12 @@ def choose_action(args: Namespace):
             new_model_name=args.name,
             train_data_srcfiles=args.data,
         ),
-        "test_ner": lambda: test_ner(
+        "process_ner": lambda: process_ner(
             model=args.model,
             cli_result=args.print,
             visualize=args.render,
-            text_path=args.text,
+            text_path=args.text_path,
+            text=args.text,
             html_result_file=args.save,
             port=args.port,
         ),
@@ -79,7 +80,8 @@ def choose_action(args: Namespace):
         ),
         "classifier_process": lambda: launch_classification(
             model_path=args.model,
-            text_paths=args.paths
+            text_path=args.text_path,
+            text=args.text
         ),
         "classifier_eval": lambda: evaluate_classification(
             model_path=args.model,

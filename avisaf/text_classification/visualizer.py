@@ -6,9 +6,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
-from sklearn.model_selection import learning_curve
 from pathlib import Path
-from datetime import datetime
 
 logger = logging.getLogger("avisaf_logger")
 
@@ -63,64 +61,81 @@ class Visualizer:
             topic_label: str = None,
             label_encoder=None
     ):
-        roc_curves_data, prec_recall_data = [], []
-        class_predictions = np.argmax(predictions_distribution, axis=1)
         add_string = (f" for \"{topic_label}\" classes" if topic_label else "") + f" ({model_type})"
-        roc_curves_title = "ROC Curve" + add_string
-        prec_recall_title = "Precision-recall curve" + add_string
-        precision = metrics.precision_score(target_classes, class_predictions, average=None)
-        for positive_class in np.unique(target_classes):
-            # inverse_transforms returns the list of decoded labels - list now contains only 1 item
-            label = label_encoder.inverse_transform([positive_class])[0]
-            fpr, tpr, thresholds = metrics.roc_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
-            roc_curves_data.append((fpr, tpr, thresholds, label))
-            prec, recall, thresholds = metrics.precision_recall_curve(target_classes, predictions_distribution[:, positive_class], pos_label=positive_class)
-            prec_recall_data.append((prec, recall, None, label))
-
         fname = f"{'_' + topic_label if topic_label else ''}_{model_type}.svg"
-        self.plot_evaluation_curves(
-            prec_recall_data,
-            title=prec_recall_title,
-            xlabel="Recall",
-            ylabel="Precision",
-            model_type=model_type,
-            model_dir=self._model_dir,
-            filename="precision_recall" + fname
-        )
-        self.plot_evaluation_curves(
-            roc_curves_data,
-            label_method=metrics.auc,
-            title=roc_curves_title,
+
+        self.compute_curve(
+            "ROC Curve" + add_string,
+            target_classes,
+            label_encoder,
+            predictions_distribution,
+            method=metrics.roc_curve,
             xlabel="False Positive Rate",
             ylabel="True Positive Rate (Recall)",
-            label="AUC",
-            show_diagonal=True,
-            model_type=model_type,
-            model_dir=self._model_dir,
-            filename="roc_curve" + fname
+            savefig_fname="roc_curve" + fname
         )
 
-    @staticmethod
-    def plot_evaluation_curves(curves_data: list, **kwargs):
+        self.compute_curve(
+            "Precision-recall curve" + add_string,
+            target_classes,
+            label_encoder,
+            predictions_distribution,
+            method=metrics.precision_recall_curve,
+            xlabel="Recall",
+            ylabel="Precision",
+            savefig_fname="precision_recall" + fname
+        )
 
-        plt.title(kwargs.get("title", ""))
-        for fpr, tpr, value, predicted_class_name in curves_data:
-            if kwargs.get("label_method"):
-                value = kwargs.get("label_method")(fpr, tpr)
-            if not value:
-                label_value = f" {predicted_class_name}"
-            else:
-                label_value = (f" ({predicted_class_name}) = %0.2f" % value)
-            plt.plot(fpr, tpr, label=kwargs.get("label", "") + label_value)
-        if kwargs.get("show_diagonal", False):
-            plt.plot([0, 1], [0, 1], "r--")
-        # label_plot = plt.subplot()
-        # box = label_plot.get_position()
-        # label_plot.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-        # label_plot.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        # label_plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
+    def compute_curve(self, title, target_classes, encoder, pred_dist, method, savefig_fname, **kwargs):
+        fprs, tprs, thresholds = [], [], []
+        plt.title(title)
+        for positive_class in np.unique(target_classes):
+            # inverse_transforms returns the list of decoded labels - contains 1 item only
+            label = encoder.inverse_transform([positive_class])[0]
+            fpr, tpr, threshold = method(
+                target_classes, pred_dist[:, positive_class],
+                pos_label=positive_class
+            )
+            self.plot_evaluation_curves(
+                fpr, tpr,
+                label=f"AUC ({label}): %0.2f" % metrics.auc(fpr, tpr),
+                xlabel=kwargs.get("xlabel", ""),
+                ylabel=kwargs.get("ylabel", ""),
+                show_diag=True
+            )
+            fprs.append(fpr)
+            tprs.append(tpr)
+            thresholds.append(threshold)
+
+        self.save_plot(savefig_fname)
+        self.show()
+
+    def save_plot(self, filename: str):
+        model_dir = self._model_dir if self._model_dir else "../evaluation"
+        fname = Path(model_dir, filename)
+
+        logger.info(f"Saving figure to: {fname}")
+        plt.savefig(fname=fname)
+
+    @staticmethod
+    def show():
+        non_gui_backend = matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']
+        if non_gui_backend:
+            logger.warning(f"Non GUI backend is active. Saved the figure.")
+            plt.clf()
+            return
+
+        plt.show()
+
+    @staticmethod
+    def plot_evaluation_curves(data_x, data_y, **kwargs):
+
+        plt.plot(data_x, data_y, label=kwargs.get("label", ""))
         plt.legend(loc="best")
         plt.grid(visible=True, linestyle='--', alpha=0.4)
+        if kwargs.get("show_diag", False):
+            # plotting random classifier roc
+            plt.plot([0, 1], [0, 1], "r--")
         plt.xlim([0, 1])
         plt.ylim([0, 1])
         plt.ylabel(kwargs.get("ylabel", ""))
@@ -128,108 +143,3 @@ class Visualizer:
         plt.xticks(np.arange(0, 1.05, 0.1))
         plt.yticks(np.arange(0, 1.05, 0.1))
         plt.tight_layout()
-        default_filename = "avisaf_classification_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".svg"
-        model_dir = kwargs.get("model_dir", "../evaluation")
-        fname = Path(model_dir, kwargs.get("filename", default_filename))
-        non_gui_backend = matplotlib.get_backend() in ['agg', 'cairo', 'pdf', 'pgf', 'ps', 'svg']
-        if non_gui_backend:
-            logger.warning(f"Non GUI backend is active. Saving the figure to: {fname}")
-            plt.savefig(fname=fname)
-            plt.clf()
-            return
-        # gui backend is available - showing the figure with possible saving
-        if model_dir:
-            logger.info(f"Saving figure to: {fname}")
-            plt.savefig(fname=fname)
-        plt.show()
-
-    @staticmethod
-    def plot_learning_curve(
-            estimator,
-            title,
-            x,
-            y,
-            axes=None,
-            ylim=None,
-            cv=None,
-            n_jobs=None,
-            train_sizes=np.linspace(0.1, 1.0, 5),
-    ):
-        if axes is None:
-            _, axes = plt.subplots(1, 3, figsize=(20, 5))
-
-        axes[0].set_title(title)
-        if ylim is not None:
-            axes[0].set_ylim(*ylim)
-        axes[0].set_xlabel("Training examples")
-        axes[0].set_ylabel("Score")
-
-        train_sizes, train_scores, test_scores, fit_times, _ = learning_curve(
-            estimator,
-            x,
-            y,
-            cv=cv,
-            n_jobs=n_jobs,
-            train_sizes=train_sizes,
-            return_times=True,
-        )
-        train_scores_mean = np.mean(train_scores, axis=1)
-        train_scores_std = np.std(train_scores, axis=1)
-        test_scores_mean = np.mean(test_scores, axis=1)
-        test_scores_std = np.std(test_scores, axis=1)
-        fit_times_mean = np.mean(fit_times, axis=1)
-        fit_times_std = np.std(fit_times, axis=1)
-
-        # Plot learning curve
-        axes[0].grid()
-        axes[0].fill_between(
-            train_sizes,
-            train_scores_mean - train_scores_std,
-            train_scores_mean + train_scores_std,
-            alpha=0.1,
-            color="r",
-        )
-        axes[0].fill_between(
-            train_sizes,
-            test_scores_mean - test_scores_std,
-            test_scores_mean + test_scores_std,
-            alpha=0.1,
-            color="g",
-        )
-        axes[0].plot_evaluation_curves(train_sizes, train_scores_mean, "o-", color="r", label="Training score")
-        axes[0].plot_evaluation_curves(
-            train_sizes,
-            test_scores_mean,
-            "o-",
-            color="g",
-            label="Cross-validation score",
-        )
-        axes[0].legend(loc="best")
-
-        # Plot n_samples vs fit_times
-        axes[1].grid()
-        axes[1].plot_evaluation_curves(train_sizes, fit_times_mean, "o-")
-        axes[1].fill_between(
-            train_sizes,
-            fit_times_mean - fit_times_std,
-            fit_times_mean + fit_times_std,
-            alpha=0.1,
-        )
-        axes[1].set_xlabel("Training examples")
-        axes[1].set_ylabel("fit_times")
-        axes[1].set_title("Scalability of the model")
-
-        # Plot fit_time vs score
-        axes[2].grid()
-        axes[2].plot_evaluation_curves(fit_times_mean, test_scores_mean, "o-")
-        axes[2].fill_between(
-            fit_times_mean,
-            test_scores_mean - test_scores_std,
-            test_scores_mean + test_scores_std,
-            alpha=0.1,
-        )
-        axes[2].set_xlabel("fit_times")
-        axes[2].set_ylabel("Score")
-        axes[2].set_title("Performance of the model")
-
-        return plt

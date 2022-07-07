@@ -24,7 +24,7 @@ def add_ner_trainer_parser(subparsers):
     parser.add_argument(
         "-d",
         "--data",
-        metavar="DATA_PATH",
+        metavar="DATA PATH",
         nargs="+",
         help="Path to the files with annotated JSON training data.",
         default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))],
@@ -33,13 +33,13 @@ def add_ner_trainer_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        metavar="MODEL_PATH",
+        metavar="PATH/MODEL",
         help="File path to an existing spaCy model or existing spaCy model name to be trained.",
         default=None,
     )
     parser.add_argument(
         "-n", "--name",
-        metavar="NEW_MODEL_NAME",
+        metavar="MODEL NAME",
         help="Name of the new model. Will be generated if not provided.",
         default=None
     )
@@ -51,26 +51,32 @@ def add_ner_tester_parser(subparsers):
     """Method responsible for parsing ner test subcommand and its arguments"""
 
     parser = subparsers.add_parser(
-        "ner_test",
+        "ner_process",
         help="Test a selected model.",
         description="Command used for testing the entity recognition on given text.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.set_defaults(dest="test_ner")
+    parser.set_defaults(dest="process_ner")
     parser.add_argument(
         "-m",
         "--model",
         metavar="PATH/MODEL",
-        default="en_core_web_md",
-        required=True,
+        default=str(Path("models", "ner", "ner_avisaf.model")),
         help="File path to an existing spaCy model or existing spaCy model name for NER.",
     )
-    parser.add_argument(
+    text_group = parser.add_mutually_exclusive_group(required=False)
+    text_group.add_argument(
         "-t",
         "--text",
         default=None,
-        help="File path to the text which will have entities extracted. If None, sample text is used.",
+        type=str,
+        help="Report narrative which will have entities extracted. If None, sample text is used.",
+    )
+    text_group.add_argument(
+        "--text_path",
+        help="String representing a path to .txt file containing reports to have their classes predicted.",
+        default=str(Path("config", "sample_text.txt")),
     )
     parser.add_argument(
         "--port",
@@ -79,17 +85,17 @@ def add_ner_tester_parser(subparsers):
         help="Port number to be used for rendering (ignored if -r nor -s are used).",
     )
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    visualization_group = parser.add_mutually_exclusive_group(required=True)
+    visualization_group.add_argument(
         "-p", "--print", action="store_true", help="Print the result on the screen."
     )
-    group.add_argument(
+    visualization_group.add_argument(
         "-r",
         "--render",
         action="store_true",
         help="A flag to indicate whether a visualization tool should be started.",
     )
-    group.add_argument(
+    visualization_group.add_argument(
         "-s",
         "--save",
         metavar="PATH",
@@ -112,7 +118,7 @@ def add_ner_evaluator_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        metavar="PATH TO MODEL",
+        metavar="PATH/MODEL",
         default=None,
         required=True,
         help="File path to an existing spaCy model or existing spaCy model name for NER.",
@@ -120,7 +126,7 @@ def add_ner_evaluator_parser(subparsers):
     parser.add_argument(
         "-t",
         "--texts",
-        metavar="PATH TO JSON TEST FILES",
+        metavar="PATH",
         default=None,
         required=True,
         help="File path to the texts JSON file which will be considered as gold dataset.",
@@ -253,7 +259,7 @@ def add_classification_train_parser(subparsers):
         "--algorithm",
         default="mlp",
         help="The algorithm used for classification training.",
-        choices={"knn", "svm", "mlp", "forest", "gauss", "mnb", "regression"},
+        choices={"knn", "svm", "mlp", "forest", "gauss", "regression"},
     )
     parser.add_argument(
         "--params_overrides",
@@ -294,22 +300,27 @@ def add_classification_processing_parser(subparsers):
 
     parser = subparsers.add_parser(
         "classifier_process",
-        help="Train an ASRS reports classification model.",
+        help="Apply NER model predictions for classes assignment to reports.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.set_defaults(dest="classifier_process")
-    parser.add_argument(
-        "--paths",
-        nargs="+",
-        help="Strings representing the paths to training data texts",
-        default=[],
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--text_path",
+        help="String representing a path to .txt file containing reports to have their classes predicted.",
+        default=None,
+    )
+    group.add_argument(
+        "-t", "--text",
+        help="Report narrative text used for classification.",
+        default=None
     )
     parser.add_argument(
         "-m",
         "--model",
-        default=None,  # TODO: Add default model relative path
-        help="Path of a trained model to be tested."
+        default=str(Path("models", "classifiers", "final_classifier_model")),
+        help="Path of a model used for text classification."
     )
 
     return parser
@@ -332,7 +343,7 @@ def add_classification_evaluation_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        default=None,  # TODO: Add default model relative path
+        default=str(Path("models", "classifiers", "final_classifier_model")),
         help="Path of a trained model to be tested."
     )
     parser.add_argument(

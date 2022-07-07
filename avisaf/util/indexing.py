@@ -78,19 +78,19 @@ def get_spans_indexes(sentence: str, spans: list):
     return result
 
 
-def get_training_data(path: Path):
-    """Gets the training data from a given file.
+#def get_training_data(path: Path):
+#    """Gets the training data from a given file.
 
-    :type path: Path
-    :param path: The file path to the training data JSON file.
+#    :type path: Path
+#    :param path: The file path to the training data JSON file.
 
-    :return: The list of (text, annotations) tuples.
-    """
-    path = path if path.is_absolute() else path.resolve()
+#    :return: The list of (text, annotations) tuples.
+#    """
+#    path = path if path.is_absolute() else path.resolve()
 
-    with path.open(mode="r") as tr_data_file:
-        tr_data = json.loads(tr_data_file.read())
-        return tr_data
+#    with path.open(mode="r") as tr_data_file:
+#        tr_data = json.loads(tr_data_file.read())
+#        return tr_data
 
 
 def entity_trimmer(data_file_path: Path):

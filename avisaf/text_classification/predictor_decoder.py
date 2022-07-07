@@ -10,51 +10,11 @@ import logging
 import numpy as np
 from pathlib import Path
 
-from ner.annotator import ASRSReportDataPreprocessor
-from util.vectorizers import VectorizerFactory
-from util.data_extractor import DataExtractor, CsvAsrsDataExtractor
+from text_classification.data_preprocessor import ASRSReportDataPreprocessor
+from text_classification.vectorizers import VectorizerFactory
+import util.data_extractor as de
 
 logger = logging.getLogger("avisaf_logger")
-
-
-def set_classifiers_to_train(label_to_train: str = None, label_filter: list = None, parameter_dicts: dict = None):
-    """
-    Chooses the classifiers to be trained based on the given arguments. By default, all previously
-    trained classifiers with saved classification classes are set to be trained again.
-
-    :param label_to_train: Text classification topic label. This argument specifies the topic to
-                           be trained by overriding the value to be returned.
-    :param label_filter:   Values which represent possible classification classes for given
-                           label_to_train.
-    :param parameter_dicts:
-    :return:               Tuple containing the list of topic labels based on which the
-                           classifiers will be trained and the list containing corresponding
-                           number of lists with classification classes for each item in labels_to_train list.
-    """
-
-    if not label_to_train:
-        # setting default training values
-        labels_to_train = list(parameter_dicts.keys())  # all text classification topic labels
-        labels_values = []
-        for topic_parameters in parameter_dicts.values():
-            trained_labels = topic_parameters.get("trained_labels", [])
-            labels_values.append(trained_labels)  # topic classification classes
-
-        if not labels_to_train:
-            raise ValueError("Nothing to train - please make sure at least one category is specified.")
-
-        assert len(labels_to_train) == len(labels_values)
-        return labels_to_train, labels_values
-
-    # overriding label training settings
-    assert label_to_train is not None
-    if label_filter:
-        return [label_to_train], [label_filter]
-
-    # label_filter is not defined - trying to get previously saved label filter for given label_to_train
-    labels_values = parameter_dicts.get(label_to_train, {}).get("trained_labels", [])
-
-    return [label_to_train], labels_values
 
 
 def build_default_class_dict(topic_labels: list, parameter_dicts: dict, set_default: bool):
@@ -68,31 +28,36 @@ def build_default_class_dict(topic_labels: list, parameter_dicts: dict, set_defa
 
 
 class ASRSReportClassificationDecoder:
-    def __init__(self, encodings: list):
+    def __init__(self, encodings: dict):
         self._encodings = encodings
 
     def decode_predictions(self, predictions: list):
-        decoded_predictions = []
+        if not predictions:
+            return [{}]
 
-        for encoder, prediction in zip(self._encodings, predictions):
+        decoded_predictions = [{} for _ in range(len(predictions[0]))]
+
+        for (encoder_name, encoder), prediction in zip(self._encodings.items(), predictions):
             predicted_classes = np.argmax(prediction, axis=1)
             original_encoding = encoder.inverse_transform(predicted_classes)
-            decoded_predictions.append(np.reshape(original_encoding, (-1, 1)))
+            for dict_idx, decoded_prediction in enumerate(original_encoding):
+                decoded_predictions[dict_idx].update({encoder_name: decoded_prediction})
+            # decoded_predictions.append(np.reshape(original_encoding, (-1, 1)))
 
-        decoded_predictions = np.concatenate(decoded_predictions, axis=1)
+        # decoded_predictions = np.concatenate(decoded_predictions, axis=1)
         return decoded_predictions
 
 
 class ASRSReportClassificationPredictor:
-    def __init__(self, data_extractor: DataExtractor):
+    def __init__(self, data_extractor: de.DataExtractor):
         self._data_extractor = data_extractor
         # preprocessor which uses default vectorizer
         self._preprocessor = ASRSReportDataPreprocessor(vectorizer="default")
 
     def get_evaluation_predictions(self, prediction_models: dict, models_parameters: dict) -> list:
 
-        # only asrs csv files are currently supported
-        asrs_extractor = CsvAsrsDataExtractor(self._data_extractor.file_paths)
+        # only asrs csv files are currently supported __FOR EVALUATION__
+        asrs_extractor = de.CsvAsrsDataExtractor(self._data_extractor.file_paths)
         vectorizer_name = list(models_parameters.values())[0].get("vectorizer_params", {}).get("vectorizer", None)
         self._preprocessor.vectorizer = VectorizerFactory.create_vectorizer(vectorizer_name)
         logger.debug(f"Using {vectorizer_name} vectorizer")
@@ -107,7 +72,9 @@ class ASRSReportClassificationPredictor:
         all_predictions = []
         for (topic_label, model), test_data, target in zip(prediction_models.items(), data, targets):
             new_vectorizer = self._data_need_revectoring(models_parameters.get(topic_label, {}))
-            if new_vectorizer is not None:
+            if new_vectorizer is None:
+                logger.info("Reusing default vectorizer")
+            else:
                 logger.info("Creating new vectors for data")
                 self._preprocessor.vectorizer = new_vectorizer
                 d, t = self._preprocessor.extract_labeled_data(
@@ -119,15 +86,13 @@ class ASRSReportClassificationPredictor:
                 )
                 test_data = d[0]
                 target = t[0]
-            else:
-                logger.info("Reusing default vectorizer")
             logger.info(self._preprocessor.get_data_targets_distribution(target, label=topic_label)[1])
             predictions = self.get_model_predictions(model, test_data.astype(np.float))  # returns (samples, probabilities / one hot encoded predictions) shaped numpy array
             all_predictions.append((predictions, target.astype(np.int)))
 
         return all_predictions
 
-    def get_all_predictions(self, prediction_models: dict, models_parameters: dict) -> list:
+    def get_all_predictions(self, prediction_models: dict, models_parameters: dict) -> tuple:
         """
         :param prediction_models: Dictionary which contains (topic_label, model) items. topic_labels are the topics
                                   for which the model associated model predicts a class.
@@ -137,19 +102,20 @@ class ASRSReportClassificationPredictor:
         """
         all_predictions = []
         default_data = self._preprocessor.vectorizer.vectorize_texts(self._data_extractor)  # using default vectorizer
+        narratives = self._preprocessor.vectorizer.vectorize_texts(self._data_extractor, return_vectors=False)
 
         for topic_label, predictor in prediction_models.items():
             new_vectorizer = self._data_need_revectoring(models_parameters.get(topic_label, {}))
-            if new_vectorizer is not None:
-                # current predictor uses different vectorization method than the default
-                data = new_vectorizer.vectorize_texts(self._data_extractor)
-            else:
+            if new_vectorizer is None:
                 # new_vectorizer is None -> data vectorized by default vectorizer can be used.
                 data = default_data
+            else:
+                # current predictor uses different vectorization method than the default
+                data = new_vectorizer.vectorize_texts(self._data_extractor)
             predictions = self.get_model_predictions(predictor, data)
             all_predictions.append(predictions)
 
-        return all_predictions
+        return narratives, all_predictions
 
     def _data_need_revectoring(self, model_parameters: dict):
         default_vectorizer_params = self._preprocessor.vectorizer.get_params()
@@ -179,7 +145,8 @@ class ASRSReportClassificationPredictor:
             predictions = prediction_model.predict_proba(data_vectors)
         else:
             predictions = prediction_model.predict(data_vectors)
-            one_hot_predictions = np.zeros((predictions.shape[0], np.unique(predictions).shape[0]))  # we expect to predict each desired class at least once
+            # we expect to predict each desired class at least once
+            one_hot_predictions = np.zeros((predictions.shape[0], np.unique(predictions).shape[0]))
             for idx, pred in enumerate(predictions):
                 # arbitrarily chosen confidence value of 100 % = 1
                 one_hot_predictions[idx, pred] = 1
@@ -188,14 +155,15 @@ class ASRSReportClassificationPredictor:
         return predictions
 
 
-def launch_classification(model_path: str, text_paths: list):
+def launch_classification(model_path: str, text_path: Path, text: str):
     """
     :param model_path:
-    :param text_paths:
+    :param text_path:
+    :param text:
     :return:
     """
-    if not model_path or not text_paths:
-        logger.error("Both model_path and text_path arguments must be specified")
+    if not model_path or (not text_path and not text):
+        logger.error("Both model_path and text(s) to be used must be specified")
         return
 
     with lzma.open(Path(model_path, "classifier.model"), "rb") as model_file, \
@@ -203,13 +171,26 @@ def launch_classification(model_path: str, text_paths: list):
         model_predictors, label_encoders = pickle.load(model_file)
         model_parameters = json.load(params_file)
 
-    extractor = CsvAsrsDataExtractor(text_paths)
+    if text:
+        extractor = de.PlainTextExtractor(text)
+    else:
+        if text_path.suffix == ".csv":
+            extractor = de.CsvAsrsDataExtractor([text_path])
+        else:
+            extractor = de.TextFileExtractor([text_path])
+
     predictor = ASRSReportClassificationPredictor(extractor)
-    predictions = predictor.get_all_predictions(model_predictors, model_parameters)
+    narratives, predictions = predictor.get_all_predictions(model_predictors, model_parameters)
 
     decoded_classes = ASRSReportClassificationDecoder(label_encoders).decode_predictions(predictions)
-    # TODO: write structured form of text and predicted classes
-    print(list(model_predictors.keys()))
-    print(decoded_classes[:10])
+    for idx, (narrative, report_predictions_dict) in enumerate(zip(narratives, decoded_classes)):
+        sep = "=" * 20
+        msg = f"Report { idx + 1 } predictions"
+        print(sep, msg, sep)
+        print("Report narrative:", narrative, "", sep="\n")
+        print("Predictions:")
+        for (label, prediction_class) in report_predictions_dict.items():
+            print(f"\t{label}: {prediction_class}")
+        print(sep, "=" * len(msg), sep)
 
     return predictions
