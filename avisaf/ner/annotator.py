@@ -15,9 +15,9 @@ from pathlib import Path
 from spacy.matcher import PhraseMatcher, Matcher
 
 # importing own modules used in this module
-from util.indexing import get_spans_indexes, entity_trimmer
-import util.training_data_build as train
-from util.data_extractor import get_entities, CsvAsrsDataExtractor
+from avisaf.util.indexing import get_spans_indexes, entity_trimmer
+import avisaf.util.training_data_build as train
+from avisaf.util.data_extractor import get_entities, CsvAsrsDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 

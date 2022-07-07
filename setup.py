@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2020 Charles University
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 requirements = list(map(str.strip, open("./requirements.txt", mode="r").readlines()))
 
 setup(
     author="Viktor Bujko",
-    email="viktorbjk@gmail.com",
+    author_email="viktorbjk@gmail.com",
     name="avisaf",
     version="1.0",
     description="Aviation safety report Named Entity Recognizer",
@@ -18,11 +18,12 @@ setup(
         "Programming Language :: Python :: 3.8.2",
     ],
     keywords=["named entity recognition", "NER", "aviation", "safety"],
-    url="",
+    url="https://github.com/viktor-bujko/avisaf",
     install_requires=requirements,
     include_package_data=True,
     zip_safe=False,
-    packages=["avisaf", "avisaf.training", "avisaf.classification", "avisaf.util"],
+    packages=find_packages(),
+    # packages=["avisaf", "avisaf.training", "avisaf.classification", "avisaf.util"],
     entry_points={
         "console_scripts": [
             "avisaf=avisaf.main:main",

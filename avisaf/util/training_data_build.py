@@ -7,7 +7,7 @@ overlaps from entity annotations as well as file content formatting.
 
 import json
 from pathlib import Path
-from util.data_extractor import JsonDataExtractor
+from .data_extractor import JsonDataExtractor
 
 
 def fetch_and_sort_annotations(file_path: Path):

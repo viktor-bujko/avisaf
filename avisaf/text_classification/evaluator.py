@@ -8,9 +8,9 @@ from pathlib import Path
 import numpy as np
 from sklearn import metrics
 
-from text_classification.predictor_decoder import ASRSReportClassificationPredictor
-from text_classification.visualizer import Visualizer
-from util.data_extractor import CsvAsrsDataExtractor
+from .predictor_decoder import ASRSReportClassificationPredictor
+from .visualizer import Visualizer
+from avisaf.util.data_extractor import CsvAsrsDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 

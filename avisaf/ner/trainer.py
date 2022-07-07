@@ -11,8 +11,8 @@ from pathlib import Path
 from spacy.tokens import DocBin
 from spacy.cli.train import train
 # importing own modules
-from util.data_extractor import get_entities
-from ner.data_stream_registry import stream_data
+from avisaf.util.data_extractor import get_entities
+from .data_stream_registry import stream_data
 
 logger = logging.getLogger("avisaf_logger")
 
