@@ -351,7 +351,7 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def get_params(self):
         return {
             "name": "SpaCyWord2Vec",
-            "vectorizer": "spacy_w2v"
+            "vectorizer": "spacyw2v"
         }
 
 

@@ -259,7 +259,7 @@ def add_classification_train_parser(subparsers):
         "--algorithm",
         default="mlp",
         help="The algorithm used for classification training.",
-        choices={"knn", "svm", "mlp", "forest", "gauss", "regression"},
+        choices={"knn", "svm", "mlp"},
     )
     parser.add_argument(
         "--params_overrides",
@@ -284,7 +284,7 @@ def add_classification_train_parser(subparsers):
     parser.add_argument(
         "-v",
         "--vectorizer",
-        choices={"tfidf", "spacyw2v", "googlew2v", "d2v", "fasttext"},
+        choices={"tfidf", "spacyw2v", "googlew2v", "d2v"},
         default=None
     )
     parser.add_argument(

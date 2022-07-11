@@ -83,7 +83,7 @@ def extract_text_to_process(text_path) -> str:
     texts = txt_ext.extract_data(["Report 1_Narrative"]).get("Report 1_Narrative")
     texts = np.array(texts)  # unification of lists format
     if texts.shape[0] == 0:
-        logger.error("An error occured during report narrative extraction.")
+        logger.error("An error occurred during report narrative extraction.")
         return None
     else:
         return texts.tolist()

@@ -44,18 +44,8 @@ class ASRSReportClassificationTrainer:
                 early_stopping=True,
                 n_iter_no_change=20,
             ),
-            # "svm": SVC(probability=True, class_weight="balanced", verbose=True, max_iter=5000),
             "svm": LinearSVC(dual=False, class_weight="balanced", verbose=5),
-            "forest": RandomForestClassifier(
-                n_estimators=150,
-                criterion="entropy",
-                min_samples_split=32,
-                n_jobs=2,
-                verbose=5,
-            ),
             "knn": KNeighborsClassifier(n_neighbors=20, weights="distance"),
-            "gauss": GaussianNB(),
-            "regression": LogisticRegression(),
         }
 
         # Setting a default classifier value
