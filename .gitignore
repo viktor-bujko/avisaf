@@ -18,6 +18,7 @@ unused/
 dist/
 shell/
 gensim-data/
+avisaf/*.ipynb
 .idea
 *.html
 print_distributions.py
