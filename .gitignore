@@ -11,6 +11,7 @@ venv/
 data_files/
 notes/
 docs/
+scripts/[mec]*
 fasttext_vectors/
 build/
 unused/
@@ -18,7 +19,7 @@ dist/
 shell/
 gensim-data/
 .idea
-
+*.html
 print_distributions.py
 pipeline_*.model
 *.svg

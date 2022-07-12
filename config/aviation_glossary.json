@@ -1,0 +1,3206 @@
+{
+    "A/C": {
+        "full": "Aircraft",
+        "description": null
+    },
+    "A/D": {
+        "full": "Aerodrome",
+        "description": null
+    },
+    "A/O": {
+        "full": "Air oil",
+        "description": "In turbine engines"
+    },
+    "A/P": {
+        "full": "Airplane",
+        "description": null
+    },
+    "A/S": {
+        "full": "anti-skid",
+        "description": null
+    },
+    "A/T": {
+        "full": "autothrottle",
+        "description": null
+    },
+    "A/THR": {
+        "full": "autothrust",
+        "description": null
+    },
+    "AAE": {
+        "full": "Above aerodrome elevation",
+        "description": "In aviation, above aerodrome level (AAL), or above aerodrome elevation (AAE), denotes that an altitude is given above the nearest aerodrome or airport."
+    },
+    "AAIB": {
+        "full": "Air Accident Investigation Branch of the Department of Transportation of the United Kingdom.",
+        "description": "Its role is to investigate air accidents. The letters AAIB also refer to equivalent organizations in Iceland, Singapore and Switzerland, among others. In the United States, the NTSB plays that role."
+    },
+    "AAO": {
+        "full": "Assumed adverse obstacle",
+        "description": null
+    },
+    "AAS": {
+        "full": "Airport advisory service",
+        "description": null
+    },
+    "AB": {
+        "full": "Air Base",
+        "description": "More often used when describing a military airport."
+    },
+    "ACAM": {
+        "full": "Aircraft continuous airworthiness monitoring",
+        "description": null
+    },
+    "ACAS": {
+        "full": "Airborne collision avoidance system",
+        "description": null
+    },
+    "ACC": {
+        "full": "Area control centre",
+        "description": null
+    },
+    "ACFT": {
+        "full": "aircraft",
+        "description": "Aircraft abbreviation."
+    },
+    "ACM": {
+        "full": "Air cycle machine",
+        "description": null
+    },
+    "ACMS": {
+        "full": "Aircraft condition monitoring system",
+        "description": null
+    },
+    "ACP": {
+        "full": "Audio Control Panel",
+        "description": null
+    },
+    "ACS": {
+        "full": "Airman Certification Standards",
+        "description": null
+    },
+    "ACU": {
+        "full": "Air condition unit",
+        "description": null
+    },
+    "AD": {
+        "full": "Airworthiness directive",
+        "description": null
+    },
+    "ADA": {
+        "full": "Advisory area",
+        "description": null
+    },
+    "ADAHRS": {
+        "full": "Air data attitude heading reference system",
+        "description": null
+    },
+    "ADC": {
+        "full": "Air data computer",
+        "description": null
+    },
+    "ADELT": {
+        "full": "Automatically Deployable Emergency Locator Transmitter.",
+        "description": "See ELT."
+    },
+    "ADF": {
+        "full": "Automatic direction finder",
+        "description": "Navigation equipment"
+    },
+    "ADI": {
+        "full": "Attitude Deviation Indicator.",
+        "description": "Enhanced artificial horizon with pitch and roll information. It is part of a flight director system."
+    },
+    "ADIRS": {
+        "full": "Air Data Inertial Reference System",
+        "description": null
+    },
+    "ADIRU": {
+        "full": "Air Data Inertial Reference Unit",
+        "description": null
+    },
+    "ADIZ": {
+        "full": "Air Defense Identification Zone",
+        "description": null
+    },
+    "ADJ": {
+        "full": "Adjustment",
+        "description": null
+    },
+    "ADM": {
+        "full": "Air data module",
+        "description": null
+    },
+    "ADS": {
+        "full": "Air data system",
+        "description": null
+    },
+    "ADT": {
+        "full": "Approved Departure Time",
+        "description": null
+    },
+    "AFB": {
+        "full": "Air Force Base",
+        "description": null
+    },
+    "AFCS": {
+        "full": "Automatic Flight Control System",
+        "description": "It is an advanced autopilot."
+    },
+    "AFDS": {
+        "full": "Autopilot and Flight Director System",
+        "description": null
+    },
+    "AFE": {
+        "full": "Above field elevation",
+        "description": null
+    },
+    "AFIS": {
+        "full": "airborne flight information system",
+        "description": "automatic flight information service"
+    },
+    "AFM": {
+        "full": "aircraft flight manual",
+        "description": null
+    },
+    "AFS": {
+        "full": "aeronautical fixed service",
+        "description": null
+    },
+    "AFTN": {
+        "full": "Aeronautical Fixed Telecommunication Network",
+        "description": null
+    },
+    "AGB": {
+        "full": "accessory gear box",
+        "description": null
+    },
+    "AGL": {
+        "full": "Above Ground Level",
+        "description": null
+    },
+    "AHRS": {
+        "full": "Attitude and heading reference system",
+        "description": null
+    },
+    "AIDC": {
+        "full": "aircraft integrated data control",
+        "description": null
+    },
+    "AIDS": {
+        "full": "aircraft integrated data system",
+        "description": null
+    },
+    "AIM": {
+        "full": "Aeronautical Information Manual",
+        "description": null
+    },
+    "AIP": {
+        "full": "Aeronautical Information Publication",
+        "description": null
+    },
+    "AIRAC": {
+        "full": "aeronautical information regulation and control",
+        "description": null
+    },
+    "AIREP": {
+        "full": "Aircraft report",
+        "description": null
+    },
+    "AIRMET": {
+        "full": "Aircraft\u2019s Meteorological Information",
+        "description": "A type of weather advisory regarding certain weather conditions (turbulence, icing, low visiblity) which could pose a threat to only smaller types of aircraft. SIGMET is a more inclusive type of advisory."
+    },
+    "ALI": {
+        "full": "Airworthiness Limitation Item",
+        "description": null
+    },
+    "ALRS": {
+        "full": "Alerting Service",
+        "description": null
+    },
+    "ALS": {
+        "full": "approach lighting system",
+        "description": null
+    },
+    "ALT": {
+        "full": "Alternate / Altimeter / Altitude",
+        "description": null
+    },
+    "AMDT": {
+        "full": "Amendment",
+        "description": null
+    },
+    "AME": {
+        "full": "Aircraft Maintenance Engineer",
+        "description": null
+    },
+    "AMM": {
+        "full": "Aircraft Maintenance Manual",
+        "description": null
+    },
+    "AMO": {
+        "full": "Approved Maintenance Organization",
+        "description": null
+    },
+    "AMP": {
+        "full": "aircraft maintenance program",
+        "description": null
+    },
+    "AMSL": {
+        "full": "above mean sea level",
+        "description": null
+    },
+    "AMT": {
+        "full": "Aircraft Maintenance Technician",
+        "description": null
+    },
+    "ANPT": {
+        "full": "Aeronautical national pipe taper",
+        "description": null
+    },
+    "ANS": {
+        "full": "Air navigation sevice",
+        "description": null
+    },
+    "AOA": {
+        "full": "Angle of attack",
+        "description": null
+    },
+    "AOC": {
+        "full": "Aeronautical operational control",
+        "description": null
+    },
+    "AOG": {
+        "full": "aircraft on ground",
+        "description": null
+    },
+    "AOM": {
+        "full": "aircraft operations manual",
+        "description": null
+    },
+    "AP": {
+        "full": "autopilot",
+        "description": null
+    },
+    "APP": {
+        "full": "Approach control",
+        "description": null
+    },
+    "APPL": {
+        "full": "Application",
+        "description": null
+    },
+    "APPROX": {
+        "full": "Approximately",
+        "description": null
+    },
+    "APT": {
+        "full": "airport",
+        "description": null
+    },
+    "APU": {
+        "full": "auxiliary power unit",
+        "description": null
+    },
+    "APV": {
+        "full": "approach procedure with vertical guidance",
+        "description": "instrumental approach"
+    },
+    "AR": {
+        "full": "airworthiness review",
+        "description": null
+    },
+    "ARC": {
+        "full": "airworthiness review certificate",
+        "description": null
+    },
+    "ARO": {
+        "full": "airport reservation office",
+        "description": null
+    },
+    "ARP": {
+        "full": "aerodrome reference point",
+        "description": null
+    },
+    "ARTCC": {
+        "full": "air route traffic control centers",
+        "description": null
+    },
+    "AS": {
+        "full": "airborne separation",
+        "description": null
+    },
+    "ASAS": {
+        "full": "Airborne Separation Assurance System",
+        "description": null
+    },
+    "ASDA": {
+        "full": "Accelerate Stop Distance Available",
+        "description": null
+    },
+    "ASI": {
+        "full": "Airspeed Indicator",
+        "description": null
+    },
+    "ASL": {
+        "full": "above sea level",
+        "description": null
+    },
+    "ASLO": {
+        "full": "Aircraft Security Logging Overview",
+        "description": null
+    },
+    "ASM": {
+        "full": "available seat miles",
+        "description": null
+    },
+    "ASPH": {
+        "full": "Asphalt",
+        "description": null
+    },
+    "ASR": {
+        "full": "Airport surveillance radar",
+        "description": null
+    },
+    "ATA": {
+        "full": "Actual Time of Arrival",
+        "description": null
+    },
+    "ATCC": {
+        "full": "Air Traffic Control Centre",
+        "description": null
+    },
+    "ATCSS": {
+        "full": "Air traffic control signalling system",
+        "description": null
+    },
+    "ATD": {
+        "full": "actual time of departure",
+        "description": null
+    },
+    "ATF": {
+        "full": "aerodrome traffic frequency",
+        "description": null
+    },
+    "ATFM": {
+        "full": "air traffic flow management",
+        "description": null
+    },
+    "ATIS": {
+        "full": "Automatic Terminal Information Service",
+        "description": "Automatically recorded message transmitted on a particular frequency, containing current weather conditions, QNH setting, active runways, etc., provided at the major airports."
+    },
+    "ATM": {
+        "full": "Air traffic management",
+        "description": null
+    },
+    "ATN": {
+        "full": "Aeronautical Telecommunication Network",
+        "description": null
+    },
+    "ATO": {
+        "full": "Approved Training Organisation",
+        "description": null
+    },
+    "ATPL": {
+        "full": "Airline Transport Pilot Licence",
+        "description": null
+    },
+    "ATQP": {
+        "full": "Alternative Training and Qualification Programme",
+        "description": null
+    },
+    "ATS": {
+        "full": "air traffic service",
+        "description": null
+    },
+    "ATSU": {
+        "full": "Air traffic services unit",
+        "description": "Avionics LRU for ACARS"
+    },
+    "ATT": {
+        "full": "Attitude",
+        "description": null
+    },
+    "ATTCS": {
+        "full": "Automatic Take-off Thrust Control System",
+        "description": null
+    },
+    "AVAIL": {
+        "full": "available",
+        "description": null
+    },
+    "AVGAS": {
+        "full": "Aviation Gasoline",
+        "description": "Usually followed by the octane rating. Used by piston-engined aircraft."
+    },
+    "AVTUR": {
+        "full": "Aviation Turbine fuel (kerosene)",
+        "description": "Used by turboprops and jet aircraft."
+    },
+    "AWBS": {
+        "full": "Aviation weather briefing service",
+        "description": null
+    },
+    "AWIS": {
+        "full": "Aviation weather information service",
+        "description": null
+    },
+    "AWOS": {
+        "full": "Automated weather observation system",
+        "description": "Automated METAR reporting system"
+    },
+    "AWWS": {
+        "full": "Aviation weather web site",
+        "description": null
+    },
+    "AZM": {
+        "full": "Azimuth",
+        "description": null
+    },
+    "BA": {
+        "full": "Braking Action",
+        "description": null
+    },
+    "BC": {
+        "full": "back course",
+        "description": "BCRS"
+    },
+    "BFL": {
+        "full": "balanced field length",
+        "description": null
+    },
+    "BITE": {
+        "full": "Built-In Test Equipment",
+        "description": null
+    },
+    "BME": {
+        "full": "Bridge Mounted Equipment",
+        "description": null
+    },
+    "BPR": {
+        "full": "bypass ratio",
+        "description": null
+    },
+    "BRG": {
+        "full": "Bearing",
+        "description": "Horizontal direction to/from a point, expressed in degrees (for example: 000 or 360 is North, 090 is East)."
+    },
+    "BTV": {
+        "full": "Brake-to-Vacate System",
+        "description": "A new feature introduced by Airbus A380"
+    },
+    "BVID": {
+        "full": "Barely Visible Impact Damage",
+        "description": null
+    },
+    "BVR": {
+        "full": "Beyond Visual Range",
+        "description": null
+    },
+    "BWC": {
+        "full": "bird watch condition",
+        "description": null
+    },
+    "CA": {
+        "full": "Captain",
+        "description": null
+    },
+    "CAA": {
+        "full": "Civil Aviation Authority",
+        "description": "An organization in charge of defining aviation safety standards. The United Kingdom and New Zealand, among others, have organizations with that exact name and role. In the United States, CAA stood for the Civil Aeronautics Administration, a fore-runner of today\u2019s FAA."
+    },
+    "CAB": {
+        "full": "Civil Aeronautics Board",
+        "description": "Former government agency of the United States responsible, among other things, of investigating air accidents (duties taken over by the NTSB) and controlling which routes the airlines could fly and what fares they could charge (prior to the Airline Deregulation Act)."
+    },
+    "CAM": {
+        "full": "cockpit area microphone",
+        "description": "Part of a cockpit voice recorder"
+    },
+    "CAME": {
+        "full": "Continuing Airworthiness Management Exposition",
+        "description": null
+    },
+    "CAMO": {
+        "full": "Continuing Airworthiness Management Organisation",
+        "description": null
+    },
+    "CAMP": {
+        "full": "Continuous Airworthiness Maintenance Program (FAA)",
+        "description": null
+    },
+    "CANSO": {
+        "full": "Civil Air Navigation Services Organisation",
+        "description": null
+    },
+    "CAP": {
+        "full": "cabin attendant panel",
+        "description": null
+    },
+    "CAR": {
+        "full": "civil aviation regulation",
+        "description": null
+    },
+    "CAS": {
+        "full": "Calibrated Airspeed",
+        "description": "IAS corrected for air density and compressibility."
+    },
+    "CASS": {
+        "full": "continuing analysis and surveillance system",
+        "description": null
+    },
+    "CAT": {
+        "full": "Operational performance Category",
+        "description": "See CAT I, CAT II, CAT IIIa, CAT IIIb, CAT IIIc"
+    },
+    "CAW": {
+        "full": "continuing airworthiness",
+        "description": null
+    },
+    "CB": {
+        "full": "Cumulonimbus cloud",
+        "description": null
+    },
+    "CBT": {
+        "full": "computer-based training",
+        "description": null
+    },
+    "CCRs": {
+        "full": "closed circuit mixed gas rebreathers",
+        "description": null
+    },
+    "CD": {
+        "full": "course deviation",
+        "description": null
+    },
+    "CDA": {
+        "full": "Continuous descent approach",
+        "description": null
+    },
+    "CDCCL": {
+        "full": "critical design configuration control limitation",
+        "description": null
+    },
+    "CDI": {
+        "full": "Course Deviation Indicator",
+        "description": "The vertical needle of a VOR indicator which shows the aircraft\u2019s position relative to the selected radial."
+    },
+    "CDL": {
+        "full": "configuration deviation list",
+        "description": null
+    },
+    "CDU": {
+        "full": "control/display unit",
+        "description": null
+    },
+    "CFR": {
+        "full": "Code of Federal Regulations",
+        "description": null
+    },
+    "CG": {
+        "full": "center of gravity",
+        "description": null
+    },
+    "CH": {
+        "full": "Course Heading",
+        "description": null
+    },
+    "CHDO": {
+        "full": "certificate-holding district office (FAA)",
+        "description": null
+    },
+    "CHG": {
+        "full": "Modification Message",
+        "description": null
+    },
+    "CHT": {
+        "full": "Cylinder Head Temperature (Piston engine aviation)",
+        "description": null
+    },
+    "CI": {
+        "full": "Course Indicator",
+        "description": null
+    },
+    "CIDIN": {
+        "full": "Common ICAO Data Interchange Network",
+        "description": null
+    },
+    "CL": {
+        "full": "Centre Line",
+        "description": null
+    },
+    "CMC": {
+        "full": "central maintenance computer",
+        "description": null
+    },
+    "CMM": {
+        "full": "component maintenance manual",
+        "description": null
+    },
+    "CMO": {
+        "full": "Certificate Management Office",
+        "description": null
+    },
+    "CMPA": {
+        "full": "complex motor-powered aircraft",
+        "description": null
+    },
+    "CMV": {
+        "full": "converted meteorological visibility",
+        "description": null
+    },
+    "COMAT": {
+        "full": "Company Material",
+        "description": "Non-revenue cargo, such as aircraft spare parts."
+    },
+    "COP": {
+        "full": "Change Over Point",
+        "description": null
+    },
+    "COTS": {
+        "full": "Commercial off-the-shelf",
+        "description": null
+    },
+    "CPDLC": {
+        "full": "Controller-Pilot Data Link Communication",
+        "description": null
+    },
+    "CPL": {
+        "full": "Commercial Pilot Licence",
+        "description": null
+    },
+    "CPR": {
+        "full": "Changed product rule",
+        "description": null
+    },
+    "CRC": {
+        "full": "Cyclic Redundancy Check",
+        "description": null
+    },
+    "CRD": {
+        "full": "Comment-response document (EASA)",
+        "description": null
+    },
+    "CRES": {
+        "full": "Corrosion resistant steel",
+        "description": null
+    },
+    "CRT": {
+        "full": "Cathode Ray Tube",
+        "description": "Television-like screens used in flight decks of new-generation aircraft, replacing the conventional instruments. See also EFIS."
+    },
+    "CS": {
+        "full": "certification specification (EASA)",
+        "description": null
+    },
+    "CSCT": {
+        "full": "Configuration Item Signer Crater Tool",
+        "description": null
+    },
+    "CSD": {
+        "full": "constant speed drive",
+        "description": null
+    },
+    "CSO": {
+        "full": "cycles since overhaul",
+        "description": null
+    },
+    "CSS": {
+        "full": "cabin services system",
+        "description": null
+    },
+    "CST": {
+        "full": "See Coast track",
+        "description": "CST may also stand for Central Standard Time."
+    },
+    "CSU": {
+        "full": "constant speed unit",
+        "description": null
+    },
+    "CTAF": {
+        "full": "common traffic advisory frequency",
+        "description": null
+    },
+    "CTR": {
+        "full": "Control Zone",
+        "description": null
+    },
+    "CWR": {
+        "full": "Color Weather Radar",
+        "description": null
+    },
+    "CWS": {
+        "full": "control wheel steering",
+        "description": null
+    },
+    "CofA": {
+        "full": "Certificate of airworthiness",
+        "description": null
+    },
+    "DA": {
+        "full": "Decision altitude",
+        "description": null
+    },
+    "DAH": {
+        "full": "design approval holder (EASA)",
+        "description": null
+    },
+    "DBER": {
+        "full": "damaged beyond economic repair",
+        "description": null
+    },
+    "DCS": {
+        "full": "Departure Control System",
+        "description": null
+    },
+    "DCT": {
+        "full": "Direct",
+        "description": null
+    },
+    "DER": {
+        "full": "Designated Engineering Representative",
+        "description": null
+    },
+    "DEU": {
+        "full": "display electronic unit",
+        "description": null
+    },
+    "DFTI": {
+        "full": "Distance From Touchdown Indicator",
+        "description": null
+    },
+    "DG": {
+        "full": "directional gyro",
+        "description": null
+    },
+    "DGPS": {
+        "full": "differential GPS",
+        "description": null
+    },
+    "DGR": {
+        "full": "Dangerous Goods Regulations",
+        "description": null
+    },
+    "DH": {
+        "full": "Decision Height",
+        "description": "Height on a precision approach at which the pilot must have the runway approach lights in sight to continue descent, or if not, initiate a go-around."
+    },
+    "DI": {
+        "full": "Direction Indicator",
+        "description": "A gyro instrument which indicates the magnetic heading of an aircraft. The DI, also known as the directional gyro (DG), is free of the turning errors associated with magnetic compasses but is prone to precession (wander) and must be reset against the magnetic compass at intervals."
+    },
+    "DIA": {
+        "full": "diameter",
+        "description": null
+    },
+    "DLA": {
+        "full": "Delay Message",
+        "description": null
+    },
+    "DLR": {
+        "full": "German Aerospace Center / Deutsches Zentrum f\u0102\u013dr Luft- und Raumfahrt e.V.",
+        "description": null
+    },
+    "DME": {
+        "full": "Distance-Measuring Equipment",
+        "description": "A combination of ground and airborne equipment which gives a continuous slant range distance-from-station readout by measuring time-lapse of a signal transmitted by the aircraft to the station and responded back. DMEs can also provide groundspeed and time-to-station readouts by differentiation."
+    },
+    "DMI": {
+        "full": "deferred maintenance item",
+        "description": null
+    },
+    "DO": {
+        "full": "design organization",
+        "description": null
+    },
+    "DOA": {
+        "full": "design organization approval",
+        "description": null
+    },
+    "DODAR": {
+        "full": "diagnose, options, decide, act/assign, review",
+        "description": null
+    },
+    "DOM": {
+        "full": "design organization manual",
+        "description": null
+    },
+    "DOW": {
+        "full": "dry operational weight",
+        "description": null
+    },
+    "DP": {
+        "full": "Departure Procedures",
+        "description": null
+    },
+    "DR": {
+        "full": "dead reckoning",
+        "description": null
+    },
+    "DUATS": {
+        "full": "Direct User Access Terminal Service",
+        "description": null
+    },
+    "DUPE": {
+        "full": "Duplication",
+        "description": null
+    },
+    "DVOR": {
+        "full": "Doppler VOR",
+        "description": ""
+    },
+    "E-LSA": {
+        "full": "experimental light-sport aircraft",
+        "description": null
+    },
+    "EA": {
+        "full": "engineering authorisation",
+        "description": null
+    },
+    "EADI": {
+        "full": "Electronic Attitude Direction Indicator",
+        "description": null
+    },
+    "EAS": {
+        "full": "equivalent airspeed",
+        "description": null
+    },
+    "EASA": {
+        "full": "European Aviation Safety Agency",
+        "description": null
+    },
+    "EAT": {
+        "full": "Estimated (or expected) Approach Time",
+        "description": null
+    },
+    "EBOM": {
+        "full": "engineering Bill of Material",
+        "description": null
+    },
+    "EBU": {
+        "full": "engine build-up",
+        "description": null
+    },
+    "EC": {
+        "full": "engineering control (also E/C)",
+        "description": null
+    },
+    "ECET": {
+        "full": "end of civil evening twilight",
+        "description": null
+    },
+    "ECR": {
+        "full": "Engineering Change Request",
+        "description": null
+    },
+    "ECS": {
+        "full": "Environmental control system",
+        "description": null
+    },
+    "EDR": {
+        "full": "engineering data record",
+        "description": null
+    },
+    "EDTO": {
+        "full": "extended diversion time operations",
+        "description": null
+    },
+    "EEC": {
+        "full": "electronic engine control",
+        "description": null
+    },
+    "EET": {
+        "full": "Estimated Elapsed Time",
+        "description": null
+    },
+    "EFB": {
+        "full": "Electronic Flight Bag",
+        "description": null
+    },
+    "EFFRA": {
+        "full": "engine failure flap retraction altitude",
+        "description": null
+    },
+    "EFIS": {
+        "full": "Electronic Flight Instrument System, in which multi-function CRT displays replace traditional instruments for providing flight, navigation and aircraft systems information, forming a so-called \u201cglass cockpit\u201d",
+        "description": ""
+    },
+    "EFP": {
+        "full": "engine failure procedure",
+        "description": null
+    },
+    "EFS": {
+        "full": "elevator feel shift",
+        "description": null
+    },
+    "EFTO": {
+        "full": "engine failure on take-off",
+        "description": null
+    },
+    "EGPWS": {
+        "full": "enhanced ground proximity warning system",
+        "description": null
+    },
+    "EGT": {
+        "full": "Exhaust Gas Temperature",
+        "description": "One of the flight deck\u2019s engine gauges."
+    },
+    "EHM": {
+        "full": "engine health monitoring",
+        "description": null
+    },
+    "EHSI": {
+        "full": "Electronic Horizontal Situation Indicator",
+        "description": null
+    },
+    "ELAC": {
+        "full": "elevator and aileron computer",
+        "description": null
+    },
+    "ELB": {
+        "full": "Emergency Locator Beacon",
+        "description": "See ELT (below)."
+    },
+    "ELOS": {
+        "full": "Equivalent Level of Safety",
+        "description": null
+    },
+    "ELT": {
+        "full": "Emergency Locator Transmitter",
+        "description": "Small radio transmitter fixed on the aircraft\u2019s structure, automatically activated by impact or water immersion, transmitting a code enabling SAR satellites or search units equipped with Direction Finders to locate the aircraft\u2019s crash site. Also called ADELT or ELB."
+    },
+    "EMAS": {
+        "full": "engineered materials arresting system",
+        "description": null
+    },
+    "EMDP": {
+        "full": "electric motor driven pump",
+        "description": null
+    },
+    "EOBT": {
+        "full": "Estimated Off-Block Time",
+        "description": null
+    },
+    "EPA": {
+        "full": "European part approval (EASA)",
+        "description": null
+    },
+    "EPR": {
+        "full": "engine pressure ratio",
+        "description": null
+    },
+    "ER": {
+        "full": "Extended Range",
+        "description": "Suffix used by some aircraft models (for example: Boeing 767-300ER)"
+    },
+    "ERM": {
+        "full": "engineering request for maintenance",
+        "description": null
+    },
+    "ESA": {
+        "full": "emergency safe altitude",
+        "description": null
+    },
+    "ETA": {
+        "full": "Estimated Time of Arrival",
+        "description": null
+    },
+    "ETD": {
+        "full": "Estimated Time of Departure",
+        "description": null
+    },
+    "ETE": {
+        "full": "Estimated Time Enroute",
+        "description": null
+    },
+    "ETOPS": {
+        "full": "Extended-range Twin Operations",
+        "description": "Certification given to two-engine aircraft for long overwater flights."
+    },
+    "ETSO": {
+        "full": "European Technical Standard Order, issued by EASA; see TSO",
+        "description": null
+    },
+    "EUROCAE": {
+        "full": "European Organization for Civil Aviation Equipment",
+        "description": null
+    },
+    "EVAS": {
+        "full": "Emergency Vision Assurance System",
+        "description": null
+    },
+    "EW": {
+        "full": "Empty Weight",
+        "description": null
+    },
+    "F/A": {
+        "full": "Flight Attendant",
+        "description": "Also known as Air Hostess in the UK, formerly known as Steward(ess) in North America."
+    },
+    "F/E": {
+        "full": "Flight Engineer",
+        "description": "Also known as Second Officer."
+    },
+    "F/O": {
+        "full": "First Officer",
+        "description": "Also known as Co-Pilot."
+    },
+    "FAA": {
+        "full": "Federal Aviation Administration",
+        "description": "A national aviation authority in charge of defining aviation safety standards in the United States. In some countries, such as the United Kingdom, an equivalent organization is called the CAA."
+    },
+    "FAC": {
+        "full": "Facilities",
+        "description": null
+    },
+    "FADEC": {
+        "full": "full authority digital engine control",
+        "description": null
+    },
+    "FAF": {
+        "full": "Final Approach Fix",
+        "description": null
+    },
+    "FANS": {
+        "full": "Future Air Navigation Systems",
+        "description": null
+    },
+    "FAP": {
+        "full": "Final Approach Point",
+        "description": null
+    },
+    "FAR": {
+        "full": "Federal Aviation Regulation",
+        "description": null
+    },
+    "FAR/AIM": {
+        "full": "Federal Aviation Regulation /",
+        "description": null
+    },
+    "FAROS": {
+        "full": "final approach runway occupancy signal",
+        "description": null
+    },
+    "FATO": {
+        "full": "Final Approach and Take-off Area",
+        "description": null
+    },
+    "FB": {
+        "full": "Winds aloft",
+        "description": null
+    },
+    "FBO": {
+        "full": "Fixed-Base Operator",
+        "description": "Supplier of fuel, maintenance, aircraft rental or sale, flight training, etc, at the airport."
+    },
+    "FBW": {
+        "full": "Fly-By-Wire",
+        "description": "Aircraft controls where the pilot\u2019s commands (bank, yaw\u2026) are transmitted to control surfaces electronically or via fiber optics, instead of mechanical linkage. Also called FBL (Fly-By-Light)."
+    },
+    "FC": {
+        "full": "flight crew",
+        "description": null
+    },
+    "FCF": {
+        "full": "functional flight check",
+        "description": null
+    },
+    "FCOM": {
+        "full": "Flight Crew Operations Manual",
+        "description": null
+    },
+    "FCTM": {
+        "full": "flight crew training manual",
+        "description": null
+    },
+    "FD": {
+        "full": "Flight Disposition Message or Flight Director",
+        "description": null
+    },
+    "FDM": {
+        "full": "Flight Data Monitoring",
+        "description": null
+    },
+    "FDR": {
+        "full": "Flight Data Recorder",
+        "description": "One of the so-called \u201cblack boxes\u201d. It is actually painted bright orange to be easily identified among aircraft debris, and records various parameters such as altitude, heading, airspeed, engine statistics, etc\u2026 It is used to investigate in the case of an accident."
+    },
+    "FDTL": {
+        "full": "flight duty time limitations",
+        "description": null
+    },
+    "FEP": {
+        "full": "final end point",
+        "description": null
+    },
+    "FFDZ": {
+        "full": "free fall drop zone (parachutists)",
+        "description": null
+    },
+    "FFS": {
+        "full": "full flight simulator",
+        "description": null
+    },
+    "FIC": {
+        "full": "Flight Information Centre",
+        "description": null
+    },
+    "FIDO": {
+        "full": "Fog Investigation and Dispersal Operation",
+        "description": null
+    },
+    "FIDS": {
+        "full": "Flight Information Display System",
+        "description": "Real-time flight arrival and departure data for an airport, either as a board inside or near the airport terminal or a virtual version on a website or teletext."
+    },
+    "FIKI": {
+        "full": "Flight Into Known Icing",
+        "description": null
+    },
+    "FIR": {
+        "full": "Flight Information Region",
+        "description": null
+    },
+    "FIS": {
+        "full": "Flight Information Service",
+        "description": null
+    },
+    "FISE": {
+        "full": "flight information service enroute",
+        "description": null
+    },
+    "FL": {
+        "full": "Flight Level",
+        "description": "Altitude at barometric setting of 1013.2 millibars or 29.92 inches of mercury, expressed in rounds hundreds of feet. This is usual mostly above 18,000 feet. FL350 is 35,000 feet."
+    },
+    "FLT": {
+        "full": "flight",
+        "description": null
+    },
+    "FLTCK": {
+        "full": "Flight Check",
+        "description": null
+    },
+    "FM": {
+        "full": "Frequency Modulation",
+        "description": null
+    },
+    "FMA": {
+        "full": "flight mode annunciator",
+        "description": null
+    },
+    "FMC": {
+        "full": "flight management computer (part of a FMS)",
+        "description": null
+    },
+    "FMGC": {
+        "full": "Flight management and guidance computer",
+        "description": null
+    },
+    "FMS": {
+        "full": "Flight Management System",
+        "description": null
+    },
+    "FN": {
+        "full": "Fleet Number",
+        "description": "Internal number, for the use of the airline, identifying a particular aircraft within the fleet."
+    },
+    "FNPT": {
+        "full": "Flight & Navigation Procedures Trainers",
+        "description": null
+    },
+    "FO": {
+        "full": "First, Officer",
+        "description": null
+    },
+    "FOD": {
+        "full": "Foreign Object Damage",
+        "description": null
+    },
+    "FOO": {
+        "full": "flight operations officer",
+        "description": null
+    },
+    "FOQA": {
+        "full": "flight operational quality assurance",
+        "description": null
+    },
+    "FPA": {
+        "full": "flight path angle",
+        "description": null
+    },
+    "FPL": {
+        "full": "Filed Flight Plan",
+        "description": null
+    },
+    "FPM": {
+        "full": "Feet Per Minute",
+        "description": "Unit of measure of an aircraft\u2019s rate of climb or descent."
+    },
+    "FSDO": {
+        "full": "Flight Standards District Office (FAA)",
+        "description": null
+    },
+    "FSF": {
+        "full": "Flight Safety Foundation",
+        "description": null
+    },
+    "FSIMS": {
+        "full": "Flight Standards Information Management System (FAA)",
+        "description": null
+    },
+    "FSS": {
+        "full": "flight service station",
+        "description": null
+    },
+    "FTL": {
+        "full": "flight time limitations",
+        "description": null
+    },
+    "FVU": {
+        "full": "flux valve unit",
+        "description": null
+    },
+    "GA": {
+        "full": "General aviation",
+        "description": null
+    },
+    "G/A": {
+        "full": "Go-around",
+        "description": null
+    },
+    "G/S": {
+        "full": "glideslope",
+        "description": null
+    },
+    "GBST": {
+        "full": "ground-based, software tool",
+        "description": null
+    },
+    "GCA": {
+        "full": "Ground Controlled Approach System or Ground Controlled Approach",
+        "description": null
+    },
+    "GCU": {
+        "full": "generator control unit",
+        "description": null
+    },
+    "GEA": {
+        "full": "Ground effect area",
+        "description": null
+    },
+    "GLOC": {
+        "full": "g-induced loss of consciousness",
+        "description": null
+    },
+    "GM": {
+        "full": "guidance material (EASA)",
+        "description": null
+    },
+    "GMM": {
+        "full": "general maintenance manual",
+        "description": null
+    },
+    "GND": {
+        "full": "Ground",
+        "description": null
+    },
+    "GNSS": {
+        "full": "Global Navigation Satellite System",
+        "description": null
+    },
+    "GP": {
+        "full": "Glide Path",
+        "description": null
+    },
+    "GPP": {
+        "full": "general practices and procedures",
+        "description": null
+    },
+    "GPS": {
+        "full": "Global Positioning System",
+        "description": null
+    },
+    "GS": {
+        "full": "Glideslope",
+        "description": "Vertical guidance, part of an ILS, establishing the safe glidepath to a runway. A standard ILS glideslope is 3 degrees."
+    },
+    "GSE": {
+        "full": "ground support equipment",
+        "description": null
+    },
+    "HAPI": {
+        "full": "Helicopter Approach Path Indicator",
+        "description": null
+    },
+    "HAT": {
+        "full": "Height Above Touchdown",
+        "description": null
+    },
+    "HAZMAT": {
+        "full": "Hazardous Material",
+        "description": null
+    },
+    "HBCS": {
+        "full": "High Bandwidth Connectivity System",
+        "description": null
+    },
+    "HDG": {
+        "full": "Heading",
+        "description": "The direction in which an aircraft\u2019s nose points in flight in the horizontal plane, expressed in compass degrees (for example: 000 or 360 is North, 090 is East)."
+    },
+    "HDI": {
+        "full": "Horizontal Deviation Indicator",
+        "description": null
+    },
+    "HFE": {
+        "full": "Human Factors Engineering",
+        "description": null
+    },
+    "HFES": {
+        "full": "Human Factors and Ergonomics Society",
+        "description": null
+    },
+    "HIGE": {
+        "full": "hover in ground effect",
+        "description": null
+    },
+    "HIRL": {
+        "full": "High Intensity Runway lighting",
+        "description": null
+    },
+    "HIRO": {
+        "full": "High Intensity Runway Operation",
+        "description": null
+    },
+    "HIRTA": {
+        "full": "High Intensity Radio Transmission Area",
+        "description": null
+    },
+    "HIWAS": {
+        "full": "Hazardous Inflight Weather Advisory Service",
+        "description": null
+    },
+    "HL": {
+        "full": "Height loss",
+        "description": null
+    },
+    "HLD": {
+        "full": "hold",
+        "description": null
+    },
+    "HMG": {
+        "full": "hydraulic motor generator",
+        "description": null
+    },
+    "HMU": {
+        "full": "hydro-mechanical unit",
+        "description": null
+    },
+    "HOGE": {
+        "full": "hover out of ground effect",
+        "description": null
+    },
+    "HPA": {
+        "full": "human-powered aircraft",
+        "description": null
+    },
+    "HPC": {
+        "full": "high pressure compressor",
+        "description": null
+    },
+    "HPT": {
+        "full": "high pressure turbine",
+        "description": null
+    },
+    "HPTACC": {
+        "full": "high pressure turbine active clearance control",
+        "description": null
+    },
+    "HSI": {
+        "full": "Horizontal Situation Indicator",
+        "description": "A cockpit navigation display, usually part of a flight-director system, which combines navigation and heading."
+    },
+    "HUD": {
+        "full": "head-up display",
+        "description": null
+    },
+    "HUM": {
+        "full": "Human Resources",
+        "description": null
+    },
+    "HW": {
+        "full": "headwind",
+        "description": null
+    },
+    "HYD": {
+        "full": "hydraulic",
+        "description": null
+    },
+    "HYDIM": {
+        "full": "hydraulic interface module",
+        "description": null
+    },
+    "I/C": {
+        "full": "In Charge",
+        "description": ""
+    },
+    "IAC": {
+        "full": "Instrument Approach Chart",
+        "description": null
+    },
+    "IAF": {
+        "full": "Initial Approach Fix",
+        "description": null
+    },
+    "IAP": {
+        "full": "instrument approach procedure",
+        "description": null
+    },
+    "IAS": {
+        "full": "Indicated Airspeed",
+        "description": "Airspeed indicated by the Airspeed Indicator, without correction for position error, altitude, or outside air temperature."
+    },
+    "IATA": {
+        "full": "International Air Transport Association",
+        "description": ""
+    },
+    "IB": {
+        "full": "inboard",
+        "description": null
+    },
+    "ICA": {
+        "full": "Instructions for Continuous Airworthiness",
+        "description": null
+    },
+    "ICAO": {
+        "full": "International Civil Aviation Organization",
+        "description": ""
+    },
+    "ICAS": {
+        "full": "International Council of the Aeronautical Sciences",
+        "description": null
+    },
+    "ICD": {
+        "full": "interface control document",
+        "description": null
+    },
+    "ICO": {
+        "full": "idle cut-off",
+        "description": null
+    },
+    "ICTS": {
+        "full": "ice-contaminated tailplane stall",
+        "description": null
+    },
+    "IDENT": {
+        "full": "Squawk function of a transponder",
+        "description": "When the \u201cIdent\u201d button is activated, an aircraft will briefly appear more distinctly on a radar scope. Used for identification or acknowledgement purposes."
+    },
+    "IDG": {
+        "full": "integrated drive generator",
+        "description": null
+    },
+    "IDT": {
+        "full": "identify",
+        "description": null
+    },
+    "IEPR": {
+        "full": "integrated engine pressure ratio",
+        "description": null
+    },
+    "IETM": {
+        "full": "interactive electronic technical manual",
+        "description": null
+    },
+    "IF": {
+        "full": "Intermediate Frequency",
+        "description": null
+    },
+    "IFA": {
+        "full": "International Federation of Airworthiness",
+        "description": null
+    },
+    "IFATCA": {
+        "full": "International Federation of Air Traffic Controllers Association",
+        "description": null
+    },
+    "IFE": {
+        "full": "in-flight entertainment",
+        "description": null
+    },
+    "IFP": {
+        "full": "instrument flight procedure",
+        "description": null
+    },
+    "IFR": {
+        "full": "Instrument Flight Rules",
+        "description": "Rules prescribed for the operation of aircraft in instrument meteorological conditions"
+    },
+    "IFSD": {
+        "full": "in-flight shutdown",
+        "description": null
+    },
+    "IGV": {
+        "full": "inlet guide vane",
+        "description": null
+    },
+    "ILS": {
+        "full": "Instrument Landing System",
+        "description": "Consists of the localizer, the glideslope and marker radio beacons (Outer, Middle, Inner). It provides horizontal and vertical guidance for the approach."
+    },
+    "IML": {
+        "full": "inside mold line",
+        "description": null
+    },
+    "INBD": {
+        "full": "Inbound",
+        "description": null
+    },
+    "INS": {
+        "full": "Inertial Navigation System",
+        "description": "It uses gyroscopes and other electronic tracking systems to detect acceleration and deceleration, and computes an aircraft\u2019s position in latitude and longitude. Its accuracy, however, declines on long flights. Also called IRS, or Inertial Reference System."
+    },
+    "IPC": {
+        "full": "illustrated parts catalog (e.g. by Boeing, Airbus)",
+        "description": null
+    },
+    "IR": {
+        "full": "Ice on Runway",
+        "description": null
+    },
+    "IRS": {
+        "full": "inertial reference system",
+        "description": null
+    },
+    "IRT": {
+        "full": "instrument rating test",
+        "description": null
+    },
+    "IRVR": {
+        "full": "instrumented runway visual range",
+        "description": null
+    },
+    "ISA": {
+        "full": "International Standart Atmosphore",
+        "description": null
+    },
+    "ISFD": {
+        "full": "integrated standby flight display",
+        "description": null
+    },
+    "ISIS": {
+        "full": "integrated standby instrument system",
+        "description": null
+    },
+    "ITAR": {
+        "full": "International Traffic in Arms Regulations",
+        "description": null
+    },
+    "ITT": {
+        "full": "interstage turbine temperature",
+        "description": null
+    },
+    "KCAS": {
+        "full": "knots calibrated airspeed",
+        "description": null
+    },
+    "KIAS": {
+        "full": "knots indicated airspeed",
+        "description": null
+    },
+    "KRE": {
+        "full": "key risk element",
+        "description": null
+    },
+    "KTAS": {
+        "full": "knots true airspeed",
+        "description": null
+    },
+    "LAHSO": {
+        "full": "Land And Hold Short Operations",
+        "description": null
+    },
+    "LAME": {
+        "full": "licensed aircraft maintenance engineer",
+        "description": null
+    },
+    "LATCC": {
+        "full": "London Area and Terminal Control Centre at West Drayton, near London\u2019s Heathrow Airport",
+        "description": ""
+    },
+    "LCC": {
+        "full": "low-cost carrier",
+        "description": null
+    },
+    "LCG": {
+        "full": "Load Classification Group",
+        "description": null
+    },
+    "LCN": {
+        "full": "Load Classification Number",
+        "description": null
+    },
+    "LDA": {
+        "full": "Landing Distance Available",
+        "description": null
+    },
+    "LDI": {
+        "full": "Landing Direction Indicator",
+        "description": null
+    },
+    "LF": {
+        "full": "Low Frequency",
+        "description": null
+    },
+    "LHO": {
+        "full": "Live human organs or fresh human blood",
+        "description": null
+    },
+    "LIR": {
+        "full": "Loading Instruction Report",
+        "description": null
+    },
+    "LNAV": {
+        "full": "lateral navigation",
+        "description": null
+    },
+    "LOA": {
+        "full": "Letter of Agreement",
+        "description": null
+    },
+    "LOC": {
+        "full": "Localizer",
+        "description": "The azimuth guidance portion of an instrument landing system."
+    },
+    "LOFT": {
+        "full": "line-oriented flight training",
+        "description": null
+    },
+    "LOM": {
+        "full": "locator outer marker",
+        "description": null
+    },
+    "LORAN": {
+        "full": "Long-Range low-frequency Radio Navigation",
+        "description": "Its range is about 1,200 nm by day, and 2,300 nm by night."
+    },
+    "LOTC": {
+        "full": "loss of thrust control",
+        "description": null
+    },
+    "LPC": {
+        "full": "low pressure compressor",
+        "description": null
+    },
+    "LPT": {
+        "full": "low pressure turbine",
+        "description": null
+    },
+    "LPTACC": {
+        "full": "low pressure turbine active clearance control",
+        "description": null
+    },
+    "LPV": {
+        "full": "localizer performance with vertical guidance",
+        "description": null
+    },
+    "LRC": {
+        "full": "long range cruise",
+        "description": null
+    },
+    "LROPS": {
+        "full": "Long Range Operational Performance Standards",
+        "description": "Certification intended to replace ETOPS as it would include all types of aircraft (not just twin-engine)."
+    },
+    "LRU": {
+        "full": "line-replaceable unit",
+        "description": null
+    },
+    "LSAP": {
+        "full": "loadable software aircraft part (EASA)",
+        "description": null
+    },
+    "LSAS": {
+        "full": "longitudinal stability augmentation system",
+        "description": null
+    },
+    "LTC": {
+        "full": "line training captain",
+        "description": null
+    },
+    "LTP": {
+        "full": "landing threshold point",
+        "description": null
+    },
+    "LVP": {
+        "full": "low visibility procedures",
+        "description": null
+    },
+    "LW": {
+        "full": "landing weight",
+        "description": null
+    },
+    "MAC": {
+        "full": "mid-air collision",
+        "description": null
+    },
+    "MAP": {
+        "full": "Aeronautical Maps and Charts",
+        "description": null
+    },
+    "MATS": {
+        "full": "Manual of Air Traffic Services",
+        "description": null
+    },
+    "MBC": {
+        "full": "Main Base Check",
+        "description": null
+    },
+    "MCAS": {
+        "full": "Maneuvering Characteristics Augmentation System",
+        "description": null
+    },
+    "MCC": {
+        "full": "Multi Crew Coordination",
+        "description": null
+    },
+    "MCH": {
+        "full": "Manufacturer Certificate Holder",
+        "description": null
+    },
+    "MCP": {
+        "full": "mode control panel",
+        "description": null
+    },
+    "MCT": {
+        "full": "Multi Channel Tracking",
+        "description": null
+    },
+    "MDA": {
+        "full": "Minimum Descent Altitude",
+        "description": null
+    },
+    "MDDR": {
+        "full": "maintenance deferred defect record",
+        "description": null
+    },
+    "MDH": {
+        "full": "minimum descent height",
+        "description": null
+    },
+    "MDM": {
+        "full": "multi-disciplinary measure",
+        "description": null
+    },
+    "ME": {
+        "full": "Manufacturing Engineer",
+        "description": null
+    },
+    "MEA": {
+        "full": "Minimum En Route Altitude",
+        "description": null
+    },
+    "MEDEVAC": {
+        "full": "medical evacuation",
+        "description": null
+    },
+    "MEF": {
+        "full": "maximum elevation figure",
+        "description": null
+    },
+    "MEL": {
+        "full": "Minimum Equipment List",
+        "description": null
+    },
+    "MEP": {
+        "full": "multi-engine piston",
+        "description": null
+    },
+    "MET": {
+        "full": "Meteorological or Meteorology",
+        "description": null
+    },
+    "METAR": {
+        "full": "Aviation routine weather report",
+        "description": "Format for shorthand weather information reporting using a standardized set of codes and abbreviations (for example: BKN broken clouds, OVC overcast, CAVOK ceiling and visibility okay, etc.) Acronym possibly comes from the French \u201cM\u00e9t\u00e9orologie Aviation R\u00e9guli\u00e8re\u201d (routine aviation weather)."
+    },
+    "MFD": {
+        "full": "multi-function display",
+        "description": null
+    },
+    "MFRA": {
+        "full": "minimum flap retraction altitude",
+        "description": null
+    },
+    "MH": {
+        "full": "magnetic heading",
+        "description": null
+    },
+    "ML": {
+        "full": "maintenance laptop",
+        "description": null
+    },
+    "MLDW": {
+        "full": "maximum landing weight",
+        "description": null
+    },
+    "MLG": {
+        "full": "Main Landing Gear",
+        "description": null
+    },
+    "MLS": {
+        "full": "Microwave Landing System",
+        "description": "A microwave-based instrument approach system intended to replace ILS in the 1990s and claimed to offer a number of advantages such as the ability to fly segmented and curved precision approaches."
+    },
+    "MM": {
+        "full": "Middle Marker",
+        "description": null
+    },
+    "MMEL": {
+        "full": "master minimum equipment list",
+        "description": null
+    },
+    "MOCA": {
+        "full": "Minimum Obstruction Clearence Altitude",
+        "description": null
+    },
+    "MOE": {
+        "full": "Maintenance Organization Exposition",
+        "description": null
+    },
+    "MORA": {
+        "full": "Minimum Off Route Altitude",
+        "description": null
+    },
+    "MP": {
+        "full": "manifold pressure",
+        "description": null
+    },
+    "MPL": {
+        "full": "multi-crew pilot license",
+        "description": null
+    },
+    "MRB": {
+        "full": "Material Review Board",
+        "description": null
+    },
+    "MRO": {
+        "full": "maintenance and repair organization",
+        "description": null
+    },
+    "MROT": {
+        "full": "Minimum Runway Occupancy Time",
+        "description": null
+    },
+    "MRP": {
+        "full": "Material Resources Planning",
+        "description": null
+    },
+    "MRW": {
+        "full": "maximum ramp weight",
+        "description": null
+    },
+    "MSA": {
+        "full": "Minimum Sector Altitude",
+        "description": null
+    },
+    "MSDS": {
+        "full": "Material Safety Data Sheet",
+        "description": null
+    },
+    "MSL": {
+        "full": "Mean Sea Level",
+        "description": null
+    },
+    "MSLW": {
+        "full": "Max. Structural Landing Weight",
+        "description": null
+    },
+    "MSN": {
+        "full": "Manufacturer Serial Number",
+        "description": "Internal number, for the use of the manufacturer, identifying a particular aircraft within the same model."
+    },
+    "MSTOW": {
+        "full": "Max. Structural Take-off Weight",
+        "description": null
+    },
+    "MSZFW": {
+        "full": "Max. Structural Zero Fuel Weight",
+        "description": null
+    },
+    "MTOW": {
+        "full": "Maximum Take-Off Weight",
+        "description": null
+    },
+    "MVA": {
+        "full": "Minimum Vectoring Altitude",
+        "description": null
+    },
+    "MX": {
+        "full": "Maintenance",
+        "description": null
+    },
+    "MZFW": {
+        "full": "Maximum Zero Fuel Weight",
+        "description": null
+    },
+    "NADP": {
+        "full": "noise abatement departure procedure",
+        "description": null
+    },
+    "NDB": {
+        "full": "Non-Directional Beacon",
+        "description": "A medium-frequency navigational aid which transmits non-directional signals, superimposed with a Morse code identifier and received by an aircraft\u2019s ADF."
+    },
+    "NDT": {
+        "full": "non-destructive testing",
+        "description": null
+    },
+    "NGS": {
+        "full": "nitrogen generation system",
+        "description": null
+    },
+    "NHA": {
+        "full": "next higher assembly",
+        "description": null
+    },
+    "NIST": {
+        "full": "National Institute of Standards and Technology",
+        "description": null
+    },
+    "NLG": {
+        "full": "nose landing gear",
+        "description": null
+    },
+    "NLR": {
+        "full": "Netherlands Aerospace Research Centre",
+        "description": null
+    },
+    "NM": {
+        "full": "Nautical Miles",
+        "description": ""
+    },
+    "NNC": {
+        "full": "non-normal checklist",
+        "description": null
+    },
+    "NORDO": {
+        "full": "No radio",
+        "description": "Aircraft without a radio or experiencing a radio failure."
+    },
+    "NOTAM": {
+        "full": "Notices To Airmen",
+        "description": "Issued by the country\u2019s aviation authority to inform pilots of new or changed aeronautical facilities, services, procedures, or hazards, temporary or permanent."
+    },
+    "NOTAR": {
+        "full": "no tail rotor",
+        "description": null
+    },
+    "NPA": {
+        "full": "notice of proposed amendment",
+        "description": null
+    },
+    "NPRM": {
+        "full": "notice of proposed rulemaking",
+        "description": null
+    },
+    "NRR": {
+        "full": "noise reduction rating",
+        "description": null
+    },
+    "NRTC": {
+        "full": "nonroutine task card",
+        "description": null
+    },
+    "NTSB": {
+        "full": "National Transportation Safety Board",
+        "description": "A United States government organisation in charge of investigating in the case of an accident. In many countries, an AAIB fulfills that role."
+    },
+    "NTZ": {
+        "full": "no-transgression zone",
+        "description": null
+    },
+    "OAT": {
+        "full": "Outside Air Temperature",
+        "description": null
+    },
+    "OBE": {
+        "full": "overcome by events",
+        "description": null
+    },
+    "OBS": {
+        "full": "omni-bearing selector",
+        "description": null
+    },
+    "OCA": {
+        "full": "Oceanic Control Area",
+        "description": null
+    },
+    "OCCM": {
+        "full": "on condition / condition monitored components",
+        "description": null
+    },
+    "OCH": {
+        "full": "obstacle clearance height",
+        "description": null
+    },
+    "OEI": {
+        "full": "one engine inoperative",
+        "description": null
+    },
+    "OEM": {
+        "full": "original equipment manufacturer",
+        "description": null
+    },
+    "OGV": {
+        "full": "outlet guide vane",
+        "description": null
+    },
+    "OHM": {
+        "full": "overhaul manual",
+        "description": null
+    },
+    "OIS": {
+        "full": "Operational Information System",
+        "description": null
+    },
+    "OM": {
+        "full": "Operations Manual",
+        "description": null
+    },
+    "OML": {
+        "full": "Operation Multi Crew Limitation",
+        "description": null
+    },
+    "ONAT": {
+        "full": "Onboard Network Access Terminal",
+        "description": null
+    },
+    "ONS": {
+        "full": "Ounce",
+        "description": null
+    },
+    "OPC": {
+        "full": "operational check",
+        "description": null
+    },
+    "OPS/CHK": {
+        "full": "operational check",
+        "description": null
+    },
+    "OTS": {
+        "full": "out of service",
+        "description": null
+    },
+    "OW": {
+        "full": "operational weight",
+        "description": null
+    },
+    "PA": {
+        "full": "Public Announcement",
+        "description": null
+    },
+    "PAH": {
+        "full": "production approval holder",
+        "description": null
+    },
+    "PANS-OPS": {
+        "full": "Procedures For Air Navigation Services - Aircraft Operations",
+        "description": null
+    },
+    "PAOG": {
+        "full": "Pre Aircraft on Ground",
+        "description": null
+    },
+    "PAPI": {
+        "full": "Precision Approach Path Indicator",
+        "description": null
+    },
+    "PAR": {
+        "full": "Precision Approach Radar",
+        "description": null
+    },
+    "PATWAS": {
+        "full": "Pilot's Automatic Telephone Weather Answering Service",
+        "description": null
+    },
+    "PAX": {
+        "full": "Passengers",
+        "description": null
+    },
+    "PBCS": {
+        "full": "performance-based communication and surveillance",
+        "description": null
+    },
+    "PBD": {
+        "full": "place bearing distance",
+        "description": null
+    },
+    "PBE": {
+        "full": "Protective Breathing Equipment",
+        "description": null
+    },
+    "PBN": {
+        "full": "Performance-Based Navigation",
+        "description": null
+    },
+    "PCN": {
+        "full": "Pavement Classification Number",
+        "description": null
+    },
+    "PDA": {
+        "full": "performance degradation allowance",
+        "description": null
+    },
+    "PDAS": {
+        "full": "public domain aeronautical software",
+        "description": null
+    },
+    "PDC": {
+        "full": "Pre-Departure Clearance",
+        "description": null
+    },
+    "PDG": {
+        "full": "procedure design gradient",
+        "description": null
+    },
+    "PDU": {
+        "full": "power drive unit",
+        "description": null
+    },
+    "PET": {
+        "full": "point of equal time",
+        "description": null
+    },
+    "PF": {
+        "full": "Pilot Flying",
+        "description": null
+    },
+    "PFAF": {
+        "full": "precision final approach fix",
+        "description": null
+    },
+    "PFD": {
+        "full": "primary flight display",
+        "description": null
+    },
+    "PIC": {
+        "full": "Pilot-in-Command",
+        "description": null
+    },
+    "PICUS": {
+        "full": "Pilot in Command Under Supervisor",
+        "description": null
+    },
+    "PIO": {
+        "full": "Pilot Induced Oscillations",
+        "description": null
+    },
+    "PIP": {
+        "full": "performance improvement package",
+        "description": null
+    },
+    "PIREP": {
+        "full": "Pilot report",
+        "description": "Weather observations reported by a pilot in flight."
+    },
+    "PJE": {
+        "full": "Parachute Jumping Exercise",
+        "description": null
+    },
+    "PM": {
+        "full": "Pilot Monitoring",
+        "description": null
+    },
+    "PMA": {
+        "full": "Parts Manufacturer Approval",
+        "description": null
+    },
+    "PMG": {
+        "full": "permanent magnet generator",
+        "description": null
+    },
+    "PN": {
+        "full": "part number",
+        "description": null
+    },
+    "PNF": {
+        "full": "Pilot Non Flying",
+        "description": null
+    },
+    "PNR": {
+        "full": "Passenger Name Record",
+        "description": "Another word for Reservation."
+    },
+    "POA": {
+        "full": "Production Organisation Approval",
+        "description": null
+    },
+    "POB": {
+        "full": "Number of Persons On Board",
+        "description": "Also SOB, Souls On Board."
+    },
+    "POF": {
+        "full": "Principles Of Flight",
+        "description": null
+    },
+    "POH": {
+        "full": "Pilot\u2019s Operating Handbook",
+        "description": "It is the aircraft\u2019s \u201cowner\u2019s manual\u201d."
+    },
+    "PPL": {
+        "full": "Private Pilot Licence",
+        "description": null
+    },
+    "PPR": {
+        "full": "prior permission required",
+        "description": null
+    },
+    "PS": {
+        "full": "passenger step",
+        "description": null
+    },
+    "PSR": {
+        "full": "Primary Surveillance Radar",
+        "description": null
+    },
+    "PSU": {
+        "full": "passenger service unit",
+        "description": null
+    },
+    "PTCU": {
+        "full": "power transfer Control unit",
+        "description": null
+    },
+    "PTF": {
+        "full": "permit to fly",
+        "description": null
+    },
+    "PTT": {
+        "full": "Push/Press to Talk",
+        "description": null
+    },
+    "PYLD": {
+        "full": "payload",
+        "description": null
+    },
+    "QAR": {
+        "full": "quick access recorder",
+        "description": null
+    },
+    "QCM": {
+        "full": "quality and compliance monitoring",
+        "description": null
+    },
+    "QDR": {
+        "full": "magnetic bearing from the station",
+        "description": ""
+    },
+    "QEC": {
+        "full": "quick engine change",
+        "description": null
+    },
+    "QFE": {
+        "full": "atmospheric pressure at aerodrome elevation",
+        "description": "With its sub-scale set to the aerodrome QFE an altimeter will indicate height above that airfield."
+    },
+    "QFU": {
+        "full": "magnetic orientation of runway in use",
+        "description": ""
+    },
+    "QNE": {
+        "full": "reading in feet on an altimeter set to 1013",
+        "description": "2 millibars (standard pressure) when the aircraft is at aerodrome elevation."
+    },
+    "QNH": {
+        "full": "altitude above mean sea level based on local station pressure",
+        "description": ""
+    },
+    "QRA": {
+        "full": "quick reaction alert",
+        "description": null
+    },
+    "QRH": {
+        "full": "Quick Reference Handbook",
+        "description": null
+    },
+    "QTE": {
+        "full": "true line of position from a direction-finding station",
+        "description": ""
+    },
+    "QUJ": {
+        "full": "true bearing",
+        "description": null
+    },
+    "RA": {
+        "full": "Resolution Advisory (see TCAS)",
+        "description": "When an RA is issued, pilots are expected to respond immediately to the RA unless doing so would jeopardize the safe operation of the flight."
+    },
+    "RAAS": {
+        "full": "Runway Awareness and Advisory System",
+        "description": "An electronic detection system that notifies aircraft flight crews on the ground of their position relative to their allocated runway."
+    },
+    "RAF": {
+        "full": "Royal Air Force",
+        "description": "Is also used as a prefix for a Royal Air Force base (for example: RAF Mildenhall)"
+    },
+    "RAIM": {
+        "full": "Receiver Autonomous Integrity Monitoring",
+        "description": null
+    },
+    "RAREPS": {
+        "full": "Weather Radar Reports",
+        "description": null
+    },
+    "RAS": {
+        "full": "Rectified Airspeed",
+        "description": "IAS corrected for instrument position error."
+    },
+    "RAT": {
+        "full": "Ram Air Turbine",
+        "description": "A small turbine that is installed in an aircraft and used as an alternate or emergency hydraulic or electrical power source."
+    },
+    "RCO": {
+        "full": "remote communications outlet",
+        "description": null
+    },
+    "RDH": {
+        "full": "reference datum height",
+        "description": null
+    },
+    "RDO": {
+        "full": "Radio",
+        "description": null
+    },
+    "REO": {
+        "full": "Repair engineering order",
+        "description": null
+    },
+    "REV": {
+        "full": "reverser",
+        "description": null
+    },
+    "RFF": {
+        "full": "rescue and fire fighting",
+        "description": null
+    },
+    "RFI": {
+        "full": "recreational flight instructor",
+        "description": null
+    },
+    "RGB": {
+        "full": "reduction gear box",
+        "description": null
+    },
+    "RIA": {
+        "full": "regulatory impact assessment (EASA)",
+        "description": null
+    },
+    "RII": {
+        "full": "required inspection items",
+        "description": null
+    },
+    "RMI": {
+        "full": "Radio Magnetic Indicator",
+        "description": "A navigation aid which combines DI, VOR and/or ADF display and will indicate bearings to stations, together with aircraft heading."
+    },
+    "RMP": {
+        "full": "Radio Management Panel",
+        "description": null
+    },
+    "RMT": {
+        "full": "rule making task (EASA)",
+        "description": null
+    },
+    "RNAV": {
+        "full": "Area Navigation",
+        "description": "A system of radio navigation which permits direct point-to-point off-airways navigation by means of an on-board computer creating phantom VOR/DME transmitters termed waypoints."
+    },
+    "RNP": {
+        "full": "Required Navigation Performance",
+        "description": null
+    },
+    "RON": {
+        "full": "Remain Overnight",
+        "description": "Aircraft remaining overnight at the airport, either at the gate, remote parking stand or hangar. Airlines take advantage of RONs to perform maintenance, cleaning, etc. on the aircraft."
+    },
+    "RPL": {
+        "full": "Repetitive Flight Plan",
+        "description": null
+    },
+    "RPM": {
+        "full": "Revolutions per minute",
+        "description": null
+    },
+    "RPT": {
+        "full": "regular public transport",
+        "description": null
+    },
+    "RQR": {
+        "full": "Required",
+        "description": null
+    },
+    "RSA": {
+        "full": "runway safety area",
+        "description": null
+    },
+    "RSR": {
+        "full": "En-Route Surveillance Radar",
+        "description": null
+    },
+    "RT": {
+        "full": "radiotelephony",
+        "description": null
+    },
+    "RTB": {
+        "full": "return to base",
+        "description": null
+    },
+    "RTF": {
+        "full": "radiotelephony",
+        "description": null
+    },
+    "RTL": {
+        "full": "rudder travel limiting",
+        "description": null
+    },
+    "RTO": {
+        "full": "Rejected takeoff",
+        "description": null
+    },
+    "RTOW": {
+        "full": "regulatory take-off weight",
+        "description": null
+    },
+    "RVDT": {
+        "full": "rotary variable differential transformer",
+        "description": null
+    },
+    "RVR": {
+        "full": "Runway Visual Range",
+        "description": "A horizontal measurement of visibility along a runway."
+    },
+    "RVSM": {
+        "full": "Reduced Vertical Seperation Minima",
+        "description": null
+    },
+    "RW": {
+        "full": "ramp weight",
+        "description": null
+    },
+    "RWY": {
+        "full": "Runway",
+        "description": "Runway abbreviation."
+    },
+    "Roger": {
+        "full": "Instruction received / understood.",
+        "description": "Also, to roger is to read back and acknowledge an instrction."
+    },
+    "SAR": {
+        "full": "Search and Rescue",
+        "description": null
+    },
+    "SARPs": {
+        "full": "Standards and Recommended Practices (ICAO)",
+        "description": null
+    },
+    "SAS": {
+        "full": "stability augmentation system",
+        "description": null
+    },
+    "SAT": {
+        "full": "Static Air Temperature",
+        "description": null
+    },
+    "SB": {
+        "full": "Service Bulletin",
+        "description": null
+    },
+    "SC": {
+        "full": "Stratocumulus",
+        "description": null
+    },
+    "SCAP": {
+        "full": "Standard Computerized Airplane Performance",
+        "description": null
+    },
+    "SCCM": {
+        "full": "senior cabin crew member",
+        "description": null
+    },
+    "SCT": {
+        "full": "See SOCAL (below)",
+        "description": ""
+    },
+    "SDF": {
+        "full": "Simplified directional facility",
+        "description": null
+    },
+    "SELCAL": {
+        "full": "Selective Calling",
+        "description": "A high-frequency system enabling air traffic control to alert a particular aircraft, by means of flashing light or aural signal in the cockpit, for receipt of a message without the crew having to maintain a listening watch. Used on long-haul over-ocean airline routes and by intercontinental business jets."
+    },
+    "SEP": {
+        "full": "single-engine piston",
+        "description": null
+    },
+    "SESAR": {
+        "full": "Single European Sky ATM Research",
+        "description": null
+    },
+    "SESMA": {
+        "full": "Special Event Search and Master Analysis",
+        "description": null
+    },
+    "SFCC": {
+        "full": "Slat Flap Control Computer",
+        "description": null
+    },
+    "SFO": {
+        "full": "Senior First Officer",
+        "description": null
+    },
+    "SFOC": {
+        "full": "Special Flight Operating Certificate",
+        "description": null
+    },
+    "SID": {
+        "full": "Standard Instrument Departure",
+        "description": "A standard IFR departure route enabling air traffic controllers to issue abbreviated clearances and thus speed the flow of traffic."
+    },
+    "SIGMET": {
+        "full": "Significant Meteorological Information",
+        "description": "A type of weather advisory regarding severe weather conditions (thunderstorms, turbulence, icing, volcanic ash, etc.) which could pose a threat to all types of aircraft. AIRMET is a less inclusive type of advisory."
+    },
+    "SLPC": {
+        "full": "single lever power control",
+        "description": null
+    },
+    "SM": {
+        "full": "service manual",
+        "description": null
+    },
+    "SMM": {
+        "full": "safety management document",
+        "description": null
+    },
+    "SMOH": {
+        "full": "Since major overhaul",
+        "description": null
+    },
+    "SMR": {
+        "full": "Surface Movement Radar",
+        "description": null
+    },
+    "SMT": {
+        "full": "software maintenance tool",
+        "description": null
+    },
+    "SN": {
+        "full": "Snow",
+        "description": null
+    },
+    "SOB": {
+        "full": "Souls (persons) On Board",
+        "description": "Also POB, Persons on Board."
+    },
+    "SOC": {
+        "full": "Sector Operation Centre",
+        "description": null
+    },
+    "SOCAL": {
+        "full": "Southern California TRACON, the busiest approach control in the world, located in San Diego",
+        "description": "Controls most arrivals for commercial, general aviation, or military airfields in Southern California. Also known as SCT for short."
+    },
+    "SODPRO": {
+        "full": "simultaneous opposite direction parallel runway operations",
+        "description": null
+    },
+    "SOG": {
+        "full": "Special Operations Group",
+        "description": null
+    },
+    "SOP": {
+        "full": "Standard Operating Procedures",
+        "description": null
+    },
+    "SOW": {
+        "full": "Statement of Work",
+        "description": null
+    },
+    "SR": {
+        "full": "Sunrise",
+        "description": null
+    },
+    "SRM": {
+        "full": "structural repair manual",
+        "description": null
+    },
+    "SS": {
+        "full": "Sunset",
+        "description": null
+    },
+    "SSR": {
+        "full": "Secondary Surveillance Radar",
+        "description": "A radar system comprising a ground-based transmitter/receiver which interrogates a compatible unit in the aircraft (the transponder), providing instant radar identification without having to manoeuvre. Assigned four-digit transponder codes are referred to as squawk (see above) codes."
+    },
+    "STAR": {
+        "full": "Standard Terminal Arrival Route",
+        "description": "For inbound IFR traffic"
+    },
+    "STC": {
+        "full": "Sensitivity Time Control",
+        "description": null
+    },
+    "STOL": {
+        "full": "Short Take-Off and Landing",
+        "description": ""
+    },
+    "STOVL": {
+        "full": "Short Take-Off and Vertical Landing",
+        "description": null
+    },
+    "STS": {
+        "full": "speed trim system",
+        "description": null
+    },
+    "Squawk": {
+        "full": "An assigned code to transmit via a transponder.",
+        "description": "To transmit the assigned code."
+    },
+    "TA": {
+        "full": "Traffic Advisory (see TCAS)",
+        "description": "When a TA is issued, pilots are instructed to initiate a visual search for the traffic causing the TA."
+    },
+    "TAA": {
+        "full": "terminal arrival area",
+        "description": null
+    },
+    "TAC": {
+        "full": "thrust asymmetry compensation",
+        "description": null
+    },
+    "TACAN": {
+        "full": "Tactical Air Navigation system",
+        "description": "An ultra-high frequency electronic navigation aid which provides suitably-equipped aircraft with a continuous indication of bearing and distance to the selected Tacan station. The distance element can be received by civilian DME equipment, but otherwise Tacan is principally a military navaid."
+    },
+    "TAF": {
+        "full": "Tactical Air Force",
+        "description": null
+    },
+    "TAI": {
+        "full": "thermal anti-ice",
+        "description": null
+    },
+    "TAM": {
+        "full": "total airport management",
+        "description": null
+    },
+    "TAR": {
+        "full": "Terminal Area Surveillance Radar",
+        "description": null
+    },
+    "TAS": {
+        "full": "True Airspeed",
+        "description": "Rectified airspeed corrected for altitude and outside air temperature."
+    },
+    "TAT": {
+        "full": "total air temperature",
+        "description": null
+    },
+    "TAWS": {
+        "full": "terrain awareness and warning system",
+        "description": null
+    },
+    "TBV": {
+        "full": "transient bleed valve",
+        "description": null
+    },
+    "TC": {
+        "full": "Tropical Cyclone",
+        "description": null
+    },
+    "TCA": {
+        "full": "Terminal Control Area",
+        "description": ""
+    },
+    "TCAS": {
+        "full": "Traffic Collision Avoidance System",
+        "description": null
+    },
+    "TCCA": {
+        "full": "Transport Canada's Civil Aviation",
+        "description": null
+    },
+    "TCDS": {
+        "full": "type certificate data sheet",
+        "description": null
+    },
+    "TCH": {
+        "full": "threshold crossing height",
+        "description": null
+    },
+    "TCI": {
+        "full": "thrust computer indicator",
+        "description": null
+    },
+    "TCU": {
+        "full": "Towering Cumulus (cumulus congestus clouds)",
+        "description": null
+    },
+    "TDZ": {
+        "full": "Touch Down Zone",
+        "description": null
+    },
+    "TERPS": {
+        "full": "terminal instrument procedures",
+        "description": null
+    },
+    "TFC": {
+        "full": "Traffic",
+        "description": null
+    },
+    "TFR": {
+        "full": "temporary flight restriction",
+        "description": null
+    },
+    "TGB": {
+        "full": "transfer gearbox",
+        "description": null
+    },
+    "TGL": {
+        "full": "temporary guidance leaflet",
+        "description": null
+    },
+    "TH": {
+        "full": "True Heading",
+        "description": null
+    },
+    "THLD": {
+        "full": "threshold",
+        "description": null
+    },
+    "THR": {
+        "full": "Threshold",
+        "description": null
+    },
+    "THS": {
+        "full": "trimmable horizontal stabilizer, see tailplane",
+        "description": null
+    },
+    "TIT": {
+        "full": "turbine inlet temperature",
+        "description": null
+    },
+    "TLB": {
+        "full": "Technical Logbook",
+        "description": null
+    },
+    "TLD": {
+        "full": "time-limited dispatch",
+        "description": null
+    },
+    "TLS": {
+        "full": "transponder landing system",
+        "description": null
+    },
+    "TMA": {
+        "full": "Terminal Control Area",
+        "description": null
+    },
+    "TMG": {
+        "full": "touring motor glider",
+        "description": null
+    },
+    "TML": {
+        "full": "Toolbox Mobile Library (Boeing)",
+        "description": null
+    },
+    "TMZ": {
+        "full": "transponder mandatory zone",
+        "description": null
+    },
+    "TO/GA": {
+        "full": "Takeoff/go-around switch / thrust",
+        "description": null
+    },
+    "TOC": {
+        "full": "Terminal Operation Center",
+        "description": null
+    },
+    "TOD": {
+        "full": "top of descent (point)",
+        "description": null
+    },
+    "TODA": {
+        "full": "Take-off Distance Available",
+        "description": null
+    },
+    "TOGA": {
+        "full": "Take-off/Go Around",
+        "description": "An autopilot setting activating take-off or go-around thrust."
+    },
+    "TOP": {
+        "full": "take-off power",
+        "description": null
+    },
+    "TOR": {
+        "full": "take-off runway",
+        "description": null
+    },
+    "TORA": {
+        "full": "Take-Off Run Available",
+        "description": null
+    },
+    "TOW": {
+        "full": "take-off weight",
+        "description": null
+    },
+    "TOWS": {
+        "full": "take-off warning system",
+        "description": null
+    },
+    "TP": {
+        "full": "turning point at missed approach",
+        "description": null
+    },
+    "TR": {
+        "full": "transmitter receiver or transceiver",
+        "description": null
+    },
+    "TRA": {
+        "full": "temporary reserved area (airspace)",
+        "description": null
+    },
+    "TRACON": {
+        "full": "Terminal Radar Approach Control",
+        "description": "ATC for departures and approaches."
+    },
+    "TRE": {
+        "full": "type rating examiner",
+        "description": null
+    },
+    "TRP": {
+        "full": "Mode S transponder",
+        "description": null
+    },
+    "TSB": {
+        "full": "Transportation Safety Board of Canada",
+        "description": "Agency that investigates accidents, in a similar fashion to the NTSB in the United States or an AAIB in other countries."
+    },
+    "TSO": {
+        "full": "technical standard order",
+        "description": null
+    },
+    "TTAF": {
+        "full": "total time air frame",
+        "description": null
+    },
+    "TTSN": {
+        "full": "total time since new",
+        "description": null
+    },
+    "TTSO": {
+        "full": "total time since overhaul",
+        "description": null
+    },
+    "TWB": {
+        "full": "Transcribed Weather Broadcasts",
+        "description": null
+    },
+    "TWC": {
+        "full": "tail wind component",
+        "description": null
+    },
+    "TWLU": {
+        "full": "Terminal Wireless LAN Unit",
+        "description": null
+    },
+    "TWR": {
+        "full": "Tower",
+        "description": null
+    },
+    "TWY": {
+        "full": "Taxiway",
+        "description": null
+    },
+    "UAS": {
+        "full": "Unmanned Aircraft System",
+        "description": null
+    },
+    "UAV": {
+        "full": "Unmanned Air Vehicle",
+        "description": null
+    },
+    "UHF": {
+        "full": "Ultra-High Frequency",
+        "description": "Radio frequencies in the 300-3,000 MHz band."
+    },
+    "UIR": {
+        "full": "Upper Flight Information Region",
+        "description": null
+    },
+    "UM": {
+        "full": "Unaccompanied Minor",
+        "description": "Underage passenger (typically 5-15 years old) travelling without a parent, guardian or trusted adult. An UM is under the constant supervision of airline staff from the departure gate until he or she is picked up at the arrival airport."
+    },
+    "UNICOM": {
+        "full": "privately-operated advisory air-to-ground radio service at uncontrolled airfields, in the United States",
+        "description": ""
+    },
+    "UTC": {
+        "full": "Co-ordinated Universal Time, formerly Greenwich Mean Time",
+        "description": null
+    },
+    "V&V": {
+        "full": "video & vision",
+        "description": null
+    },
+    "V/STOL": {
+        "full": "Vertical and Short Take-Off and Landing",
+        "description": ""
+    },
+    "V1": {
+        "full": "decision speed, up to which it should be possible to abort a take-off and stop safely within the remaining runway length",
+        "description": "After reaching V1 the take-off must be continued."
+    },
+    "VA": {
+        "full": "design manoeuvring speed",
+        "description": "The speed below which abrupt and extreme control movements are possible (though not advised) without exceeding the airframe\u2019s limiting load factors."
+    },
+    "VASI": {
+        "full": "visual approach slope indicator",
+        "description": null
+    },
+    "VASIS": {
+        "full": "Visual Approach Slope Indicator System",
+        "description": "A colored light system providing visual guidance to the glidepath of a runway."
+    },
+    "VBV": {
+        "full": "variable bleed valve",
+        "description": null
+    },
+    "VCR": {
+        "full": "visual control room",
+        "description": null
+    },
+    "VCS": {
+        "full": "Voice Communications System",
+        "description": null
+    },
+    "VDP": {
+        "full": "visual descent point",
+        "description": null
+    },
+    "VFE": {
+        "full": "maximum flap extension speed (top of white arc on ASI)",
+        "description": ""
+    },
+    "VFR": {
+        "full": "Visual Flight Rules",
+        "description": "Prescribed for the operation of aircraft in visual meteorological conditions (VMC). VMC is generally defined as 5 miles visibility or more and 1,000 feet vertical and one nautical mile horizontal clearance from cloud, but variations apply to aircraft operating below 3,000 feet AMSL. Special VFR (SVFR) clearances are granted at the discretion of ATC for VFR flight through some controlled airspace where IFR usually apply."
+    },
+    "VG": {
+        "full": "vortex generator",
+        "description": null
+    },
+    "VGM": {
+        "full": "voice generator module",
+        "description": null
+    },
+    "VHF": {
+        "full": "Very High Frequency",
+        "description": "Radio frequencies in the 30-300 MHz band, used for most civil air-to-ground communication."
+    },
+    "VID": {
+        "full": "visible impact damage",
+        "description": null
+    },
+    "VIGV": {
+        "full": "variable inlet guide vane",
+        "description": null
+    },
+    "VIS": {
+        "full": "Visibility",
+        "description": null
+    },
+    "VMCA": {
+        "full": "minimum control speed (air)",
+        "description": "The minimum speed at which control of a twin-engined aircraft can be maintained after failure of one engine."
+    },
+    "VMO": {
+        "full": "maximum operating speed",
+        "description": "Also Mmo, Mach limit maximum operating speed."
+    },
+    "VNAV": {
+        "full": "Vertical Navigation",
+        "description": null
+    },
+    "VNC": {
+        "full": "VFR navigation chart",
+        "description": null
+    },
+    "VNE": {
+        "full": "never-exceed speed, \u2018redline speed\u2019 denoted by a red radial on an ASI",
+        "description": ""
+    },
+    "VNO": {
+        "full": "normal operating speed",
+        "description": "The maximum structural cruising speed allowable for normal operating conditions (top of green arc on ASI)."
+    },
+    "VOLMET": {
+        "full": "Meteorological Information For Aircraft in Flight",
+        "description": null
+    },
+    "VOR": {
+        "full": "Very high frequency Omnidirectional Range",
+        "description": "A radio navigation aid operating in the 108-118 MHz band. A VOR ground station transmits a two-phase directional signal through 360\u00b0. the aircraft\u2019s VOR receiver enables a pilot to identify his radial or bearing from/to the ground station. VOR is the most commonly used radio navigation aid in private flying. Increased accuracy is available in DVOR which have replaced some VORs in the UK system. Also VORTAC, combined VOR and TACAN, and VOT (VOR test facility)."
+    },
+    "VR": {
+        "full": "Rotation speed at which to raise the nose for take-off",
+        "description": ""
+    },
+    "VSCF": {
+        "full": "variable speed constant frequency",
+        "description": null
+    },
+    "VSI": {
+        "full": "Vertical Speed Indicator",
+        "description": null
+    },
+    "VSO": {
+        "full": "Stalling speed at MTWA",
+        "description": "in landing configuration with flaps and landing gear down, at sea level, ISA conditions (bottom of white arc on ASI)."
+    },
+    "VSV": {
+        "full": "variable stator vane",
+        "description": null
+    },
+    "VTA": {
+        "full": "VFR terminal area chart",
+        "description": null
+    },
+    "VTOL": {
+        "full": "Vertical Take-Off and Landing",
+        "description": ""
+    },
+    "VVI": {
+        "full": "vertical velocity indicator",
+        "description": null
+    },
+    "VX": {
+        "full": "Best angle of climb speed on all engines",
+        "description": ""
+    },
+    "VXSE": {
+        "full": "Best engine-out angle of climb speed",
+        "description": ""
+    },
+    "VY": {
+        "full": "Best rate of climb speed on all engines",
+        "description": ""
+    },
+    "VYSE": {
+        "full": "Best engine-out rate of climb speed",
+        "description": "\u2018blueline speed\u2019 (blue radial on ASIs of light twin aircraft)"
+    },
+    "W&B": {
+        "full": "Weight & Balance",
+        "description": null
+    },
+    "WAC": {
+        "full": "World Aeronautical Chart ICAO 1:1.000.000",
+        "description": null
+    },
+    "WAT": {
+        "full": "weight, altitude, temperature",
+        "description": null
+    },
+    "WCA": {
+        "full": "Wind Correction Angle",
+        "description": null
+    },
+    "WDM": {
+        "full": "Wiring Diagram Manual",
+        "description": null
+    },
+    "WEF": {
+        "full": "With Effect From or Effective From",
+        "description": null
+    },
+    "WOCL": {
+        "full": "window of circadian low",
+        "description": null
+    },
+    "WOFW": {
+        "full": "weight-off-wheels",
+        "description": null
+    },
+    "WONW": {
+        "full": "weight-on-wheels",
+        "description": null
+    },
+    "WS": {
+        "full": "wind shear",
+        "description": null
+    },
+    "WTC": {
+        "full": "Wake Turbulence Category",
+        "description": null
+    },
+    "Wx": {
+        "full": "weather",
+        "description": null
+    },
+    "XC": {
+        "full": "cross-country",
+        "description": null
+    },
+    "XMIT": {
+        "full": "transmit",
+        "description": null
+    },
+    "XMSN": {
+        "full": "Transmission",
+        "description": null
+    },
+    "XPDR": {
+        "full": "Transponder",
+        "description": null
+    },
+    "XPNDR": {
+        "full": "transponder",
+        "description": null
+    },
+    "ZFT": {
+        "full": "zero-fuel time",
+        "description": null
+    },
+    "ZFW": {
+        "full": "zero-fuel weight",
+        "description": null
+    },
+    "ZULU": {
+        "full": "Zulu Time",
+        "description": null
+    },
+    "Zulu": {
+        "full": "UTC time",
+        "description": null
+    },
+    "kts": {
+        "full": "Standard unit of speed in aviation and marine transportation, equivalent to one nautical mile per hour",
+        "description": "One knot equals 1.1515 mph, and one nautical mile equals 6,080 feet. The word \u201cknot\u201d replaces \u201cnautical miles per hour\u201d, and one should never say for example \u201c60 knots per hour\u201d."
+    },
+    "psi": {
+        "full": "Pounds per Square Inch",
+        "description": "Unit of measure for pressure."
+    },
+    "rpm": {
+        "full": "Revolutions Per Minute",
+        "description": null
+    }
+}

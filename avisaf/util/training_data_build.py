@@ -7,7 +7,7 @@ overlaps from entity annotations as well as file content formatting.
 
 import json
 from pathlib import Path
-from util.data_extractor import JsonDataExtractor
+from .data_extractor import JsonDataExtractor
 
 
 def fetch_and_sort_annotations(file_path: Path):
@@ -25,10 +25,10 @@ def fetch_and_sort_annotations(file_path: Path):
 
     file_path = file_path.resolve()
     extractor = JsonDataExtractor([file_path])
-    training_data = extractor.get_ner_training_data()
+    # training_data = extractor.get_ner_training_data()
     sorted_training_data = []
 
-    for text, annotation in training_data:
+    for text, annotation in extractor.get_ner_training_data():
         annot_list = annotation["entities"]  # get entities list from "entities" key in the annotation dictionary
         sorted_list = sorted(annot_list)  # , key=lambda tple: (tple[0], tple[1], tple[2])
         # sort entities
@@ -89,7 +89,7 @@ def remove_overlaps(annotations_dict: dict) -> dict:
             # Only the first triplet is kept -> we skip the next one by increasing the lookahead
             # Otherwise; default lookahead of 1 is used
             lookahead = lookahead + 1 if triplets_to_keep == [current_triplet] else 1
-        
+
         annotations_dict = {"entities": sorted(list(keep_list))}
 
     return annotations_dict
@@ -185,18 +185,17 @@ def pretty_print_training_data(file_path: Path):
                 file.write("\n")
         file.write("]")
 
+#def write_sentences():
+#    """A loop which prompts a user to input a sentence which will be annotated
+#    later. The function ends when string 'None' is detected
 
-def write_sentences():
-    """A loop which prompts a user to input a sentence which will be annotated
-    later. The function ends when string 'None' is detected
+#    :return: The list of user-written sentences.
+#    """
+#    result = []
+#    sentence = input('Write a sentence or "None" to exit the loop: ')
 
-    :return: The list of user-written sentences.
-    """
-    result = []
-    sentence = input('Write a sentence or "None" to exit the loop: ')
+#    while sentence != "None":
+#        result.append(sentence)
+#        sentence = input("Write a sentence: ")
 
-    while sentence != "None":
-        result.append(sentence)
-        sentence = input("Write a sentence: ")
-
-    return result
+#    return result

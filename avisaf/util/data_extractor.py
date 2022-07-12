@@ -3,11 +3,13 @@
 training data used by other modules.
 """
 
-import pandas as pd
 import json
 import logging
-from pathlib import Path
+import sys
+
 import numpy as np
+import pandas as pd
+from pathlib import Path
 from typing import Union
 
 logger = logging.getLogger("avisaf_logger")
@@ -55,7 +57,9 @@ class JsonDataExtractor(DataExtractor):
             with training_data_file_path.open(mode="r") as tr_data_file:
                 training_data += json.load(tr_data_file)
 
-        return training_data
+            yield training_data
+
+        # return training_data
 
 
 def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
@@ -70,7 +74,7 @@ def get_entities(entities_file_path: Union[str, Path] = None) -> dict:
     :return: Returns the list of available entity labels.
     """
     if entities_file_path is None:
-        entities_file_path = find_file_by_path("entities_labels.json")
+        entities_file_path = find_file_by_path(Path("config", "entities_labels.json"))
         if entities_file_path is None:
             raise FileNotFoundError()
 
@@ -135,16 +139,14 @@ class CsvAsrsDataExtractor(DataExtractor):
 
         try:
             narratives1 = report_df["Report 1_Narrative"].values.tolist()
-            calls1 = report_df["Report 1_Callback"].values.tolist()
             narratives2 = report_df["Report 2_Narrative"].values.tolist()
-            calls2 = report_df["Report 2_Callback"].values.tolist()
 
         except KeyError:
             logger.error("No such key was found")
             return None
 
         length = len(narratives1)
-        lists = [narratives1, calls1, narratives2, calls2]
+        lists = [narratives1, narratives2]
 
         end_index = start_index + lines_count
 
@@ -160,8 +162,6 @@ class CsvAsrsDataExtractor(DataExtractor):
         """
 
         :param field_names:
-        :param lines_count:
-        :param start_index:
         :return:
         """
 
@@ -203,3 +203,33 @@ class CsvAsrsDataExtractor(DataExtractor):
             label_data_dict[field_name] = np.array(extracted_values)
 
         return label_data_dict
+
+
+class TextFileExtractor(DataExtractor):
+    def __init__(self, file_paths: list):
+        super().__init__(file_paths)
+
+    def extract_data(self, field_names: list, **kwargs) -> dict:
+
+        extracted_texts = []
+
+        for path in self.file_paths:
+            file_path = Path(path)
+            try:
+                with file_path.open("r") as f:
+                    texts = f.readlines()
+                    extracted_texts += texts
+            except FileNotFoundError:
+                logger.error(f"File \"{path}\" has not been found. Returning text as is.")
+                extracted_texts += [path]
+
+        return {"Report 1_Narrative": extracted_texts}
+
+
+class PlainTextExtractor(DataExtractor):
+    def __init__(self, text: str):
+        super().__init__([])
+        self._text = text
+
+    def extract_data(self, field_names: list, **kwargs) -> dict:
+        return {"Report 1_Narrative": [self._text]}

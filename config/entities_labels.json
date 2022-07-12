@@ -1,0 +1,10 @@
+{
+  "ABBREVIATION": ["#FFF4E6", 31],
+  "AIRPLANE": ["#ACECD5", 92],
+  "AIRPORT_TERM": ["#FFD5B8", 35],
+  "ALTITUDE": ["#988270", 36],
+  "CREW": ["#FFF9AA", 93],
+  "FLIGHT_PHASE": ["#FFB9B3", 91],
+  "NAV_WAYPOINT": ["#FF6961", 97],
+  "WEATHER": ["#BE9B7B", 96]
+}
