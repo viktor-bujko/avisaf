@@ -22,7 +22,7 @@ setup(
     install_requires=requirements,
     include_package_data=True,
     zip_safe=False,
-    packages=find_packages(where="avisaf"),
+    packages=find_packages(),
     # packages=["avisaf", "avisaf.training", "avisaf.classification", "avisaf.util"],
     entry_points={
         "console_scripts": [

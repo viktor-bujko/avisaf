@@ -1,0 +1,2 @@
+vectors/tfidf/* filter=lfs diff=lfs merge=lfs -text
+vectors/doc2vec/* filter=lfs diff=lfs merge=lfs -text

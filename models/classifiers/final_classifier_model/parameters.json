@@ -1,0 +1,296 @@
+{
+    "Events_Detector": {
+        "algorithm": "mlp",
+        "has_default_class": false,
+        "encodings": {
+            "0": "Automation",
+            "1": "Person Air Traffic Control",
+            "2": "Person Flight Crew"
+        },
+        "trained_labels": [
+            "Automation",
+            "Person Air Traffic Control",
+            "Person Flight Crew"
+        ],
+        "vectorizer_params": {
+            "name": "TfIdfVectorizer",
+            "vectorizer": "tfidf",
+            "encoding": "utf-8",
+            "decode_error": "strict",
+            "lowercase": true,
+            "ngram_range": [
+                1,
+                2
+            ],
+            "max_features": 100000,
+            "analyzer": "word",
+            "tokenizer": null,
+            "preprocessor": null,
+            "use_idf": true,
+            "norm": "l2"
+        },
+        "model_params": {
+            "activation": "relu",
+            "alpha": 0.0005,
+            "batch_size": 256,
+            "beta_1": 0.9,
+            "beta_2": 0.999,
+            "early_stopping": true,
+            "epsilon": 1e-08,
+            "hidden_layer_sizes": [
+                512,
+                256
+            ],
+            "learning_rate": "adaptive",
+            "learning_rate_init": 0.003,
+            "max_fun": 15000,
+            "max_iter": 200,
+            "momentum": 0.9,
+            "n_iter_no_change": 15,
+            "nesterovs_momentum": true,
+            "power_t": 0.5,
+            "random_state": 4030,
+            "shuffle": true,
+            "solver": "adam",
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": true,
+            "warm_start": false
+        },
+        "trained_texts": [
+            "data_files/ASRS/ASRS_train_1.csv",
+            "data_files/ASRS/ASRS_train_2.csv",
+            "data_files/ASRS/ASRS_train_3.csv",
+            "data_files/ASRS/ASRS_train_4.csv",
+            "data_files/ASRS/ASRS_train_5.csv",
+            "data_files/ASRS/ASRS_train_6.csv",
+            "data_files/ASRS/ASRS_train_7.csv",
+            "data_files/ASRS/ASRS_train_8.csv",
+            "data_files/ASRS/ASRS_train_9.csv"
+        ]
+    },
+    "Events_When Detected": {
+        "algorithm": "mlp",
+        "has_default_class": false,
+        "encodings": {
+            "0": "Gate",
+            "1": "In-flight",
+            "2": "Pre-flight",
+            "3": "Taxi"
+        },
+        "trained_labels": [
+            "Gate",
+            "In-flight",
+            "Pre-flight",
+            "Taxi"
+        ],
+        "vectorizer_params": {
+            "name": "TfIdfVectorizer",
+            "vectorizer": "tfidf",
+            "encoding": "utf-8",
+            "decode_error": "strict",
+            "lowercase": true,
+            "ngram_range": [
+                1,
+                2
+            ],
+            "max_features": 100000,
+            "analyzer": "word",
+            "tokenizer": null,
+            "preprocessor": null,
+            "use_idf": true,
+            "norm": "l2"
+        },
+        "model_params": {
+            "activation": "relu",
+            "alpha": 0.0005,
+            "batch_size": 256,
+            "beta_1": 0.9,
+            "beta_2": 0.999,
+            "early_stopping": true,
+            "epsilon": 1e-08,
+            "hidden_layer_sizes": [
+                512,
+                256
+            ],
+            "learning_rate": "adaptive",
+            "learning_rate_init": 0.003,
+            "max_fun": 15000,
+            "max_iter": 200,
+            "momentum": 0.9,
+            "n_iter_no_change": 15,
+            "nesterovs_momentum": true,
+            "power_t": 0.5,
+            "random_state": 4030,
+            "shuffle": true,
+            "solver": "adam",
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": true,
+            "warm_start": false
+        },
+        "trained_texts": [
+            "data_files/ASRS/ASRS_train_1.csv",
+            "data_files/ASRS/ASRS_train_2.csv",
+            "data_files/ASRS/ASRS_train_3.csv",
+            "data_files/ASRS/ASRS_train_4.csv",
+            "data_files/ASRS/ASRS_train_5.csv",
+            "data_files/ASRS/ASRS_train_6.csv",
+            "data_files/ASRS/ASRS_train_7.csv",
+            "data_files/ASRS/ASRS_train_8.csv",
+            "data_files/ASRS/ASRS_train_9.csv"
+        ]
+    },
+    "Aircraft 1_Flight Phase": {
+        "algorithm": "mlp",
+        "has_default_class": false,
+        "encodings": {
+            "0": "Approach",
+            "1": "Climb",
+            "2": "Cruise",
+            "3": "Descent",
+            "4": "Landing",
+            "5": "Parked",
+            "6": "Takeoff",
+            "7": "Taxi"
+        },
+        "trained_labels": [
+            "Approach",
+            "Climb",
+            "Cruise",
+            "Descent",
+            "Landing",
+            "Parked",
+            "Takeoff",
+            "Taxi"
+        ],
+        "vectorizer_params": {
+            "name": "TfIdfVectorizer",
+            "vectorizer": "tfidf",
+            "encoding": "utf-8",
+            "decode_error": "strict",
+            "lowercase": true,
+            "ngram_range": [
+                1,
+                2
+            ],
+            "max_features": 100000,
+            "analyzer": "word",
+            "tokenizer": null,
+            "preprocessor": null,
+            "use_idf": true,
+            "norm": "l2"
+        },
+        "model_params": {
+            "activation": "relu",
+            "alpha": 0.0005,
+            "batch_size": 256,
+            "beta_1": 0.9,
+            "beta_2": 0.999,
+            "early_stopping": true,
+            "epsilon": 1e-08,
+            "hidden_layer_sizes": [
+                512,
+                256
+            ],
+            "learning_rate": "adaptive",
+            "learning_rate_init": 0.003,
+            "max_fun": 15000,
+            "max_iter": 200,
+            "momentum": 0.9,
+            "n_iter_no_change": 15,
+            "nesterovs_momentum": true,
+            "power_t": 0.5,
+            "random_state": 4030,
+            "shuffle": true,
+            "solver": "adam",
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": true,
+            "warm_start": false
+        },
+        "trained_texts": [
+            "data_files/ASRS/ASRS_train_1.csv",
+            "data_files/ASRS/ASRS_train_2.csv",
+            "data_files/ASRS/ASRS_train_3.csv",
+            "data_files/ASRS/ASRS_train_4.csv",
+            "data_files/ASRS/ASRS_train_5.csv",
+            "data_files/ASRS/ASRS_train_6.csv",
+            "data_files/ASRS/ASRS_train_7.csv",
+            "data_files/ASRS/ASRS_train_8.csv",
+            "data_files/ASRS/ASRS_train_9.csv"
+        ]
+    },
+    "Assessments_Primary Problem": {
+        "algorithm": "mlp",
+        "has_default_class": false,
+        "encodings": {
+            "0": "Aircraft",
+            "1": "Ambiguous",
+            "2": "Human Factors",
+            "3": "Procedure"
+        },
+        "trained_labels": [
+            "Aircraft",
+            "Ambiguous",
+            "Human Factors",
+            "Procedure"
+        ],
+        "vectorizer_params": {
+            "name": "TfIdfVectorizer",
+            "vectorizer": "tfidf",
+            "encoding": "utf-8",
+            "decode_error": "strict",
+            "lowercase": true,
+            "ngram_range": [
+                1,
+                2
+            ],
+            "max_features": 100000,
+            "analyzer": "word",
+            "tokenizer": null,
+            "preprocessor": null,
+            "use_idf": true,
+            "norm": "l2"
+        },
+        "model_params": {
+            "activation": "relu",
+            "alpha": 0.0005,
+            "batch_size": 256,
+            "beta_1": 0.9,
+            "beta_2": 0.999,
+            "early_stopping": true,
+            "epsilon": 1e-08,
+            "hidden_layer_sizes": [
+                512,
+                256
+            ],
+            "learning_rate": "adaptive",
+            "learning_rate_init": 0.003,
+            "max_fun": 15000,
+            "max_iter": 200,
+            "momentum": 0.9,
+            "n_iter_no_change": 15,
+            "nesterovs_momentum": true,
+            "power_t": 0.5,
+            "random_state": 4030,
+            "shuffle": true,
+            "solver": "adam",
+            "tol": 0.0001,
+            "validation_fraction": 0.1,
+            "verbose": true,
+            "warm_start": false
+        },
+        "trained_texts": [
+            "data_files/ASRS/ASRS_train_1.csv",
+            "data_files/ASRS/ASRS_train_2.csv",
+            "data_files/ASRS/ASRS_train_3.csv",
+            "data_files/ASRS/ASRS_train_4.csv",
+            "data_files/ASRS/ASRS_train_5.csv",
+            "data_files/ASRS/ASRS_train_6.csv",
+            "data_files/ASRS/ASRS_train_7.csv",
+            "data_files/ASRS/ASRS_train_8.csv",
+            "data_files/ASRS/ASRS_train_9.csv"
+        ]
+    }
+}

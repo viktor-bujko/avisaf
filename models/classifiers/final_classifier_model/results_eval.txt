@@ -1,0 +1,79 @@
+Evaluating 'Events_Detector' predictor:
+Classes order: Automation | Person Air Traffic Control | Person Flight Crew
+[[ 270   72  253]
+ [  66  823  374]
+ [ 243  355 4288]]
+	Accuracy: 79.79
+	Precision: | 46.63 || 65.84 || 87.24 |
+	Average Precision: 66.57
+	Std dev of Precision: 16.59
+	Recall: | 45.38 || 65.16 || 87.76 |
+	Average Recall: 66.10
+	Std dev of Recall: 17.32
+	F1 score: | 46.00 || 65.50 || 87.50 |
+	Average F1 score: 66.33
+	Std dev of F1 score: 16.95
+	Matthews correlation coefficient: 52.97
+	ROC AUC macro ovr: 87.71
+	ROC AUC weighted ovr: 88.09
+Evaluating 'Events_When Detected' predictor:
+Classes order: Gate | In-flight | Pre-flight | Taxi
+[[ 186  114   34   58]
+ [  36 4708   15   76]
+ [ 152  138   83   27]
+ [  27  201    4  544]]
+	Accuracy: 86.23
+	Precision: | 46.38 || 91.22 || 61.03 || 77.16 |
+	Average Precision: 68.95
+	Std dev of Precision: 16.85
+	Recall: | 47.45 || 97.37 || 20.75 || 70.10 |
+	Average Recall: 58.92
+	Std dev of Recall: 28.25
+	F1 score: | 46.91 || 94.20 || 30.97 || 73.46 |
+	Average F1 score: 61.39
+	Std dev of F1 score: 24.28
+	Matthews correlation coefficient: 63.75
+	ROC AUC macro ovr: 95.37
+	ROC AUC weighted ovr: 96.50
+Evaluating 'Aircraft 1_Flight Phase' predictor:
+Classes order: Approach | Climb | Cruise | Descent | Landing | Parked | Takeoff | Taxi
+[[1088   46   68   56   18   12    7    8]
+ [  58  673  217   24    3   29   18   10]
+ [  78  133  777   55    2   78    1    6]
+ [ 157   52  170  263    0   16    1    1]
+ [ 207    8   31    1  236   13   28   21]
+ [   7   17   29    1    1  826    4   40]
+ [  34  156   27    1   10   32  247   22]
+ [  10   14   17    1   20  148   43  507]]
+	Accuracy: 67.07
+	Precision: | 66.38 || 61.24 || 58.16 || 65.42 || 81.38 || 71.58 || 70.77 || 82.44 |
+	Average Precision: 69.67
+	Std dev of Precision: 8.20
+	Recall: | 83.50 || 65.21 || 68.76 || 39.85 || 43.30 || 89.30 || 46.69 || 66.71 |
+	Average Recall: 62.92
+	Std dev of Recall: 17.15
+	F1 score: | 73.96 || 63.16 || 63.02 || 49.53 || 56.53 || 79.46 || 56.26 || 73.75 |
+	Average F1 score: 64.46
+	Std dev of F1 score: 9.74
+	Matthews correlation coefficient: 61.75
+	ROC AUC macro ovr: 93.61
+	ROC AUC weighted ovr: 93.63
+Evaluating 'Assessments_Primary Problem' predictor:
+Classes order: Aircraft | Ambiguous | Human Factors | Procedure
+[[1541   33  241   23]
+ [ 102   67  293   51]
+ [ 164   77 1895  256]
+ [  48   43  519  269]]
+	Accuracy: 67.09
+	Precision: | 83.07 || 30.45 || 64.28 || 44.91 |
+	Average Precision: 55.68
+	Std dev of Precision: 19.85
+	Recall: | 83.84 || 13.06 || 79.22 || 30.60 |
+	Average Recall: 51.68
+	Std dev of Recall: 30.53
+	F1 score: | 83.46 || 18.28 || 70.97 || 36.40 |
+	Average F1 score: 52.28
+	Std dev of F1 score: 26.12
+	Matthews correlation coefficient: 49.94
+	ROC AUC macro ovr: 82.64
+	ROC AUC weighted ovr: 85.22
