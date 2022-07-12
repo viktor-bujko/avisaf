@@ -8,16 +8,16 @@ entity recognition models.
 import logging
 import sys
 from argparse import Namespace
-from argument_parser import parse_args
+from .argument_parser import parse_args
 
 # importing own modules
-from ner.predictor import process_ner
-from ner.trainer import train_ner
-from ner.annotator import auto_annotation_handler, manual_annotation_handler
-from ner.evaluator import evaluate_ner
-from text_classification.trainer import train_classification
-from text_classification.evaluator import evaluate_classification
-from text_classification.predictor_decoder import launch_classification
+from .ner.predictor import process_ner
+from .ner.trainer import train_ner
+from .ner.annotator import auto_annotation_handler, manual_annotation_handler
+from .ner.evaluator import evaluate_ner
+from .text_classification.trainer import train_classification
+from .text_classification.evaluator import evaluate_classification
+from .text_classification.predictor_decoder import launch_classification
 
 logger = logging.getLogger("avisaf_logger")
 

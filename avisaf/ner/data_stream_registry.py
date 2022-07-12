@@ -3,7 +3,7 @@
 import spacy
 import logging
 from spacy.training.example import Example
-from util.data_extractor import JsonDataExtractor
+from avisaf.util.data_extractor import JsonDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 

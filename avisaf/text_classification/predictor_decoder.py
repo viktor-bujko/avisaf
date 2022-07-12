@@ -10,9 +10,9 @@ import logging
 import numpy as np
 from pathlib import Path
 
-from text_classification.data_preprocessor import ASRSReportDataPreprocessor
-from text_classification.vectorizers import VectorizerFactory
-import util.data_extractor as de
+from .data_preprocessor import ASRSReportDataPreprocessor
+from .vectorizers import VectorizerFactory
+import avisaf.util.data_extractor as de
 
 logger = logging.getLogger("avisaf_logger")
 

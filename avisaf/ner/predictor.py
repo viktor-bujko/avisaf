@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import sys
+
 from pathlib import Path
 
 import spacy
 import logging
 import numpy as np
 from spacy import displacy as displacy
-import util.data_extractor as de
+import avisaf.util.data_extractor as de
 
 logger = logging.getLogger("avisaf_logger")
 

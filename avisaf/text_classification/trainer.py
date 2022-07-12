@@ -18,11 +18,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import LinearSVC, SVC
 
-from text_classification.predictor_decoder import ASRSReportClassificationPredictor, build_default_class_dict
-from text_classification.data_preprocessor import ASRSReportDataPreprocessor
-from text_classification.evaluator import ASRSReportClassificationEvaluator
-from text_classification.visualizer import Visualizer
-from util.data_extractor import CsvAsrsDataExtractor
+from .predictor_decoder import ASRSReportClassificationPredictor, build_default_class_dict
+from .data_preprocessor import ASRSReportDataPreprocessor
+from .evaluator import ASRSReportClassificationEvaluator
+from .visualizer import Visualizer
+from avisaf.util.data_extractor import CsvAsrsDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 

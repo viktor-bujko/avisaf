@@ -4,8 +4,8 @@ import numpy as np
 from scipy import sparse as sp
 from sklearn.preprocessing import LabelEncoder
 
-from ner.annotator import logger
-from text_classification.vectorizers import VectorizerFactory
+from avisaf.ner.annotator import logger
+from .vectorizers import VectorizerFactory
 
 
 class ASRSReportDataPreprocessor:

@@ -113,7 +113,7 @@ class AsrsReportVectorizer:
             lemmatized = "".join(doc_lemmas)
 
             lemmatized = re.sub(r"(\d{1,2});(\d{1,3})", r"\1,\2", lemmatized)  # ; separated numbers - usually altitude
-            lemmatized = re.sub(r"fl;?\d{2,3}", "flight level", lemmatized)  # flight level representation
+            lemmatized = re.sub(r"fl;?(\d{2,3})", r"flight level \1", lemmatized)  # flight level representation
             lemmatized = re.sub(r"runway|rwy \d{1,2}[rcl]?", r"runway", lemmatized)  # runway identifiers
             lemmatized = re.sub(r"tx?wys?", "taxiway", lemmatized)
             lemmatized = re.sub(r"twrs?[^a-z]", "tower", lemmatized)
@@ -358,10 +358,10 @@ class SpaCyWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
 class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
     def __init__(self):
         logger.debug(Path().absolute())
-        self._model_path = Path(".", "vectors", "gensim-data", "word2vec-google-news-300", "word2vec-google-news-300.gz")  # Path("vectors", "gensim-data", "GoogleNews-vectors-negative300.bin")
+        self._model_path = Path(".", "vectors", "gensim-data", "word2vec-google-news-300", "word2vec-google-news-300.gz")
         print(self._model_path)
         if not self._model_path.exists():
-            logger.warning("Pre-trained GoogleNews model used for vectorization has not been found.")
+            logger.warning("Pre-trained Google News model used for vectorization has not been found.")
             if input("Do you want to download and unzip the model (1.5 Gb zipped size)? (y/N) ").lower() == "y":
                 logger.debug("(down)LOADING")
                 self._model_path = dwnldr.load("word2vec-google-news-300", return_path=True)
@@ -369,7 +369,7 @@ class GoogleNewsWord2VecAsrsReportVectorizer(Word2VecAsrsReportVectorizer):
             else:
                 sys.exit(1)
 
-        print("Loading large GoogleNews model. May take a while.")
+        print("Loading large Google News model. May take a while.")
         self._model = KeyedVectors.load_word2vec_format(self._model_path, binary=True)
         super().__init__(self._model.wv)
 
