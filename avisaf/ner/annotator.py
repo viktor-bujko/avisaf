@@ -17,13 +17,13 @@ from spacy.matcher import PhraseMatcher, Matcher
 # importing own modules used in this module
 from avisaf.util.indexing import get_spans_indexes, entity_trimmer
 import avisaf.util.training_data_build as train
-from avisaf.util.data_extractor import get_entities, CsvAsrsDataExtractor
+from avisaf.util.data_extractor import get_entities, CsvAsrsDataExtractor, JsonDataExtractor
 
 logger = logging.getLogger("avisaf_logger")
 
 
-def get_current_texts_and_ents(train_data_file: Path, extract_texts: bool):
-    if extract_texts:
+def get_current_texts_and_ents(train_data_file: Path):
+    if train_data_file.suffix == ".csv":
         # get testing texts
         extractor = CsvAsrsDataExtractor([train_data_file])
         texts = list(extractor.get_narratives())
@@ -48,7 +48,6 @@ def auto_annotation_handler(
         label_text: str,
         training_src_file: str,
         model="en_core_web_md",
-        extract_texts: bool = False,
         use_phrasematcher: bool = False,
         save: bool = False,
         save_to: str = None,
@@ -89,7 +88,6 @@ def auto_annotation_handler(
         label_text,
         training_src_file,
         model,
-        extract_texts,
         use_phrasematcher
     )
 
@@ -125,7 +123,6 @@ def launch_auto_annotation(
     label_text: str,
     training_src_file: Path,
     model="en_core_web_md",
-    extract_texts: bool = False,
     use_phrasematcher: bool = False
 ):
     """Automatic annotation tool. The function takes a file which has to contain a
@@ -146,9 +143,6 @@ def launch_auto_annotation(
         contain list of (text, annotations) tuples, where the text is the string
         and annotations represents a dictionary with list of (start, end, label)
         entity descriptors.
-    :type extract_texts: bool
-    :param extract_texts: A flag indicating whether new texts should be searched
-        for.
     :type use_phrasematcher: bool
     :param use_phrasematcher: A flag indicating whether Matcher or PhraseMatcher
         spaCy object is used.
@@ -159,7 +153,7 @@ def launch_auto_annotation(
     training_src_file = training_src_file.resolve()
     patterns_file_path = patterns_file_path.resolve()
 
-    texts, entities = get_current_texts_and_ents(training_src_file, extract_texts)
+    texts, entities = get_current_texts_and_ents(training_src_file)
 
     nlp = spacy.load(model)  # create NLP analyzer object of the model
     with patterns_file_path.open(mode="r") as pttrns_file:
@@ -174,6 +168,7 @@ def launch_auto_annotation(
         matcher.add(label_text, keywords)
     else:
         # create Matcher object
+        logger.info("Creating corresponding Matcher object")
         matcher = Matcher(nlp.vocab, validate=True)
         matcher.add(label_text, patterns)
 
@@ -184,7 +179,7 @@ def launch_auto_annotation(
         matched_spans = [doc[start:end] for match_id, start, end in matches]
 
         if matched_spans:
-            logger.info(f"Doc index: {texts.index(doc.text)}, Matched spans {len(matched_spans)}: {matched_spans}")
+            print(f"Doc index: {texts.index(doc.text)}, {len(matched_spans)} matched spans: {matched_spans}")
         new_entities = [(span.start_char, span.end_char, label_text) for span in matched_spans]
         # following line of code also resolves situation when the entities dictionary is None
         train_example = (doc.text, {"entities": new_entities})
@@ -225,25 +220,22 @@ def manual_annotation_handler(
                         should be saved.
     :return:
     """
-    file_path = Path(file_path)
-    labels_path = Path(labels_path)
 
     assert file_path is not None, "file_path is None"
     assert labels_path is not None, "labels_path is None"
 
+    file_path = Path(file_path)
+    labels_path = Path(labels_path)
+
     labels = list(get_entities(labels_path).keys())
 
     try:
-        if file_path.exists():
-            if file_path.suffix == ".csv":
-                extractor = CsvAsrsDataExtractor([file_path])
-                texts = extractor.get_narratives(lines_count=lines, start_index=start_index)
-            else:
-                with file_path.open(mode="r") as file:
-                    texts = json.load(file)
+        if file_path.exists() and file_path.suffix == ".csv":
+            extractor = CsvAsrsDataExtractor([file_path])
+            texts = extractor.get_narratives(lines_count=lines, start_index=start_index)
         else:
-            # use given argument as the text to be annotated
-            texts = [str(file_path)]
+            logger.error("Please make sure that a correct csv file is given.")
+            return
     except OSError:
         # use given argument as the text to be annotated
         texts = [str(file_path)]

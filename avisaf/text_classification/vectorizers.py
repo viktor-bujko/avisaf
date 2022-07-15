@@ -74,7 +74,7 @@ class AsrsReportVectorizer:
         logger.debug("Started preprocessing")
         preprocessed = []
         logger.debug("Loading language model")
-        nlp = spacy.load("./models/ner/ner_avisaf.model")
+        nlp = spacy.load("./models/ner/ner_avisaf_model")
         logger.debug("Loading done")
         texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
@@ -83,14 +83,14 @@ class AsrsReportVectorizer:
             abbreviations_glossary = dict(json.load(glossary_file))
             logger.debug("Glossary loaded")
 
-        batch_size = 1024
+        batch_size = 100
         for idx, doc in enumerate(nlp.pipe(
                 texts,
                 batch_size=batch_size,
                 disable=[],
                 n_process=4)
         ):
-            if idx > 0 and idx % batch_size == 0:
+            if idx > 0 and idx % (batch_size * 3) == 0:
                 logger.debug(f"Lemmatized { int((idx / batch_size) * batch_size) } texts.")
             doc_lemmas = []
             for token in doc:

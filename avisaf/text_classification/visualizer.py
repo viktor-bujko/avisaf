@@ -75,17 +75,6 @@ class Visualizer:
             savefig_fname="roc_curve" + fname
         )
 
-        self.compute_curve(
-            "Precision-recall curve" + add_string,
-            target_classes,
-            label_encoder,
-            predictions_distribution,
-            method=metrics.precision_recall_curve,
-            xlabel="Recall",
-            ylabel="Precision",
-            savefig_fname="precision_recall" + fname
-        )
-
     def compute_curve(self, title, target_classes, encoder, pred_dist, method, savefig_fname, **kwargs):
         fprs, tprs, thresholds = [], [], []
         plt.title(title)

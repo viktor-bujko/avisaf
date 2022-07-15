@@ -130,7 +130,7 @@ class ASRSReportClassificationPredictor:
         # getting information which vectorizer current predictor has been trained with
         new_vectorizer = VectorizerFactory.create_vectorizer(predictor_vectorizer_params.get("vectorizer"))
         if new_vectorizer.get_params() == default_vectorizer_params:
-            logger.warning("New vectorizer has same parameters as the old one. Reusing previous.")
+            logger.info("New vectorizer has same parameters as the old one. Reusing previous.")
             return None
 
         return new_vectorizer

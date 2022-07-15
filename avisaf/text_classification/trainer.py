@@ -238,7 +238,7 @@ class ASRSReportClassificationTrainer:
         if self._normalize_method in self._preprocessor.normalization_methods:
             model_dir_name += self._normalize_method
 
-        classifiers_dir = Path("models", "classifiers", self._algorithm if self._algorithm else ".")
+        classifiers_dir = Path("models", "classifiers")
         classifiers_dir.mkdir(exist_ok=True)
         model_dir_path = Path(classifiers_dir, model_dir_name)
         model_dir_path.mkdir(exist_ok=False)
