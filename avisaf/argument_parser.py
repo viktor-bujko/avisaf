@@ -16,7 +16,7 @@ def add_ner_trainer_parser(subparsers):
 
     parser.set_defaults(dest="train_ner")
     parser.add_argument(
-        "config_path",
+        "--config",
         type=str,
         default=str(Path("config", "spacy_ner.cfg")),
         help="Path to the spaCy configuration file (see https://spacy.io/api/data-formats#config)."
@@ -27,8 +27,7 @@ def add_ner_trainer_parser(subparsers):
         metavar="DATA PATH",
         nargs="+",
         help="Path to the files with annotated JSON training data.",
-        default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))],
-        required=True,
+        default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))]
     )
     parser.add_argument(
         "-m",
@@ -196,18 +195,20 @@ def add_manual_annotator_parser(subparsers):
 
     parser.set_defaults(dest="annotate_man")
     parser.add_argument(
-        "texts_file",
-        help="""The path to the file containing texts to be annotated. (Supports .csv/.json files). If None, then a user can write own sentences and annotate them.""",
+        "--texts",
+        help="The path to the file containing texts to be annotated. (Supports .csv/.json files). If None, then a user can write own sentences and annotate them.",
         default=None,
     )
     parser.add_argument(
-        "lines", type=int, help="The number of texts to be annotated (1 text = 1 line)."
+        "--lines",
+        type=int,
+        help="The number of texts to be annotated (1 text = 1 line)."
     )
     parser.add_argument(
         "-l",
         "--labels",
         help="Path to the file containing entity labels used for annotation.",
-        default=str(Path("data_files", "entities_labels.json"))
+        default=str(Path("config", "entities_labels.json"))
     )
     parser.add_argument(
         "-s",
