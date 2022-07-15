@@ -16,6 +16,7 @@ requests<3.0.0,>=2.13.0
 scikit-learn~=1.0.2
 smart-open==5.2.1
 spacy==3.2.0
+spacy-lookups-data==1.0.3
 sphinx==3.2.1
 sphinx_rtd_theme==0.5.0
 srsly<3.0.0,>=2.4.1
