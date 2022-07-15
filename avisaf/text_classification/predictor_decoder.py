@@ -130,7 +130,7 @@ class ASRSReportClassificationPredictor:
         # getting information which vectorizer current predictor has been trained with
         new_vectorizer = VectorizerFactory.create_vectorizer(predictor_vectorizer_params.get("vectorizer"))
         if new_vectorizer.get_params() == default_vectorizer_params:
-            logger.warning("New vectorizer has same parameters as the old one. Reusing previous.")
+            logger.info("New vectorizer has same parameters as the old one. Reusing previous.")
             return None
 
         return new_vectorizer
@@ -163,6 +163,7 @@ def launch_classification(model_path: str, text_path: Path, text: str):
     :return:
     """
     if not model_path or (not text_path and not text):
+        # TODO:
         logger.error("Both model_path and text(s) to be used must be specified")
         return
 
@@ -174,6 +175,7 @@ def launch_classification(model_path: str, text_path: Path, text: str):
     if text:
         extractor = de.PlainTextExtractor(text)
     else:
+        text_path = Path(text_path)
         if text_path.suffix == ".csv":
             extractor = de.CsvAsrsDataExtractor([text_path])
         else:

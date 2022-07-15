@@ -32,7 +32,7 @@ def choose_action(args: Namespace):
 
     functions = {
         "train_ner": lambda: train_ner(
-            config_file_path=args.config_path,
+            config_file_path=args.config,
             model=args.model,
             new_model_name=args.name,
             train_data_srcfiles=args.data,
@@ -55,14 +55,13 @@ def choose_action(args: Namespace):
             args.label,
             model=args.model,
             training_src_file=args.data,
-            extract_texts=args.extract,
             use_phrasematcher=args.p,
             save=args.save,
             save_to=args.save_to
         ),
         "annotate_man": lambda: manual_annotation_handler(
             labels_path=args.labels,
-            file_path=args.texts_file,
+            file_path=args.texts,
             lines=args.lines,
             save=args.not_save,
             start_index=args.start_index,

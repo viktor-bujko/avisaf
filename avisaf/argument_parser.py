@@ -16,7 +16,7 @@ def add_ner_trainer_parser(subparsers):
 
     parser.set_defaults(dest="train_ner")
     parser.add_argument(
-        "config_path",
+        "--config",
         type=str,
         default=str(Path("config", "spacy_ner.cfg")),
         help="Path to the spaCy configuration file (see https://spacy.io/api/data-formats#config)."
@@ -27,8 +27,7 @@ def add_ner_trainer_parser(subparsers):
         metavar="DATA PATH",
         nargs="+",
         help="Path to the files with annotated JSON training data.",
-        default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))],
-        required=True,
+        default=[str(Path("data_files", "ner", "train_data", "annotated_data_01.json"))]
     )
     parser.add_argument(
         "-m",
@@ -62,7 +61,7 @@ def add_ner_tester_parser(subparsers):
         "-m",
         "--model",
         metavar="PATH/MODEL",
-        default=str(Path("models", "ner", "ner_avisaf.model")),
+        default=str(Path("models", "ner", "ner_avisaf_model")),
         help="File path to an existing spaCy model or existing spaCy model name for NER.",
     )
     text_group = parser.add_mutually_exclusive_group(required=False)
@@ -119,8 +118,7 @@ def add_ner_evaluator_parser(subparsers):
         "-m",
         "--model",
         metavar="PATH/MODEL",
-        default=None,
-        required=True,
+        default=str(Path("models", "ner", "ner_avisaf_model")),
         help="File path to an existing spaCy model or existing spaCy model name for NER.",
     )
     parser.add_argument(
@@ -149,13 +147,11 @@ def add_auto_annotator_parser(subparsers):
     parser.add_argument("keys_file", help="Path to file with words to be matched.")
     parser.add_argument("label", type=str, help="The text of the label of an entity.")
     parser.add_argument(
-        "-d", "--data", type=str, help="Training data source file path.", default=None
-    )
-    parser.add_argument(
-        "-e",
-        "--extract",
-        action="store_true",
-        help="Flag indicating that text extraction should take place. Otherwise, JSON file containing list of ('report string', entities dictionary) tuples is required.",
+        "-d", "--data",
+        type=str,
+        help="Training data source file path.",
+        default=None,
+        required=True
     )
     parser.add_argument(
         "-m",
@@ -196,18 +192,22 @@ def add_manual_annotator_parser(subparsers):
 
     parser.set_defaults(dest="annotate_man")
     parser.add_argument(
-        "texts_file",
-        help="""The path to the file containing texts to be annotated. (Supports .csv/.json files). If None, then a user can write own sentences and annotate them.""",
+        "--texts",
+        help="The path to the file containing texts to be annotated. (Supports .csv files only).",
         default=None,
+        required=True
     )
     parser.add_argument(
-        "lines", type=int, help="The number of texts to be annotated (1 text = 1 line)."
+        "--lines",
+        type=int,
+        help="The number of texts to be annotated (1 text = 1 line). Default value means all texts",
+        default=-1,
     )
     parser.add_argument(
         "-l",
         "--labels",
         help="Path to the file containing entity labels used for annotation.",
-        default=str(Path("data_files", "entities_labels.json"))
+        default=str(Path("config", "entities_labels.json")),
     )
     parser.add_argument(
         "-s",
@@ -319,7 +319,7 @@ def add_classification_processing_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        default=str(Path("models", "classifiers", "final_classifier_model")),
+        default=str(Path("models", "classifiers", "avisaf_classifier_model")),
         help="Path of a model used for text classification."
     )
 
@@ -343,7 +343,7 @@ def add_classification_evaluation_parser(subparsers):
     parser.add_argument(
         "-m",
         "--model",
-        default=str(Path("models", "classifiers", "final_classifier_model")),
+        default=str(Path("models", "classifiers", "avisaf_classifier_model")),
         help="Path of a trained model to be tested."
     )
     parser.add_argument(
