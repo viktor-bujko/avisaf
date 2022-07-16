@@ -4,36 +4,26 @@
 IF /I "%1"=="install" GOTO install
 IF /I "%1"=="venv" GOTO venv
 IF /I "%1"=="clean" GOTO clean
-IF /I "%1"=="docs" GOTO docs
 GOTO error
 
 :install
-	CALL make.bat setup.py
 	CALL make.bat venv
-	CALL make.bat avisaf/
-	venv/bin/pip3 install -U pip
-	venv/bin/pip3 install -r requirements.txt
-	venv/bin/python3 -m spacy download en_core_web_md
-	venv/bin/python3 ./setup.py build && venv/bin/python ./setup.py install
-	@. venv/bin/activate
+	@.\venv\Scripts\pip.exe install -U pip
+	@.\venv\Scripts\pip.exe install -r requirements.txt
+	@.\venv\Scripts\python.exe -m spacy download en_core_web_md
+	@.\venv\Scripts\python.exe ./setup.py build && .\venv\Scripts\python.exe ./setup.py install
 	GOTO :EOF
 
 :venv
-	CALL make.bat requirements.txt
-	test -d venv || python3 -m venv venv
-	@. venv/bin/activate
-	@which venv/bin/pip3
-	@which venv/bin/python3
+	if not exist venv (
+		ECHO "Creating virtual environment"
+		python -m venv venv
+	)
 	GOTO :EOF
 
 :clean
 	@echo "Cleaning directory"
-	@rm -rf avisaf.egg-info build dist venv && echo "Cleaning complete"
-	GOTO :EOF
-
-:docs
-	sphinx-apidoc -o docs/ avisaf
-	CALL make.bat -C docs html
+	@rmdir /s /q avisaf.egg-info build dist venv && echo "Cleaning complete"
 	GOTO :EOF
 
 :error

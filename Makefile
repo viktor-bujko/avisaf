@@ -4,7 +4,7 @@ install: setup.py venv avisaf/
 	venv/bin/pip3 install -U pip
 	venv/bin/pip3 install -r requirements.txt
 	venv/bin/python3 -m spacy download en_core_web_md
-	venv/bin/python3 ./setup.py build && venv/bin/python ./setup.py install
+	venv/bin/python3 ./setup.py build && venv/bin/python3 ./setup.py install
 	@. venv/bin/activate
 
 venv: requirements.txt

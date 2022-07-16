@@ -71,15 +71,15 @@ class AsrsReportVectorizer:
 
     @staticmethod
     def preprocess(texts: np.ndarray):
-        logger.debug("Started preprocessing")
+        logger.info("Started preprocessing")
         preprocessed = []
-        logger.debug("Loading language model")
+        logger.info("Loading language model")
         nlp = spacy.load("./models/ner/ner_avisaf_model")
         logger.debug("Loading done")
         texts = map(lambda txt: str(txt), texts)  # converting numpy string for
 
         with Path("config", "aviation_glossary.json").open("r") as glossary_file:
-            logger.debug("Loading terminology glossary")
+            logger.info("Loading terminology glossary")
             abbreviations_glossary = dict(json.load(glossary_file))
             logger.debug("Glossary loaded")
 
@@ -122,7 +122,7 @@ class AsrsReportVectorizer:
             lemmatized = re.sub(r"lndgs?", "landing", lemmatized)
 
             preprocessed.append(lemmatized)
-        logger.debug("Ended preprocessing")
+        logger.info("Ended preprocessing")
 
         return preprocessed
 

@@ -16,7 +16,6 @@ def stream_data(data_source: list):
 
     def stream(nlp):
         for annotated_texts in extractor.get_ner_training_data():
-            logger.info(f"Using file: {annotated_texts}")
             for text, ents in annotated_texts:
                 doc = nlp.make_doc(text)
                 example = Example.from_dict(doc, ents)
